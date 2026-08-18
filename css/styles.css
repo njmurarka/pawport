@@ -730,6 +730,14 @@ details.faq-item p { margin-bottom: 0; }
   height: 3px;
   background: var(--gradient-primary);
 }
+.build-hash {
+  font-family: 'Courier New', monospace;
+  font-size: 0.6rem;
+  color: var(--color-text-muted);
+  opacity: 0.32;
+  text-decoration: none;
+}
+.build-hash:hover, .build-hash:focus { opacity: 0.85; text-decoration: underline; }
 
 /* ---------- Utility ---------- */
 .section-spacer { margin: 48px 0; }

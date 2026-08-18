@@ -871,7 +871,37 @@
       var open = nav.classList.toggle('open');
       document.getElementById('navToggle').setAttribute('aria-expanded', open ? 'true' : 'false');
     });
-    document.getElementById('lastVerified').textContent = DATA.lastVerified;
+    loadBuildInfo();
+  }
+
+  /* ================= build/publish stamp =================
+     There's no build step for this site, so instead of a manually
+     maintained (and quickly stale) timestamp, ask GitHub directly for
+     the latest commit on main and derive both the published time and
+     the commit hash from that — always accurate, nothing to remember
+     to update. Fails silently (footer just omits the stamp) if the
+     API is unreachable, e.g. offline or rate-limited. */
+  function loadBuildInfo() {
+    var publishedEl = document.getElementById('publishedAt');
+    var hashLink = document.getElementById('buildHashLink');
+    fetch('https://api.github.com/repos/njmurarka/pawport/commits/main')
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (data) {
+        if (!data || !data.sha) return;
+        var commitDate = data.commit && data.commit.committer && data.commit.committer.date;
+        if (publishedEl && commitDate) {
+          var d = new Date(commitDate);
+          if (!isNaN(d.getTime())) {
+            var tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+            publishedEl.textContent = d.toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' }) + ' (' + tz + ')';
+          }
+        }
+        if (hashLink) {
+          hashLink.textContent = data.sha.slice(0, 7);
+          hashLink.href = 'https://github.com/njmurarka/pawport/commit/' + data.sha;
+        }
+      })
+      .catch(function () { /* offline or rate-limited — leave the placeholder as-is */ });
   }
 
   /* ================= init ================= */
