@@ -21,6 +21,39 @@
     try { localStorage.setItem(STORAGE_KEYS.checked, JSON.stringify(c)); } catch (e) {}
   }
 
+  /* ================= theme (light/dark) =================
+     A cookie (not localStorage) per explicit request, so the choice
+     persists the same way across any future server-side use too.
+     The actual theme is applied before first paint by the inline
+     script in index.html's <head> — this just keeps the toggle button
+     and the cookie in sync with whatever's already on <html>. */
+  var THEME_COOKIE = 'pawport_theme';
+  function setThemeCookie(value) {
+    var expires = new Date(Date.now() + 365 * 86400000).toUTCString();
+    document.cookie = THEME_COOKIE + '=' + encodeURIComponent(value) + '; expires=' + expires + '; path=/; SameSite=Lax';
+  }
+  function applyTheme(theme) {
+    document.documentElement.setAttribute('data-theme', theme);
+    var btn = document.getElementById('themeToggle');
+    if (!btn) return;
+    var isDark = theme === 'dark';
+    btn.querySelector('.theme-toggle-icon').textContent = isDark ? '☀️' : '🌙';
+    btn.querySelector('.theme-toggle-label').textContent = isDark ? 'Light mode' : 'Dark mode';
+    var label = 'Switch to ' + (isDark ? 'light' : 'dark') + ' mode';
+    btn.setAttribute('aria-label', label);
+    btn.title = label;
+  }
+  function wireThemeToggle() {
+    var current = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
+    applyTheme(current);
+    var btn = document.getElementById('themeToggle');
+    btn.addEventListener('click', function () {
+      current = current === 'dark' ? 'light' : 'dark';
+      applyTheme(current);
+      setThemeCookie(current);
+    });
+  }
+
   /* ================= date helpers ================= */
   function parseDate(s) {
     if (!s) return null;
@@ -43,15 +76,29 @@
      rabiesDoses/favnDone/dates the wizard collected for a *previous*
      microchipDone answer are stale and must not drive the checklist —
      treat the vaccination chain as not-yet-started instead of asking a
-     nonsensical "how many since the chip" question in that case. */
+     nonsensical "how many since the chip" question in that case. Same
+     idea applies going back and forth on ANY earlier answer in this
+     chain — a designated-region switch, a microchip answer, or even
+     dialing rabiesDoses back down — so this normalizes the whole
+     dependency chain (country designation -> microchip -> rabies dose
+     count -> FAVN), not just the microchip step, and does it from
+     current raw answers every time rather than trusting whatever was
+     stored while an earlier step had a different answer. */
   function getEffectiveAnswers(answers) {
     var eff = {};
     for (var k in answers) { if (Object.prototype.hasOwnProperty.call(answers, k)) eff[k] = answers[k]; }
-    if (eff.microchipDone !== 'yes') {
-      eff.rabiesDoses = '0';
-      eff.favnDone = 'no';
+    var country = countriesByCode[eff.originCountry];
+    var designated = !!(country && country.designated);
+
+    if (designated || eff.microchipDone !== 'yes') {
+      eff.rabiesDoses = designated ? undefined : '0';
       eff.lastRabiesDate = undefined;
       eff.rabiesDuration = undefined;
+    }
+    // FAVN can only follow the FINAL rabies dose in the required 2-dose
+    // series, so it can't have happened unless rabiesDoses is '2+'.
+    if (designated || eff.rabiesDoses !== '2+') {
+      eff.favnDone = designated ? undefined : 'no';
       eff.favnDate = undefined;
     }
     return eff;
@@ -871,6 +918,7 @@
       var open = nav.classList.toggle('open');
       document.getElementById('navToggle').setAttribute('aria-expanded', open ? 'true' : 'false');
     });
+    wireThemeToggle();
     loadBuildInfo();
   }
 

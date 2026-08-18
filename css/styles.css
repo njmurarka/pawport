@@ -17,6 +17,20 @@
   --color-warn: #a8681a;
   --color-warn-light: #fdf1de;
   --color-danger: #b3261e;
+  --color-danger-light: #fdecea;
+
+  --text-on-success: #1d5133;
+  --text-on-warn: #6e4610;
+  --text-on-danger: #7a1913;
+
+  --header-bg: rgba(251, 247, 242, 0.82);
+  --modal-overlay-bg: rgba(43, 38, 32, 0.45);
+  --footer-bg: #f3ebdd;
+  --story-gradient-2: #f2fbf9;
+  --story-border: #cdeae5;
+  --bg-decor-1: #ffbb8a;
+  --bg-decor-2: #8fd9cf;
+  --bg-decor-opacity: 0.35;
 
   --gradient-primary: linear-gradient(135deg, #ff9d5c 0%, #e2652c 55%, #c14e1c 100%);
   --gradient-primary-hover: linear-gradient(135deg, #ffab73 0%, #e2652c 55%, #b0480f 100%);
@@ -34,6 +48,55 @@
 
   --font: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   --font-display: 'Fraunces', Georgia, 'Times New Roman', serif;
+
+  color-scheme: light;
+}
+
+/* Dark theme — toggled explicitly via the header button (see js/app.js
+   initTheme/applyTheme), not prefers-color-scheme; default is always
+   light unless the visitor has already chosen dark (remembered via a
+   cookie). Same token names throughout so every component below just
+   works — only the values change. */
+:root[data-theme="dark"] {
+  --color-bg: #17130f;
+  --color-surface: #211a13;
+  --color-surface-alt: #2a2118;
+  --color-text: #f5ece0;
+  --color-text-muted: #b3a390;
+  --color-primary: #ff8a4d;
+  --color-primary-dark: #ffb27f;
+  --color-primary-light: #3a2416;
+  --color-accent: #45c7b8;
+  --color-accent-dark: #9be3d8;
+  --color-accent-light: #16302c;
+  --color-border: #3c3226;
+  --color-success: #5fcf8b;
+  --color-success-light: #1c3324;
+  --color-warn: #e2a655;
+  --color-warn-light: #3a2c15;
+  --color-danger: #ff6f66;
+  --color-danger-light: #3a1a17;
+
+  --text-on-success: #bff0d3;
+  --text-on-warn: #ffe1b0;
+  --text-on-danger: #ffcac5;
+
+  --header-bg: rgba(23, 19, 15, 0.75);
+  --modal-overlay-bg: rgba(0, 0, 0, 0.62);
+  --footer-bg: #1c1610;
+  --story-gradient-2: #17302b;
+  --story-border: #234b43;
+  --bg-decor-1: #ff9a5c;
+  --bg-decor-2: #2fae9d;
+  --bg-decor-opacity: 0.22;
+
+  --gradient-hero-text: linear-gradient(120deg, #ff9a5c 0%, #ff7a3d 45%, #45c7b8 100%);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4), 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
+  --shadow-lg: 0 18px 46px rgba(0, 0, 0, 0.6);
+  --shadow-glow: 0 8px 26px rgba(255, 138, 77, 0.35);
+
+  color-scheme: dark;
 }
 
 * { box-sizing: border-box; }
@@ -50,6 +113,7 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   position: relative;
+  transition: background-color 0.25s ease, color 0.25s ease;
 }
 
 /* Soft ambient color blobs behind the whole site */
@@ -67,17 +131,18 @@ body {
   height: 620px;
   border-radius: 50%;
   filter: blur(90px);
-  opacity: 0.35;
+  opacity: var(--bg-decor-opacity);
+  transition: opacity 0.25s ease;
 }
 .bg-decor::before {
   top: -220px;
   right: -180px;
-  background: radial-gradient(circle at 30% 30%, #ffbb8a, transparent 70%);
+  background: radial-gradient(circle at 30% 30%, var(--bg-decor-1), transparent 70%);
 }
 .bg-decor::after {
   bottom: -260px;
   left: -200px;
-  background: radial-gradient(circle at 60% 60%, #8fd9cf, transparent 70%);
+  background: radial-gradient(circle at 60% 60%, var(--bg-decor-2), transparent 70%);
 }
 
 h1, h2, h3, h4 {
@@ -117,7 +182,7 @@ main#app.route-enter { animation: routeFadeIn 0.35s ease both; }
 
 /* ---------- Header ---------- */
 .site-header {
-  background: rgba(251, 247, 242, 0.82);
+  background: var(--header-bg);
   backdrop-filter: blur(10px) saturate(1.4);
   -webkit-backdrop-filter: blur(10px) saturate(1.4);
   border-bottom: 1px solid var(--color-border);
@@ -130,6 +195,11 @@ main#app.route-enter { animation: routeFadeIn 0.35s ease both; }
   align-items: center;
   justify-content: space-between;
   height: 68px;
+}
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 18px;
 }
 .brand {
   display: flex;
@@ -207,6 +277,32 @@ main#app.route-enter { animation: routeFadeIn 0.35s ease both; }
   height: 2px;
   background: var(--color-text);
   border-radius: 2px;
+}
+
+/* ---------- Theme toggle ---------- */
+.theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 44px;
+  padding: 0 16px 0 12px;
+  border-radius: 999px;
+  border: 2px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-weight: 600;
+  font-size: 0.92rem;
+  line-height: 1;
+  flex-shrink: 0;
+  transition: border-color 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+}
+.theme-toggle:hover { border-color: var(--color-primary); transform: translateY(-1px); box-shadow: var(--shadow-sm); }
+.theme-toggle:active { transform: translateY(0); }
+.theme-toggle-icon { font-size: 1.15rem; }
+@media (max-width: 560px) {
+  .theme-toggle { width: 44px; padding: 0; }
+  .theme-toggle-label { display: none; }
 }
 
 @media (max-width: 720px) {
@@ -330,8 +426,8 @@ main#app { padding: 36px 20px 64px; min-height: 60vh; }
 .feature-card h3 { margin-bottom: 8px; }
 
 .story-callout {
-  background: linear-gradient(135deg, var(--color-accent-light), #f2fbf9);
-  border: 1px solid #cdeae5;
+  background: linear-gradient(135deg, var(--color-accent-light), var(--story-gradient-2));
+  border: 1px solid var(--story-border);
   border-radius: var(--radius-lg);
   padding: 28px;
   margin: 36px 0;
@@ -457,7 +553,7 @@ label.field-label { font-weight: 600; display: block; margin-bottom: 8px; }
 .designated-banner {
   background: var(--color-success-light);
   border: 1px solid var(--color-success);
-  color: #1d5133;
+  color: var(--text-on-success);
   border-radius: var(--radius);
   padding: 18px 22px;
   margin-bottom: 24px;
@@ -469,7 +565,7 @@ label.field-label { font-weight: 600; display: block; margin-bottom: 8px; }
   padding: 14px 16px;
   margin-top: 12px;
   font-weight: 600;
-  color: #6e4610;
+  color: var(--text-on-warn);
 }
 .date-callout .value { font-size: 1.1rem; }
 
@@ -491,15 +587,15 @@ label.field-label { font-weight: 600; display: block; margin-bottom: 8px; }
 .feasibility-alert-title { font-weight: 800; font-size: 1.08rem; margin-bottom: 4px; }
 .feasibility-alert-body { font-size: 0.95rem; line-height: 1.55; }
 .feasibility-alert.level-blocker {
-  background: #fdecea;
+  background: var(--color-danger-light);
   border: 2px solid var(--color-danger);
-  color: #7a1913;
+  color: var(--text-on-danger);
 }
 .feasibility-alert.level-blocker .feasibility-alert-title { color: var(--color-danger); }
 .feasibility-alert.level-urgent {
   background: var(--color-warn-light);
   border: 2px solid var(--color-warn);
-  color: #6b4610;
+  color: var(--text-on-warn);
 }
 .feasibility-alert.level-urgent .feasibility-alert-title { color: var(--color-warn); }
 
@@ -574,7 +670,7 @@ label.field-label { font-weight: 600; display: block; margin-bottom: 8px; }
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(43, 38, 32, 0.45);
+  background: var(--modal-overlay-bg);
   backdrop-filter: blur(2px);
   display: flex;
   align-items: center;
@@ -716,7 +812,7 @@ details.faq-item p { margin-bottom: 0; }
 
 /* ---------- Footer ---------- */
 .site-footer {
-  background: #f3ebdd;
+  background: var(--footer-bg);
   border-top: 1px solid var(--color-border);
   padding: 30px 0 42px;
   font-size: 0.9rem;

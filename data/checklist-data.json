@@ -151,7 +151,7 @@
         { "value": "unsure", "label": "Not sure" }
       ],
       "required": true,
-      "showIf": [ { "field": "originCountry", "isDesignated": false }, { "field": "microchipDone", "equals": "yes" } ]
+      "showIf": [ { "field": "originCountry", "isDesignated": false }, { "field": "microchipDone", "equals": "yes" }, { "field": "rabiesDoses", "equals": "2+" } ]
     },
     {
       "id": "favnDate",
@@ -262,7 +262,7 @@
       "category": "testing",
       "title": "If your trip might slip past the 2-year FAVN window, plan a redraw with a small buffer",
       "body": "If there's a real chance your travel date could land after your FAVN's 2-year validity ends, plan a redraw well ahead. A missed FAVN window is a 'soft' failure — you just wait out a new 180-day clock, and the delay is roughly however many days late you were, not a full reset. Because it's a soft failure, a modest buffer (around a week before your true no-gap deadline) is enough. Your true no-gap deadline is your FAVN's 2-year expiry minus 180 days.",
-      "showIf": { "field": "favnDone", "equals": "yes" },
+      "showIf": [ { "field": "originCountry", "isDesignated": false }, { "field": "favnDone", "equals": "yes" } ],
       "computedDate": "favnRedrawDeadline"
     },
     {
@@ -270,7 +270,7 @@
       "category": "testing",
       "title": "Set a booster reminder well before your vaccine's labeled expiry",
       "body": "Missing a booster is a 'hard' failure — it resets the entire process (new vaccination series, new FAVN, new 180-day wait: 6+ months blocked). Because the consequence is so much worse than a late FAVN redraw, give yourself a generous buffer before the labeled immunity period ends — several weeks at minimum. Put a real calendar reminder on this; don't rely on remembering.",
-      "showIf": { "field": "lastRabiesDate", "exists": true },
+      "showIf": [ { "field": "originCountry", "isDesignated": false }, { "field": "lastRabiesDate", "exists": true } ],
       "computedDate": "boosterBufferDate"
     },
     {

@@ -3,6 +3,15 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script>
+// Applied before first paint (and before the stylesheet is even parsed)
+// so a returning dark-mode visitor never sees a flash of the light theme.
+(function () {
+  var m = document.cookie.match(/(?:^|; )pawport_theme=([^;]*)/);
+  var theme = (m && decodeURIComponent(m[1]) === 'dark') ? 'dark' : 'light';
+  document.documentElement.setAttribute('data-theme', theme);
+})();
+</script>
 <title>PawPort — Your dog's path to Japan, mapped out</title>
 <meta name="description" content="A free, personalized step-by-step checklist for bringing your dog to Japan from anywhere in the world.">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%90%BE%3C/text%3E%3C/svg%3E">
@@ -21,15 +30,21 @@
       <span class="brand-mark" aria-hidden="true">🐾</span>
       <span class="brand-name">PawPort</span>
     </a>
-    <button class="nav-toggle" id="navToggle" aria-label="Open menu" aria-expanded="false">
-      <span></span><span></span><span></span>
-    </button>
-    <nav class="site-nav" id="siteNav">
-      <a href="#/home" data-nav>Home</a>
-      <a href="#/wizard" data-nav class="nav-cta">Build my checklist</a>
-      <a href="#/resources" data-nav>Resources &amp; FAQ</a>
-      <a href="#/about" data-nav>Our story</a>
-    </nav>
+    <div class="header-right">
+      <button class="theme-toggle" id="themeToggle" type="button" aria-label="Switch to dark mode" title="Switch to dark mode">
+        <span class="theme-toggle-icon" aria-hidden="true">🌙</span>
+        <span class="theme-toggle-label">Dark mode</span>
+      </button>
+      <button class="nav-toggle" id="navToggle" aria-label="Open menu" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
+      <nav class="site-nav" id="siteNav">
+        <a href="#/home" data-nav>Home</a>
+        <a href="#/wizard" data-nav class="nav-cta">Build my checklist</a>
+        <a href="#/resources" data-nav>Resources &amp; FAQ</a>
+        <a href="#/about" data-nav>Our story</a>
+      </nav>
+    </div>
   </div>
 </header>
 
