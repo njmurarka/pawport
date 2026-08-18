@@ -1,0 +1,440 @@
+{
+  "appName": "PawPort",
+  "tagline": "A personalized, step-by-step guide for bringing your dog to Japan — built from real experience, so you don't have to learn it the hard way.",
+  "officialSources": [
+    { "label": "MAFF: Guide to importing dogs and cats (non-designated regions)", "url": "https://www.maff.go.jp/aqs/animal/dog/attach/pdf/import-other-42.pdf" },
+    { "label": "MAFF: Importing from designated (rabies-free) regions", "url": "https://www.maff.go.jp/aqs/english/animal/dog/import-free.html" },
+    { "label": "MAFF: Import and export quarantine of dogs and cats (index)", "url": "https://www.maff.go.jp/aqs/english/animal/dog/index.html" }
+  ],
+  "lastVerified": "2026-08-18",
+  "countries": [
+    { "code": "CA", "name": "Canada", "designated": false, "richDetail": true },
+    { "code": "US", "name": "United States (mainland)", "designated": false },
+    { "code": "US-HI", "name": "United States — Hawaii", "designated": true },
+    { "code": "GU", "name": "Guam", "designated": true },
+    { "code": "GB", "name": "United Kingdom", "designated": false },
+    { "code": "IE", "name": "Ireland", "designated": false },
+    { "code": "FR", "name": "France", "designated": false },
+    { "code": "DE", "name": "Germany", "designated": false },
+    { "code": "IT", "name": "Italy", "designated": false },
+    { "code": "ES", "name": "Spain", "designated": false },
+    { "code": "PT", "name": "Portugal", "designated": false },
+    { "code": "NL", "name": "Netherlands", "designated": false },
+    { "code": "BE", "name": "Belgium", "designated": false },
+    { "code": "CH", "name": "Switzerland", "designated": false },
+    { "code": "AT", "name": "Austria", "designated": false },
+    { "code": "SE", "name": "Sweden", "designated": false },
+    { "code": "NO", "name": "Norway", "designated": false },
+    { "code": "DK", "name": "Denmark", "designated": false },
+    { "code": "FI", "name": "Finland", "designated": false },
+    { "code": "IS", "name": "Iceland", "designated": true },
+    { "code": "PL", "name": "Poland", "designated": false },
+    { "code": "CZ", "name": "Czech Republic", "designated": false },
+    { "code": "GR", "name": "Greece", "designated": false },
+    { "code": "AU", "name": "Australia", "designated": true },
+    { "code": "NZ", "name": "New Zealand", "designated": true },
+    { "code": "FJ", "name": "Fiji", "designated": true },
+    { "code": "MX", "name": "Mexico", "designated": false },
+    { "code": "BR", "name": "Brazil", "designated": false },
+    { "code": "AR", "name": "Argentina", "designated": false },
+    { "code": "CL", "name": "Chile", "designated": false },
+    { "code": "CO", "name": "Colombia", "designated": false },
+    { "code": "ZA", "name": "South Africa", "designated": false },
+    { "code": "IN", "name": "India", "designated": false },
+    { "code": "CN", "name": "China", "designated": false },
+    { "code": "KR", "name": "South Korea", "designated": false },
+    { "code": "PH", "name": "Philippines", "designated": false },
+    { "code": "SG", "name": "Singapore", "designated": false },
+    { "code": "MY", "name": "Malaysia", "designated": false },
+    { "code": "TH", "name": "Thailand", "designated": false },
+    { "code": "VN", "name": "Vietnam", "designated": false },
+    { "code": "ID", "name": "Indonesia", "designated": false },
+    { "code": "AE", "name": "United Arab Emirates", "designated": false },
+    { "code": "SA", "name": "Saudi Arabia", "designated": false },
+    { "code": "IL", "name": "Israel", "designated": false },
+    { "code": "TR", "name": "Turkey", "designated": false },
+    { "code": "RU", "name": "Russia", "designated": false },
+    { "code": "UA", "name": "Ukraine", "designated": false },
+    { "code": "OTHER", "name": "Other / not listed", "designated": false }
+  ],
+  "wizard": [
+    {
+      "id": "originCountry",
+      "type": "select",
+      "label": "Which country are you starting from?",
+      "help": "This determines whether you're on the full antibody-test path or the simplified path for a handful of rabies-free ‘designated regions.’",
+      "optionsFrom": "countries",
+      "required": true
+    },
+    {
+      "id": "dogName",
+      "type": "text",
+      "label": "What's your dog's name?",
+      "help": "Just so we can personalize your checklist. Totally optional.",
+      "placeholder": "e.g. Miso",
+      "required": false
+    },
+    {
+      "id": "dogBreed",
+      "type": "text",
+      "label": "What breed is your dog?",
+      "help": "Optional — helps us flag breed-specific flying considerations.",
+      "placeholder": "e.g. Papillon",
+      "required": false
+    },
+    {
+      "id": "healthConditions",
+      "type": "checkboxGroup",
+      "label": "Does your dog have any of the following?",
+      "help": "This is about flying safely, not about your Japan paperwork — but it can affect timing and vet sign-off, so it's worth flagging up front.",
+      "options": [
+        { "value": "heart", "label": "A heart condition (e.g. a heart murmur or valve disease)" },
+        { "value": "brachy", "label": "A flat-faced (brachycephalic) breed — e.g. Bulldog, Pug, Boston Terrier, Shih Tzu" },
+        { "value": "senior", "label": "Senior age (roughly 10+ years)" },
+        { "value": "mobility", "label": "A mobility issue or other chronic condition" },
+        { "value": "none", "label": "None of the above", "exclusive": true }
+      ],
+      "required": true
+    },
+    {
+      "id": "microchipDone",
+      "type": "radio",
+      "label": "Does your dog already have an ISO-compliant (15-digit) microchip?",
+      "options": [
+        { "value": "yes", "label": "Yes" },
+        { "value": "no", "label": "No, not yet" },
+        { "value": "unsure", "label": "Not sure" }
+      ],
+      "required": true
+    },
+    {
+      "id": "rabiesDoses",
+      "type": "radio",
+      "label": "How many rabies vaccinations has your dog had since the microchip was implanted?",
+      "help": "Only count vaccinations given after the microchip — vaccinations before that don't count for Japan.",
+      "options": [
+        { "value": "0", "label": "None yet" },
+        { "value": "1", "label": "One" },
+        { "value": "2+", "label": "Two or more" },
+        { "value": "unsure", "label": "Not sure" }
+      ],
+      "required": true,
+      "showIf": { "field": "originCountry", "isDesignated": false }
+    },
+    {
+      "id": "lastRabiesDate",
+      "type": "date",
+      "label": "Date of the most recent rabies vaccination",
+      "required": false,
+      "showIf": { "field": "rabiesDoses", "in": ["1", "2+"] }
+    },
+    {
+      "id": "rabiesDuration",
+      "type": "radio",
+      "label": "What's the labeled immunity duration on that vaccine (check the certificate for a ‘duration of immunity’ or similar field)?",
+      "options": [
+        { "value": "1yr", "label": "1 year" },
+        { "value": "3yr", "label": "3 years" },
+        { "value": "unsure", "label": "Not sure / need to check with my vet" }
+      ],
+      "required": false,
+      "showIf": { "field": "rabiesDoses", "in": ["1", "2+"] }
+    },
+    {
+      "id": "favnDone",
+      "type": "radio",
+      "label": "Has a FAVN (rabies antibody titer) blood test already been done at a Japan-designated lab, after that vaccination?",
+      "options": [
+        { "value": "yes", "label": "Yes" },
+        { "value": "no", "label": "No, not yet" },
+        { "value": "unsure", "label": "Not sure" }
+      ],
+      "required": true,
+      "showIf": { "field": "originCountry", "isDesignated": false }
+    },
+    {
+      "id": "favnDate",
+      "type": "date",
+      "label": "Date of the FAVN blood draw",
+      "required": false,
+      "showIf": { "field": "favnDone", "equals": "yes" }
+    },
+    {
+      "id": "travelDateKnown",
+      "type": "radio",
+      "label": "Do you have a target travel date?",
+      "options": [
+        { "value": "yes", "label": "Yes" },
+        { "value": "no", "label": "Not yet — just planning ahead" }
+      ],
+      "required": true
+    },
+    {
+      "id": "travelDate",
+      "type": "date",
+      "label": "Target travel date (arrival in Japan)",
+      "required": false,
+      "showIf": { "field": "travelDateKnown", "equals": "yes" }
+    },
+    {
+      "id": "hasTransit",
+      "type": "radio",
+      "label": "Will your trip include any layover, stop, or overnight stay in a country other than your home country before you arrive in Japan?",
+      "help": "Even a short overland stop (e.g. driving across a border before a direct flight) counts — that country may have its own separate pet rules.",
+      "options": [
+        { "value": "yes", "label": "Yes" },
+        { "value": "no", "label": "No — direct route only" },
+        { "value": "unsure", "label": "Not sure yet" }
+      ],
+      "required": true
+    }
+  ],
+  "categories": [
+    { "id": "foundations", "title": "Foundations", "icon": "📋", "blurb": "The identity and vaccination chain everything else depends on." },
+    { "id": "testing", "title": "Antibody Testing & Timing", "icon": "🧪", "blurb": "The part with the hard deadlines." },
+    { "id": "paperwork", "title": "Paperwork & Government Sign-off", "icon": "📄", "blurb": "The forms and endorsements Japan actually requires." },
+    { "id": "health", "title": "Health & Fitness to Fly", "icon": "❤️", "blurb": "Making sure your dog is cleared to travel safely." },
+    { "id": "logistics", "title": "Travel Logistics", "icon": "✈️", "blurb": "Crates, airlines, and getting there." },
+    { "id": "arrival", "title": "Arrival in Japan", "icon": "🇯🇵", "blurb": "What happens when you land." }
+  ],
+  "checklistItems": [
+    {
+      "id": "microchip",
+      "category": "foundations",
+      "title": "Implant an ISO-compliant microchip (if not already done)",
+      "body": "Your dog needs an ISO 11784/11785-compliant 15-digit microchip, and it must be implanted BEFORE any rabies vaccination that will count toward Japan's requirements — vaccinations given before the chip don't count. The chip and the first vaccination can happen on the same visit, chip first. Note: microchips starting with the prefix ‘900 202’ are currently rejected by Japan — double check your chip's number if you're not sure which one your vet used.",
+      "showIf": [ { "field": "originCountry", "isDesignated": false }, { "field": "microchipDone", "in": ["no", "unsure"] } ]
+    },
+    {
+      "id": "confirm-microchip",
+      "category": "foundations",
+      "title": "Confirm your microchip number is recorded on every document",
+      "body": "The exact same 15-digit microchip number needs to appear, letter-for-letter, on the vaccination certificate, the FAVN lab report, and Japan's Form AC. Mismatches between documents are one of the most common reasons paperwork gets rejected or delayed — it's worth triple-checking this yourself rather than assuming it's automatically consistent.",
+      "showIf": null
+    },
+    {
+      "id": "rabies-vax-fresh",
+      "category": "foundations",
+      "title": "Complete two rabies vaccinations, at least 30 days apart",
+      "body": "For non-designated-region dogs, Japan requires two or more rabies vaccinations. The first must be given after the microchip is implanted, and your dog must be at least 91 days old. The second dose must be given at least 30 days after the first, and while the first dose's immunity period is still active. Use an inactivated (killed) or recombinant vaccine — live vaccines are not accepted.",
+      "showIf": { "field": "rabiesDoses", "equals": "0" }
+    },
+    {
+      "id": "rabies-vax-second",
+      "category": "foundations",
+      "title": "Complete the second rabies vaccination",
+      "body": "You'll need a second rabies vaccination at least 30 days after the first one, given before that first dose's immunity period lapses. Only after this second dose can the FAVN blood draw happen.",
+      "showIf": { "field": "rabiesDoses", "equals": "1" }
+    },
+    {
+      "id": "vaccine-type-check",
+      "category": "foundations",
+      "title": "Confirm the vaccine is inactivated (killed) or recombinant, not live",
+      "body": "Japan only accepts inactivated (killed virus) or recombinant rabies vaccines — not modified-live vaccines. Check the product name/manufacturer on your certificate, or ask your vet to confirm.",
+      "showIf": { "field": "originCountry", "isDesignated": false }
+    },
+    {
+      "id": "favn-test",
+      "category": "testing",
+      "title": "Get a FAVN (or RFFIT) antibody titer test at a Japan-designated laboratory",
+      "body": "The blood draw must happen after the final rabies vaccination and after the microchip was implanted. It must be sent to a laboratory Japan specifically designates for this test — not just any vet lab. The required result is a titer of 0.5 IU/mL or higher. Ask your vet which designated lab they use, or check MAFF's current list.",
+      "showIf": { "field": "originCountry", "isDesignated": false }
+    },
+    {
+      "id": "favn-180-wait",
+      "category": "testing",
+      "title": "Wait out the 180-day clock from your blood draw",
+      "body": "You cannot bring your dog into Japan until at least 180 days have passed since the FAVN blood draw (day of the draw counts as day 0). There's no way to expedite this — it's a hard minimum wait, so it's worth building your whole timeline backward from this date.",
+      "showIf": { "field": "originCountry", "isDesignated": false },
+      "computedDate": "favn180"
+    },
+    {
+      "id": "favn-validity",
+      "category": "testing",
+      "title": "Know your FAVN's 2-year outer validity — and don't let vaccine coverage lapse",
+      "body": "Your FAVN result is valid for 2 years from the blood draw date — but only as long as your dog's rabies vaccine coverage never lapses in the meantime. If a booster is missed and coverage lapses even briefly, the whole process resets: new vaccinations, a brand-new FAVN test, and a fresh 180-day wait from scratch. As long as each booster is given before the prior one's labeled immunity period runs out, your original FAVN stays valid and you never need to retest — right up to that 2-year outer limit.",
+      "showIf": { "field": "originCountry", "isDesignated": false },
+      "computedDate": "favnValidityEnd"
+    },
+    {
+      "id": "favn-redraw-buffer",
+      "category": "testing",
+      "title": "If your trip might slip past the 2-year FAVN window, plan a redraw with a small buffer",
+      "body": "If there's a real chance your travel date could land after your FAVN's 2-year validity ends, plan a redraw well ahead. A missed FAVN window is a 'soft' failure — you just wait out a new 180-day clock, and the delay is roughly however many days late you were, not a full reset. Because it's a soft failure, a modest buffer (around a week before your true no-gap deadline) is enough. Your true no-gap deadline is your FAVN's 2-year expiry minus 180 days.",
+      "showIf": { "field": "favnDone", "equals": "yes" },
+      "computedDate": "favnRedrawDeadline"
+    },
+    {
+      "id": "booster-buffer",
+      "category": "testing",
+      "title": "Set a booster reminder well before your vaccine's labeled expiry",
+      "body": "Missing a booster is a 'hard' failure — it resets the entire process (new vaccination series, new FAVN, new 180-day wait: 6+ months blocked). Because the consequence is so much worse than a late FAVN redraw, give yourself a generous buffer before the labeled immunity period ends — several weeks at minimum. Put a real calendar reminder on this; don't rely on remembering.",
+      "showIf": { "field": "lastRabiesDate", "exists": true },
+      "computedDate": "boosterBufferDate"
+    },
+    {
+      "id": "designated-microchip",
+      "category": "foundations",
+      "title": "Implant an ISO-compliant microchip",
+      "body": "Even on the simplified designated-region path, your dog needs an ISO 11784/11785-compliant 15-digit microchip. Chips starting with '900 202' are currently rejected.",
+      "showIf": [ { "field": "originCountry", "isDesignated": true }, { "field": "microchipDone", "in": ["no", "unsure"] } ]
+    },
+    {
+      "id": "designated-residency",
+      "category": "foundations",
+      "title": "Confirm your dog meets the residency requirement for a designated region",
+      "body": "To use the simplified path, your dog must meet one of: continuous residence in a designated region since birth, at least 180 days of continuous residence there before export, or continuous residence since being directly imported from Japan. If your dog has traveled through non-designated countries recently, check carefully whether this breaks continuous residency.",
+      "showIf": { "field": "originCountry", "isDesignated": true }
+    },
+    {
+      "id": "designated-verify",
+      "category": "testing",
+      "title": "Double-check your country's current designated-region status directly with MAFF",
+      "body": "Japan's list of designated (simplified-path) regions is short and can change. Before you rely on the simplified process, confirm your country is still on the current official list rather than trusting this app alone.",
+      "showIf": { "field": "originCountry", "isDesignated": true }
+    },
+    {
+      "id": "form-ac",
+      "category": "paperwork",
+      "title": "Complete Japan's official Form AC — don't rely on a generic export certificate alone",
+      "body": "Many countries have their own generic 'international health certificate' template, but Japan requires its own specific document, Form AC, which covers your dog's ID and microchip, your (the traveler's) and the receiving contact's details in Japan, full vaccination history, the FAVN result, and a clinical exam confirmation. A generic certificate is usually not a substitute — check whether your country's export authority wants Form AC alone or paired with a generic certificate as a cover document.",
+      "countryNote": true
+    },
+    {
+      "id": "gov-endorsement",
+      "category": "paperwork",
+      "title": "Get Form AC endorsed by your country's official government veterinary authority",
+      "body": "After your treating vet completes and signs Form AC, it typically needs to be endorsed by your country's official government veterinary export authority (for example, CFIA in Canada, APHIS in the United States, or your national equivalent) — usually for a fee, and often needing to be booked in advance.",
+      "countryNote": true
+    },
+    {
+      "id": "advance-notification",
+      "category": "paperwork",
+      "title": "Submit advance notification to Japan's Animal Quarantine Service — at least 40 days before arrival",
+      "body": "This is one of the most commonly missed steps because it happens well before travel and isn't part of the vet paperwork. You (or your agent) must notify the Animal Quarantine Service office at your expected Japanese port of entry, typically by email, at least 40 days before your dog's arrival. Do this even if your other paperwork isn't finalized yet — it's based on your planned itinerary.",
+      "computedDate": "advanceNotificationDeadline"
+    },
+    {
+      "id": "pre-export-exam",
+      "category": "paperwork",
+      "title": "Book the pre-export clinical exam — within 10 days of departure",
+      "body": "A vet (or official government vet) must examine your dog within 10 days before boarding, confirming the microchip reads correctly and there are no clinical signs of rabies (or leptospirosis, for dogs). This exam result gets recorded on Form AC, so it needs to happen close to your actual travel date, not earlier.",
+      "showIf": null,
+      "computedDate": "preExportExamWindow"
+    },
+    {
+      "id": "fit-to-fly",
+      "category": "health",
+      "title": "Get a fitness-to-fly assessment from your vet",
+      "body": "Given what you told us about your dog's health, it's worth having an honest conversation with your vet well before booking flights — not just for paperwork, but for your dog's safety. Heart conditions (like valve disease or a murmur), flat-faced breeds, senior age, and mobility issues can all affect how well a dog tolerates a long flight, cabin vs. cargo placement, and whether an airline will even accept them. Ask specifically: is this dog fit to fly this route, and is there anything (medication timing, cabin vs. cargo, a direct routing) that would make it safer?",
+      "showIf": { "field": "healthConditions", "excludesOnly": "none" }
+    },
+    {
+      "id": "transit-rules",
+      "category": "logistics",
+      "title": "Check the separate pet rules for any country you'll pass through",
+      "body": "A layover or even a brief overland stop in another country before Japan can trigger that country's own separate pet entry or transit requirements — these are not automatically covered by your Japan paperwork. Check directly with that country's relevant authority, even for a same-day or overnight stop.",
+      "showIf": { "field": "hasTransit", "in": ["yes", "unsure"] }
+    },
+    {
+      "id": "crate-airline",
+      "category": "logistics",
+      "title": "Book an IATA-compliant crate and confirm your airline's pet policy",
+      "body": "Make sure your crate meets IATA Live Animals Regulations sizing (your dog should be able to stand, turn around, and lie down naturally). Confirm with your airline: cabin vs. cargo eligibility, any breed restrictions (many airlines restrict flat-faced breeds from cargo), temperature embargo policies, and whether they require a direct/nonstop routing.",
+      "showIf": null
+    },
+    {
+      "id": "originals-not-copies",
+      "category": "logistics",
+      "title": "Travel with original documents, not photocopies",
+      "body": "Bring the original FAVN lab report, original Form AC, and original vaccination certificates — not copies. Keep them together in a single folder you can access quickly at check-in and on arrival.",
+      "showIf": null
+    },
+    {
+      "id": "arrival-aqs",
+      "category": "arrival",
+      "title": "Present your dog and documents at Animal Quarantine on arrival",
+      "body": "On arrival in Japan, you'll go through the Animal Quarantine Service counter before regular customs. If your advance notification was filed correctly and your documents are complete and consistent, inspection is typically quick. If documents are missing, inconsistent, or requirements weren't met, your dog can be held in quarantine for up to 180 days — which is exactly why getting the paperwork right in advance matters so much.",
+      "showIf": null
+    }
+  ],
+  "countryDetails": {
+    "default": {
+      "form-ac": "Check with your country's national veterinary/export authority for how Form AC is submitted and whether it's paired with a generic export certificate.",
+      "gov-endorsement": "Search for your country's official animal export authority (often part of the agriculture or food safety ministry) to find their Form AC endorsement process and fees."
+    },
+    "CA": {
+      "form-ac": "In Canada, your treating vet completes Form AC directly — the CFIA's generic 'Canadian International Health Certificate' template is not a substitute and shouldn't be used instead of Form AC for Japan.",
+      "gov-endorsement": "In Canada, CFIA (Canadian Food Inspection Agency) endorses Form AC through the same official-vet endorsement process used for other export certificates — there's a fee, and it's worth confirming with CFIA or a pet relocation broker whether they want Form AC on its own or accompanied by the generic CFIA certificate as a cover document."
+    }
+  },
+  "caseStudy": {
+    "country": "CA",
+    "title": "A real example: a Papillon named Miso, Canada → Japan",
+    "summary": "One Canadian family did the microchip, first rabies vaccination, and FAVN blood draw all in a single vet visit — which is allowed, as long as the order is right (chip, then vaccine, same day is fine). Their vet also raised a couple of concerns worth knowing about in advance: whether 'blue ink' signatures were required (they aren't, for the FAVN report — that's a myth that gets conflated with other countries' export certificate conventions), and which of two dates on the vaccination certificate mattered (the labeled 'due on'/next-booster date is what governs continuous coverage — a separate 'expiration' date on the same certificate turned out to be the vaccine vial's own shelf-life, not the dog's immunity window; they confirmed this in writing with their vet rather than guessing). They also built in two different-sized safety buffers: about a week of buffer before their FAVN's true no-gap redraw deadline (a soft failure — late just means a short wait), and about six weeks of buffer before their rabies booster's labeled expiry (a hard failure — missing it resets everything). That asymmetric buffering — thin buffer on soft failures, fat buffer on hard failures — is the single biggest planning lesson from their experience."
+  },
+  "glossary": [
+    { "term": "FAVN", "definition": "Fluorescent Antibody Virus Neutralization test — the specific blood test Japan requires to measure your dog's rabies antibody level (titer) after vaccination. RFFIT is an accepted alternative test method." },
+    { "term": "Titer", "definition": "The measured level of rabies antibodies in your dog's blood. Japan requires a result of 0.5 IU/mL or higher." },
+    { "term": "Designated laboratory", "definition": "A laboratory Japan has specifically approved to run the FAVN/RFFIT test for import purposes — not every vet lab qualifies, so ask your vet which designated lab they use." },
+    { "term": "ISO microchip", "definition": "A microchip meeting the ISO 11784/11785 standard, producing a 15-digit numeric code. Japan requires this exact standard, implanted before your dog's rabies vaccination series begins." },
+    { "term": "MAFF", "definition": "Japan's Ministry of Agriculture, Forestry and Fisheries — the government body that publishes the official animal import rules and runs the Animal Quarantine Service." },
+    { "term": "AQS", "definition": "Animal Quarantine Service — the Japanese government office that reviews your paperwork, both in advance (the 40-day notification) and in person at the airport on arrival." },
+    { "term": "Form AC", "definition": "Japan's official, mandatory health certificate form for importing dogs and cats. It is not the same as a generic export health certificate your home country may otherwise use for other destinations." },
+    { "term": "Designated region", "definition": "A short list of countries/regions (currently including Iceland, Australia, New Zealand, Fiji, Hawaii, and Guam) that Japan treats as rabies-free, allowing a simplified import process without a FAVN test. Most countries are NOT on this list." },
+    { "term": "Non-designated region", "definition": "Any country not on Japan's designated (rabies-free) list — this covers the large majority of countries, including Canada, the US mainland, the UK, and most of the EU. This is the full FAVN-based process this app focuses on." },
+    { "term": "Government veterinary authority", "definition": "Your country's official body that endorses export health certificates on behalf of the government — for example CFIA in Canada or APHIS in the United States. This is a separate, later step from your regular vet completing the paperwork." }
+  ],
+  "faqGroups": [
+    {
+      "id": "deadlines",
+      "title": "Understanding your deadlines (read this one first)",
+      "intro": "This is the part people get tripped up on. There are two clocks running at once — your FAVN blood test and your rabies vaccine's protection period — and missing one costs you days, while missing the other costs you months. Here's the whole thing, broken down step by step with a worked example.",
+      "items": [
+        {
+          "q": "How does the FAVN blood test's timing actually work?",
+          "a": "Two numbers matter, and both are counted from the date of the blood draw: 180 days and 2 years. The 180 days is a mandatory minimum wait — you cannot bring your dog into Japan until at least 180 days have passed since the blood was drawn, no exceptions and no way to speed it up. The 2 years is the outer shelf life of that one test result — after 2 years from the draw date, Japan won't accept it anymore, period (as long as your dog's rabies vaccine coverage stayed continuous the whole time — more on that below). So with a single FAVN test, your usable travel window runs from 180 days after the draw through 2 years after the draw. Example: blood drawn January 1, 2026 → you could travel any time from about June 30, 2026 through January 1, 2028, using that same test, no retesting needed in between."
+        },
+        {
+          "q": "What if my trip might happen after that 2-year window closes?",
+          "a": "Do a second FAVN test — a 'redraw' — before the first one expires, so a new 180-day-to-2-year window picks up right where the old one ends, with no gap in between. The timing rule: draw the new blood sample at least 180 days before your original test's 2-year mark. Why 180 days specifically? Because the new test needs to serve its own 180-day wait, and you want that wait to finish before the old test dies — otherwise there's a stretch where neither test is currently usable and you simply couldn't travel. Worked example: first FAVN drawn January 1, 2026 → its 2-year limit is January 1, 2028. Counting back 180 days from that gives roughly July 5, 2027 — that's your true 'no-gap' deadline to get the redraw done. (PawPort's checklist actually suggests getting it done about a week before that date, for the reason in the next question.)"
+        },
+        {
+          "q": "Why does PawPort suggest only a small buffer (about a week) before the FAVN redraw deadline?",
+          "a": "Because missing that deadline by a few days is what we call a 'soft failure' — annoying, but not disastrous. If you draw the new blood sample a little later than planned, you simply wait out a new 180-day clock starting from whenever you actually drew it, and your trip slips by roughly as many days as you were late. Nothing needs to be redone — no re-vaccinating, no starting over. Since a small miss here only costs a small, predictable delay, a small buffer (about a week) is plenty. It exists mainly to protect against forgetting, not against catastrophe."
+        },
+        {
+          "q": "What's the deadline on the rabies vaccine, and why is that buffer so much bigger (a month or more)?",
+          "a": "This is the one to genuinely watch. Your dog's rabies vaccine has a labeled protection period printed on the vaccination certificate (commonly 1 or 3 years). As long as every booster is given before the previous one's protection period runs out, coverage counts as continuous — and your original FAVN result stays valid for its full 2-year life. But if that coverage lapses even briefly (a booster given even a day after the old one's protection technically ran out), Japan no longer accepts your existing FAVN result at all, regardless of how much of its 2-year window was left. This is the 'reset trap': you'd have to start completely over — a new vaccination series, a brand-new FAVN blood draw, and a fresh 180-day wait — six-plus months, from zero. Because the downside is so much bigger than a late FAVN redraw, PawPort suggests a much larger safety buffer here (several weeks, scaled to your vaccine's labeled duration) — enough room that a delayed vet appointment doesn't turn into a six-month setback."
+        },
+        {
+          "q": "So what's the simple rule for how big a buffer should be?",
+          "a": "Size the buffer to match the cost of being late. If missing a deadline just costs a short, predictable delay — a 'soft' failure, like the FAVN redraw — a small buffer is plenty. If missing a deadline resets the whole process and costs you months — a 'hard' failure, like a lapsed rabies booster — build in a much bigger buffer, and put an actual reminder on your calendar rather than trusting yourself to remember."
+        }
+      ]
+    },
+    {
+      "id": "paperwork",
+      "title": "Paperwork myths & mix-ups",
+      "items": [
+        { "q": "Does the FAVN report need to be signed in blue ink?", "a": "No. This is a myth that seems to come from general export-certificate conventions in some countries (where contrasting ink helps distinguish an original from a photocopy). Japan's official guidance does not specify a signature ink color for the FAVN report — it does prohibit pencil, erasable pen, and correction fluid/tape, but any pen color satisfies the signature requirement." },
+        { "q": "Can I use my country's generic export health certificate instead of Form AC?", "a": "Generally no. Most countries' generic 'international health certificate' templates explicitly say not to use them when the destination country supplies its own required form — and Japan does: Form AC. Your vet completes Form AC directly; the generic certificate isn't a substitute, though your export authority may still want it as an accompanying cover document — confirm this locally." }
+      ]
+    },
+    {
+      "id": "health-logistics",
+      "title": "Health & travel logistics",
+      "items": [
+        { "q": "My dog has a heart condition (or is a flat-faced breed / senior / has mobility issues) — does that change the Japan paperwork?", "a": "Not the Japan import paperwork itself — but it absolutely matters for whether and how your dog should fly. Talk to your vet early about a fitness-to-fly assessment, and check your airline's own policies, since many restrict certain breeds or conditions from cargo or require extra documentation." },
+        { "q": "We have a brief layover or overnight stop in another country before Japan — does that need separate paperwork?", "a": "Possibly, yes. Even a same-day or overnight stop in a third country can trigger that country's own pet entry/transit rules, separate from anything Japan requires. Check directly with that country's relevant authority rather than assuming your Japan paperwork covers it." }
+      ]
+    },
+    {
+      "id": "arrival",
+      "title": "At the airport",
+      "items": [
+        { "q": "What actually happens at the airport if something's wrong with our paperwork?", "a": "Japan's Animal Quarantine Service reviews your documents on arrival. If everything was filed correctly in advance (including the 40-day notification) and matches up, this is usually quick. If something is missing, inconsistent, or a requirement wasn't met, your dog can be held in quarantine — potentially for as long as 180 days. Getting the paperwork right in advance is worth the effort." }
+      ]
+    }
+  ]
+}
