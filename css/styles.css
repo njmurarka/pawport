@@ -195,6 +195,7 @@ main#app.route-enter { animation: routeFadeIn 0.35s ease both; }
   align-items: center;
   justify-content: space-between;
   height: 68px;
+  max-width: 1180px; /* wider than the 900px body-content .wrap it also uses — room for the theme toggle without crowding the nav */
 }
 .header-right {
   display: flex;
@@ -299,13 +300,18 @@ main#app.route-enter { animation: routeFadeIn 0.35s ease both; }
 }
 .theme-toggle:hover { border-color: var(--color-primary); transform: translateY(-1px); box-shadow: var(--shadow-sm); }
 .theme-toggle:active { transform: translateY(0); }
+.theme-toggle:focus-visible { outline: 3px solid var(--color-primary); outline-offset: 2px; }
 .theme-toggle-icon { font-size: 1.15rem; }
-@media (max-width: 560px) {
+/* Icon-only through the whole "nav still inline but not spacious" range
+   (roughly 721-1080px real-world windows) — the text label only has
+   room once the header is genuinely wide. Icon + tooltip + aria-label
+   stays clear on its own; sun/moon is a well-understood affordance. */
+@media (max-width: 1080px) {
   .theme-toggle { width: 44px; padding: 0; }
   .theme-toggle-label { display: none; }
 }
 
-@media (max-width: 720px) {
+@media (max-width: 900px) {
   .nav-toggle { display: flex; }
   .site-nav {
     position: absolute;
