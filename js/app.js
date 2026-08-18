@@ -933,40 +933,52 @@
   }
 
   /* ================= build/publish stamp =================
-     There's no build step for this site, so instead of a manually
-     maintained (and quickly stale) timestamp, ask GitHub directly for
-     the latest commit on main and derive both the published time and
-     the commit hash from that — always accurate, nothing to remember
-     to update. Fails silently (footer just omits the stamp) if the
-     API is unreachable, e.g. offline or rate-limited. */
-  function loadBuildInfo() {
+     There's no build step for this site, so this asks GitHub directly
+     for the latest commit on main and derives both the published time
+     and the commit hash from that — always accurate when it works,
+     nothing to remember to update. BUT GitHub's unauthenticated API is
+     capped at 60 requests/hour per IP, and that's shared across
+     whatever NAT/proxy pool a visitor's traffic happens to sit behind
+     — real visitors can and do land on an already-exhausted IP, and a
+     silent failure there left the footer showing a bare "—" once.
+     So: try the live fetch first for accuracy, but always fall back
+     to the values baked into checklist-data.json (fallbackCommitHash /
+     fallbackPublishedAt — bump these by hand alongside each deploy,
+     same as the ?v= cache-bust numbers) so a real visitor never sees
+     an empty stamp, just a very slightly stale one in the rare case
+     the live fetch fails. */
+  function renderBuildInfo(sha, isoDate) {
     var publishedEl = document.getElementById('publishedAt');
     var hashLink = document.getElementById('buildHashLink');
+    if (publishedEl && isoDate) {
+      var d = new Date(isoDate);
+      if (!isNaN(d.getTime())) {
+        var tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+        publishedEl.textContent = d.toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' }) + ' (' + tz + ')';
+      }
+    }
+    if (hashLink && sha) {
+      hashLink.textContent = sha.slice(0, 7);
+      hashLink.href = 'https://github.com/njmurarka/pawport/commit/' + sha;
+    }
+  }
+  function loadBuildInfo() {
+    if (DATA) renderBuildInfo(DATA.fallbackCommitHash, DATA.fallbackPublishedAt);
     fetch('https://api.github.com/repos/njmurarka/pawport/commits/main')
       .then(function (r) { return r.ok ? r.json() : null; })
       .then(function (data) {
         if (!data || !data.sha) return;
         var commitDate = data.commit && data.commit.committer && data.commit.committer.date;
-        if (publishedEl && commitDate) {
-          var d = new Date(commitDate);
-          if (!isNaN(d.getTime())) {
-            var tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
-            publishedEl.textContent = d.toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' }) + ' (' + tz + ')';
-          }
-        }
-        if (hashLink) {
-          hashLink.textContent = data.sha.slice(0, 7);
-          hashLink.href = 'https://github.com/njmurarka/pawport/commit/' + data.sha;
-        }
+        renderBuildInfo(data.sha, commitDate);
       })
-      .catch(function () { /* offline or rate-limited — leave the placeholder as-is */ });
+      .catch(function () { /* offline or rate-limited — the fallback stamp set above stands */ });
   }
 
   /* ================= init ================= */
   function init() {
     // ?v= bumped by hand alongside checklist-data.json edits, same
     // reasoning as the ?v= on the css/js tags in index.html.
-    fetch('data/checklist-data.json?v=2')
+    fetch('data/checklist-data.json?v=3')
       .then(function (r) { return r.json(); })
       .then(function (data) {
         DATA = data;

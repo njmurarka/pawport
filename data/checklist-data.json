@@ -7,6 +7,8 @@
     { "label": "MAFF: Import and export quarantine of dogs and cats (index)", "url": "https://www.maff.go.jp/aqs/english/animal/dog/index.html" }
   ],
   "lastVerified": "2026-08-18",
+  "fallbackCommitHash": "57eed88a2d88d119c09861215f6d0926ae9fd05d",
+  "fallbackPublishedAt": "2026-08-18T03:47:46-07:00",
   "countries": [
     { "code": "CA", "name": "Canada", "designated": false, "richDetail": true },
     { "code": "US", "name": "United States (mainland)", "designated": false },
