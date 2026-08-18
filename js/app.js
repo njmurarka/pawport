@@ -70,20 +70,23 @@
   function todayDateOnly() { var d = new Date(); d.setHours(0, 0, 0, 0); return d; }
 
   /* ================= effective answers =================
-     Japan only counts a rabies vaccination (and everything downstream —
-     titer test, FAVN) if it happened after the microchip was implanted.
-     If the dog doesn't have a chip yet (or the owner isn't sure), any
-     rabiesDoses/favnDone/dates the wizard collected for a *previous*
-     microchipDone answer are stale and must not drive the checklist —
-     treat the vaccination chain as not-yet-started instead of asking a
-     nonsensical "how many since the chip" question in that case. Same
-     idea applies going back and forth on ANY earlier answer in this
-     chain — a designated-region switch, a microchip answer, or even
-     dialing rabiesDoses back down — so this normalizes the whole
-     dependency chain (country designation -> microchip -> rabies dose
-     count -> FAVN), not just the microchip step, and does it from
-     current raw answers every time rather than trusting whatever was
-     stored while an earlier step had a different answer. */
+     Going back and changing any earlier answer must be reflected
+     everywhere downstream — the wizard's own showIf already makes it
+     re-ask the right questions going forward, but anything the user
+     answered BEFORE the change stays in storage untouched, and the
+     results/checklist page reads that storage directly. So for every
+     wizard field whose showIf depends on another field, we mirror
+     that exact same condition here and null the answer out if it no
+     longer holds — using the ALREADY-normalized eff values (not the
+     raw stored ones) so the nulling cascades correctly however many
+     links deep the chain goes:
+       rabiesDoses      <- originCountry (designated) + microchipDone
+       lastRabiesDate   <- rabiesDoses
+       rabiesDuration   <- rabiesDoses
+       favnDone         <- originCountry (designated) + microchipDone + rabiesDoses
+       favnDate         <- favnDone
+       travelDate       <- travelDateKnown
+     Add a line here for any new conditional wizard question. */
   function getEffectiveAnswers(answers) {
     var eff = {};
     for (var k in answers) { if (Object.prototype.hasOwnProperty.call(answers, k)) eff[k] = answers[k]; }
@@ -92,6 +95,8 @@
 
     if (designated || eff.microchipDone !== 'yes') {
       eff.rabiesDoses = designated ? undefined : '0';
+    }
+    if (eff.rabiesDoses !== '1' && eff.rabiesDoses !== '2+') {
       eff.lastRabiesDate = undefined;
       eff.rabiesDuration = undefined;
     }
@@ -99,7 +104,12 @@
     // series, so it can't have happened unless rabiesDoses is '2+'.
     if (designated || eff.rabiesDoses !== '2+') {
       eff.favnDone = designated ? undefined : 'no';
+    }
+    if (eff.favnDone !== 'yes') {
       eff.favnDate = undefined;
+    }
+    if (eff.travelDateKnown !== 'yes') {
+      eff.travelDate = undefined;
     }
     return eff;
   }
