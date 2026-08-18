@@ -100,6 +100,7 @@
       "id": "microchipDone",
       "type": "radio",
       "label": "Does your dog already have an ISO-compliant (15-digit) microchip?",
+      "help": "Answer ‘Not sure’ if you don’t know for certain — Japan only counts rabies vaccinations given after the chip, so we’ll treat those as not-yet-started until you confirm the order with your vet.",
       "options": [
         { "value": "yes", "label": "Yes" },
         { "value": "no", "label": "No, not yet" },
@@ -119,7 +120,7 @@
         { "value": "unsure", "label": "Not sure" }
       ],
       "required": true,
-      "showIf": { "field": "originCountry", "isDesignated": false }
+      "showIf": [ { "field": "originCountry", "isDesignated": false }, { "field": "microchipDone", "equals": "yes" } ]
     },
     {
       "id": "lastRabiesDate",
@@ -150,7 +151,7 @@
         { "value": "unsure", "label": "Not sure" }
       ],
       "required": true,
-      "showIf": { "field": "originCountry", "isDesignated": false }
+      "showIf": [ { "field": "originCountry", "isDesignated": false }, { "field": "microchipDone", "equals": "yes" } ]
     },
     {
       "id": "favnDate",

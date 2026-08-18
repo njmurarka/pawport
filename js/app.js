@@ -33,6 +33,29 @@
     if (!d) return '';
     return d.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
   }
+  function daysBetween(a, b) { return Math.round((b - a) / 86400000); }
+  function todayDateOnly() { var d = new Date(); d.setHours(0, 0, 0, 0); return d; }
+
+  /* ================= effective answers =================
+     Japan only counts a rabies vaccination (and everything downstream —
+     titer test, FAVN) if it happened after the microchip was implanted.
+     If the dog doesn't have a chip yet (or the owner isn't sure), any
+     rabiesDoses/favnDone/dates the wizard collected for a *previous*
+     microchipDone answer are stale and must not drive the checklist —
+     treat the vaccination chain as not-yet-started instead of asking a
+     nonsensical "how many since the chip" question in that case. */
+  function getEffectiveAnswers(answers) {
+    var eff = {};
+    for (var k in answers) { if (Object.prototype.hasOwnProperty.call(answers, k)) eff[k] = answers[k]; }
+    if (eff.microchipDone !== 'yes') {
+      eff.rabiesDoses = '0';
+      eff.favnDone = 'no';
+      eff.lastRabiesDate = undefined;
+      eff.rabiesDuration = undefined;
+      eff.favnDate = undefined;
+    }
+    return eff;
+  }
 
   function computeAllDates(answers) {
     var out = {};
@@ -72,6 +95,89 @@
       };
     }
     return out;
+  }
+
+  /* ================= feasibility checks =================
+     The checklist below is honest about what's required, but a wizard
+     that just lists items can still let someone walk away thinking
+     "OK, I have a plan" when their stated travel date is flatly
+     impossible under Japan's rules (e.g. no FAVN done yet, flying in a
+     week). This surfaces those as unmissable alerts, not just another
+     checklist row. Uses effective answers (eff), so a stale/never-asked
+     rabiesDoses or favnDone can't hide a real problem. */
+  function computeEarliestFavnDrawDate(eff, today) {
+    var lastRabies = parseDate(eff.lastRabiesDate);
+    var rd = eff.rabiesDoses;
+    if (rd === '2+') return today; // best case: draw can happen right away
+    if (rd === '1') {
+      var secondEarliest = addDays(lastRabies || today, 30);
+      return secondEarliest > today ? secondEarliest : today;
+    }
+    // '0', 'unsure', or not started (no microchip yet): best case is
+    // first dose today, second dose in 30 days, draw the same day.
+    return addDays(today, 30);
+  }
+
+  function computeFeasibilityAlerts(eff, dates, country, today) {
+    var alerts = [];
+    var travelDate = parseDate(eff.travelDate);
+    var nonDesignated = !!(country && !country.designated);
+
+    if (nonDesignated) {
+      var earliestTravel = null, basisNote = '';
+      if (eff.favnDone === 'yes') {
+        if (dates.favn180) { earliestTravel = dates.favn180.value; basisNote = 'from your FAVN blood draw date'; }
+      } else {
+        var earliestDraw = computeEarliestFavnDrawDate(eff, today);
+        earliestTravel = addDays(earliestDraw, 180);
+        basisNote = 'in the best case, assuming every remaining vet step happens with no delay';
+      }
+
+      if (earliestTravel && travelDate && travelDate < earliestTravel) {
+        alerts.push({
+          level: 'blocker',
+          title: 'Your target travel date is not achievable',
+          detail: 'Japan requires a mandatory 180-day wait after the FAVN blood draw, with no exceptions. Based on your answers, the earliest your dog could legally enter Japan is ' + fmtDate(earliestTravel) + ' (' + basisNote + ') — ' + daysBetween(travelDate, earliestTravel) + ' day(s) after your stated travel date of ' + fmtDate(travelDate) + '. Your dog cannot travel with you on this date — you need to push your trip back.'
+        });
+      }
+
+      if (eff.favnDone === 'yes' && dates.favnValidityEnd && travelDate && travelDate > dates.favnValidityEnd.value) {
+        alerts.push({
+          level: 'blocker',
+          title: 'Your FAVN result will have expired before your travel date',
+          detail: 'Your FAVN is only valid for 2 years from the blood draw, until ' + fmtDate(dates.favnValidityEnd.value) + '. Your stated travel date of ' + fmtDate(travelDate) + ' is after that. You need a new blood draw — and a fresh 180-day wait — before you can travel.'
+        });
+      }
+
+      var lastRabies = parseDate(eff.lastRabiesDate);
+      var years = eff.rabiesDuration === '1yr' ? 1 : (eff.rabiesDuration === '3yr' ? 3 : null);
+      if (lastRabies && years) {
+        var dueDate = addYears(lastRabies, years);
+        if (dueDate < today) {
+          alerts.push({
+            level: 'blocker',
+            title: 'Your rabies vaccine coverage has already lapsed',
+            detail: 'Your last rabies vaccination’s labeled immunity period ended ' + fmtDate(dueDate) + '. A lapse invalidates your FAVN result entirely — Japan will require a brand-new vaccination series, a new FAVN blood draw, and a fresh 180-day wait from scratch.'
+          });
+        } else if (travelDate && dueDate < travelDate) {
+          alerts.push({
+            level: 'blocker',
+            title: 'Your rabies vaccine coverage will lapse before your travel date',
+            detail: 'Your current vaccination’s labeled immunity runs out ' + fmtDate(dueDate) + ', which is before your stated travel date of ' + fmtDate(travelDate) + '. You must get a booster before that date to keep your FAVN result valid — missing it resets the whole process.'
+          });
+        }
+      }
+    }
+
+    if (dates.advanceNotificationDeadline && today > dates.advanceNotificationDeadline.value) {
+      alerts.push({
+        level: 'urgent',
+        title: 'You are past the 40-day advance-notification deadline',
+        detail: 'Japan’s Animal Quarantine Service requires advance notification at least 40 days before arrival. Based on your travel date, that deadline was ' + fmtDate(dates.advanceNotificationDeadline.value) + '. Contact the AQS office at your port of entry immediately if you haven’t already notified them — being this late risks delays or denial at arrival.'
+      });
+    }
+
+    return alerts;
   }
 
   /* ================= condition matching ================= */
@@ -617,14 +723,28 @@
 
     var country = countriesByCode[answers.originCountry] || { name: 'your country', designated: false };
     var checked = loadChecked();
-    var dates = computeAllDates(answers);
-    var visibleItems = DATA.checklistItems.filter(function (item) { return matches(item.showIf, answers); });
+    var eff = getEffectiveAnswers(answers);
+    var dates = computeAllDates(eff);
+    var visibleItems = DATA.checklistItems.filter(function (item) { return matches(item.showIf, eff); });
+    var alerts = computeFeasibilityAlerts(eff, dates, country, todayDateOnly());
 
     var doneCount = visibleItems.filter(function (item) { return checked[item.id]; }).length;
     var totalCount = visibleItems.length;
     var pct = totalCount ? Math.round((doneCount / totalCount) * 100) : 0;
 
     var dogLabel = answers.dogName ? escapeHtml(answers.dogName) + '’s' : 'Your';
+
+    if (alerts.length) {
+      var alertsHtml = alerts.map(function (a) {
+        var icon = a.level === 'blocker' ? '🚫' : '⚠️';
+        return '<div class="feasibility-alert level-' + a.level + '">' +
+          '<div class="feasibility-alert-icon">' + icon + '</div>' +
+          '<div><div class="feasibility-alert-title">' + escapeHtml(a.title) + '</div>' +
+          '<div class="feasibility-alert-body">' + escapeHtml(a.detail) + '</div></div>' +
+        '</div>';
+      }).join('');
+      app.appendChild(el('<div class="feasibility-banner">' + alertsHtml + '</div>'));
+    }
 
     var header = el(
       '<div class="results-header">' +

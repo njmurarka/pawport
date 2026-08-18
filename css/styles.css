@@ -473,6 +473,36 @@ label.field-label { font-weight: 600; display: block; margin-bottom: 8px; }
 }
 .date-callout .value { font-size: 1.1rem; }
 
+.feasibility-banner {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-bottom: 24px;
+}
+.feasibility-alert {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  border-radius: var(--radius);
+  padding: 20px 22px;
+  box-shadow: var(--shadow);
+}
+.feasibility-alert-icon { font-size: 1.7rem; line-height: 1.1; }
+.feasibility-alert-title { font-weight: 800; font-size: 1.08rem; margin-bottom: 4px; }
+.feasibility-alert-body { font-size: 0.95rem; line-height: 1.55; }
+.feasibility-alert.level-blocker {
+  background: #fdecea;
+  border: 2px solid var(--color-danger);
+  color: #7a1913;
+}
+.feasibility-alert.level-blocker .feasibility-alert-title { color: var(--color-danger); }
+.feasibility-alert.level-urgent {
+  background: var(--color-warn-light);
+  border: 2px solid var(--color-warn);
+  color: #6b4610;
+}
+.feasibility-alert.level-urgent .feasibility-alert-title { color: var(--color-warn); }
+
 .category-block { margin-bottom: 32px; }
 .category-title {
   display: flex;
