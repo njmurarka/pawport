@@ -69,29 +69,41 @@ async function run() {
       }
     }
 
-    // ---------- Gradient heading text hugs its own width (not the full container) ----------
-    // Regression for a real bug: the results-page h1 used the gradient's
-    // CSS box for background-clip:text, but as a block element that box
-    // was the full wide container, not the (centered, shorter) rendered
-    // text. Short headings like "Your checklist for Japan" only ever
-    // sampled a middle slice of the gradient, missing the vivid teal
-    // endpoint entirely and landing in the muddy orange<->teal transition
-    // zone for the LAST word -- exactly the word a reader's eye lands on.
+    // ---------- Heading "Japan" accent is a solid color, not a gradient sweep ----------
+    // Regression for a real bug (twice): background-clip:text gradients
+    // swept across arbitrary heading text put whichever word landed near
+    // the gradient's midpoint into the muddy, desaturated RGB-interpolation
+    // zone between orange and teal -- and that word was reliably "Japan"
+    // (short results heading) or landed near it (longer hero heading),
+    // rendering as dull khaki instead of a color. No amount of gradient-stop
+    // tuning reliably fixes this for arbitrary text/viewport/wrapping, so
+    // "Japan" now gets its own solid .accent-word color instead -- solid
+    // colors can't blend into mud. Check both headings, both themes.
     {
-      const page = await browser.newPage();
-      await setAnswers(page, {
-        originCountry: 'DE', healthConditions: ['none'], microchipDone: 'yes', rabiesDoses: '2+',
-        favnDone: 'no', travelDateKnown: 'no', hasTransit: 'no',
-      });
-      await goToResults(page);
-      const h1Box = await page.locator('.results-header h1').boundingBox();
-      const containerBox = await page.locator('.results-header').boundingBox();
-      check(
-        "Results heading's gradient box hugs its own text width, not the full container",
-        h1Box.width < containerBox.width * 0.85,
-        'h1 width=' + h1Box.width + ' container width=' + containerBox.width
-      );
-      await page.close();
+      for (const theme of ['light', 'dark']) {
+        const context = theme === 'dark'
+          ? await (async () => { const c = await browser.newContext(); await c.addCookies([{ name: 'pawport_theme', value: 'dark', domain: 'localhost', path: '/' }]); return c; })()
+          : await browser.newContext();
+        const page = await context.newPage();
+
+        await page.goto(BASE + '/index.html#/home');
+        let accent = await page.locator('.hero h1 .accent-word').evaluate((el) => getComputedStyle(el).color);
+        let rest = await page.locator('.hero h1').evaluate((el) => getComputedStyle(el).color);
+        check(theme + ': home hero "Japan" is a distinct solid color from the rest of the heading', accent !== rest, 'accent=' + accent + ' rest=' + rest);
+        check(theme + ': home hero "Japan" color is fully opaque (solid, not a transparent gradient-clip)', !accent.includes('0, 0, 0, 0)') , 'accent=' + accent);
+
+        await setAnswers(page, {
+          originCountry: 'DE', healthConditions: ['none'], microchipDone: 'yes', rabiesDoses: '2+',
+          favnDone: 'no', travelDateKnown: 'no', hasTransit: 'no',
+        });
+        await goToResults(page);
+        accent = await page.locator('.results-header h1 .accent-word').evaluate((el) => getComputedStyle(el).color);
+        rest = await page.locator('.results-header h1').evaluate((el) => getComputedStyle(el).color);
+        check(theme + ': results heading "Japan" is a distinct solid color from the rest of the heading', accent !== rest, 'accent=' + accent + ' rest=' + rest);
+        check(theme + ': results heading "Japan" color is fully opaque (solid, not a transparent gradient-clip)', !accent.includes('0, 0, 0, 0)'), 'accent=' + accent);
+
+        await page.close();
+      }
     }
 
     // ---------- "Start over" button on every wizard question ----------

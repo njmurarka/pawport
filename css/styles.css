@@ -35,7 +35,6 @@
   --gradient-primary: linear-gradient(135deg, #ff9d5c 0%, #e2652c 55%, #c14e1c 100%);
   --gradient-primary-hover: linear-gradient(135deg, #ffab73 0%, #e2652c 55%, #b0480f 100%);
   --gradient-accent: linear-gradient(135deg, #34a99c 0%, #1f7a72 100%);
-  --gradient-hero-text: linear-gradient(120deg, #e2652c 0%, #c14e1c 45%, #1f7a72 100%);
 
   --radius: 18px;
   --radius-sm: 12px;
@@ -90,7 +89,6 @@
   --bg-decor-2: #2fae9d;
   --bg-decor-opacity: 0.22;
 
-  --gradient-hero-text: linear-gradient(120deg, #ff9a5c 0%, #ff7a3d 45%, #45c7b8 100%);
   --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4), 0 1px 2px rgba(0, 0, 0, 0.3);
   --shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
   --shadow-lg: 0 18px 46px rgba(0, 0, 0, 0.6);
@@ -342,20 +340,19 @@ main#app { padding: 36px 20px 64px; min-height: 60vh; }
 }
 .hero h1 {
   font-size: clamp(1.9rem, 5.5vw, 2.9rem);
-  background: var(--gradient-hero-text);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
+  /* Deliberately a SOLID color, not a gradient. A gradient swept across
+     arbitrary text (background-clip:text) is fundamentally fragile:
+     whichever word happens to land near the middle of an orange<->teal
+     gradient gets rendered in the muddy, desaturated RGB-interpolation
+     zone between them — and there's no reliable way to know in advance
+     which word that'll be once font loading, viewport width, and
+     wrapping are all in play. This bit real users twice. "Japan" gets
+     its own solid accent-word color instead (see .accent-word below) —
+     solid colors can't blend into mud. */
+  color: var(--color-primary-dark);
   padding-bottom: 4px;
-  /* display:inline-block makes the gradient's own box hug the actual
-     rendered text width instead of the full (block-level) container —
-     without this, center-aligned text only ever samples a middle slice
-     of the gradient and can miss both vivid endpoints entirely,
-     landing in the muddy orange<->teal transition zone (this is
-     exactly what happened to the word "Japan" in short headings). */
-  display: inline-block;
-  max-width: 100%;
 }
+.accent-word { color: var(--color-accent); }
 .hero p.lede {
   font-size: 1.18rem;
   color: var(--color-text-muted);
@@ -591,12 +588,8 @@ label.field-label { font-weight: 600; display: block; margin-bottom: 8px; }
   margin-bottom: 24px;
 }
 .results-header h1 {
-  background: var(--gradient-hero-text);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  display: inline-block; /* see .hero h1 comment — hugs actual text width so the gradient's endpoints land on the first/last characters, not lost in an oversized invisible box */
-  max-width: 100%;
+  /* Solid color, not a gradient — see .hero h1 for why. */
+  color: var(--color-primary-dark);
 }
 .designated-banner {
   background: var(--color-success-light);
@@ -907,5 +900,5 @@ details.faq-item p { margin-bottom: 0; }
   body { background: #fff; }
   .checklist-item input[type="checkbox"] { accent-color: #000; }
   a[href]:after { content: "" !important; }
-  .hero h1, .results-header h1 { -webkit-text-fill-color: initial; background: none; color: #000; }
+  .hero h1, .results-header h1, .accent-word { color: #000; }
 }
