@@ -65,6 +65,7 @@
       "type": "select",
       "label": "Which country are you starting from?",
       "help": "This determines whether you're on the full antibody-test path or the simplified path for a handful of rabies-free ‘designated regions.’",
+      "why": "Japan treats countries very differently depending on rabies status. A short list of ‘designated regions’ (currently Iceland, Australia, New Zealand, Fiji, Hawaii, and Guam) get a simplified path based on residency, with no FAVN blood test required. Every other country goes through the full process: microchip, two rabies vaccinations, a FAVN antibody test, and a mandatory 180-day wait. This one answer determines which of two completely different checklists you'll see, so it's worth double-checking before moving on.",
       "optionsFrom": "countries",
       "required": true
     },
@@ -73,6 +74,7 @@
       "type": "text",
       "label": "What's your dog's name?",
       "help": "Just so we can personalize your checklist. Totally optional.",
+      "why": "Purely cosmetic — it just lets your checklist say \"[Name]'s checklist\" instead of \"Your checklist.\" It has zero effect on any requirement, deadline, or document.",
       "placeholder": "e.g. Miso",
       "required": false
     },
@@ -81,6 +83,7 @@
       "type": "text",
       "label": "What breed is your dog?",
       "help": "Optional — helps us flag breed-specific flying considerations.",
+      "why": "Also cosmetic for the checklist header, but flat-faced (brachycephalic) breeds are worth naming because many airlines restrict or refuse them in cargo, and some effectively require a vet consultation before booking. This doesn't change any Japan-side paperwork requirement — that's covered by the health-conditions question next.",
       "placeholder": "e.g. Papillon",
       "required": false
     },
@@ -89,6 +92,7 @@
       "type": "checkboxGroup",
       "label": "Does your dog have any of the following?",
       "help": "This is about flying safely, not about your Japan paperwork — but it can affect timing and vet sign-off, so it's worth flagging up front.",
+      "why": "Japan's import rules don't care about your dog's health beyond a basic pre-export clinical exam. This question exists for your dog's safety on the flight itself: heart conditions, flat faces, senior age, and mobility issues can all affect whether cargo or cabin is safe, whether an airline will even accept the booking, and whether medication timing needs planning around a long flight. It shapes the 'fitness to fly' item on your checklist, not any government requirement.",
       "options": [
         { "value": "heart", "label": "A heart condition (e.g. a heart murmur or valve disease)" },
         { "value": "brachy", "label": "A flat-faced (brachycephalic) breed — e.g. Bulldog, Pug, Boston Terrier, Shih Tzu" },
@@ -103,6 +107,7 @@
       "type": "radio",
       "label": "Does your dog already have an ISO-compliant (15-digit) microchip?",
       "help": "Answer ‘Not sure’ if you don’t know for certain — Japan only counts rabies vaccinations given after the chip, so we’ll treat those as not-yet-started until you confirm the order with your vet.",
+      "why": "This is the single most important ordering rule in the whole process: Japan only counts a rabies vaccination if it happened AFTER the ISO microchip was implanted. A vaccination given before the chip does not count at all, no matter how official the certificate looks — it would have to be redone. That's why this comes before we ask about vaccinations: if there's no chip yet, nothing after it can have 'started' in Japan's eyes.",
       "options": [
         { "value": "yes", "label": "Yes" },
         { "value": "no", "label": "No, not yet" },
@@ -115,6 +120,7 @@
       "type": "radio",
       "label": "How many rabies vaccinations has your dog had since the microchip was implanted?",
       "help": "Only count vaccinations given after the microchip — vaccinations before that don't count for Japan.",
+      "why": "Japan requires two rabies vaccinations (not one), given at least 30 days apart, both after the microchip. This number drives your whole downstream timeline — whether you still need a first dose, a second dose, or whether you're ready for the antibody blood test — so a precise count matters more than it might seem.",
       "options": [
         { "value": "0", "label": "None yet" },
         { "value": "1", "label": "One" },
@@ -128,6 +134,7 @@
       "id": "lastRabiesDate",
       "type": "date",
       "label": "Date of the most recent rabies vaccination",
+      "why": "This date anchors two later calculations: how soon a second dose could safely follow (if needed), and — combined with the labeled duration below — when the next booster is due before coverage lapses. A wrong date here throws off every date PawPort calculates for you downstream.",
       "required": false,
       "showIf": { "field": "rabiesDoses", "in": ["1", "2+"] }
     },
@@ -135,6 +142,7 @@
       "id": "rabiesDuration",
       "type": "radio",
       "label": "What's the labeled immunity duration on that vaccine (check the certificate for a ‘duration of immunity’ or similar field)?",
+      "why": "Rabies vaccines are labeled for either 1 or 3 years of protection. This isn't a Japan-specific rule directly — it's about never letting coverage lapse. If a booster is given even one day after this labeled period ends, Japan no longer accepts your existing FAVN result at all, and the whole process (new vaccinations, new blood test, new 180-day wait) starts over from zero. This lets PawPort calculate a safe booster reminder date for you.",
       "options": [
         { "value": "1yr", "label": "1 year" },
         { "value": "3yr", "label": "3 years" },
@@ -147,6 +155,7 @@
       "id": "favnDone",
       "type": "radio",
       "label": "Has a FAVN (rabies antibody titer) blood test already been done at a Japan-designated lab, after that vaccination?",
+      "why": "The FAVN blood test measures whether the rabies vaccination actually produced enough antibodies (0.5 IU/mL or higher) — Japan won't accept the vaccination certificate alone as proof. This can only happen after both rabies doses, which is why it isn't asked until you've said you're at two or more doses. Once it's done, a mandatory 180-day clock starts — usually the single longest wait in the entire process.",
       "options": [
         { "value": "yes", "label": "Yes" },
         { "value": "no", "label": "No, not yet" },
@@ -159,6 +168,7 @@
       "id": "favnDate",
       "type": "date",
       "label": "Date of the FAVN blood draw",
+      "why": "This date anchors the two biggest deadlines in the whole app: 180 days from here is the earliest your dog can legally enter Japan, and 2 years from here is the outer limit on how long this result stays valid at all. Every other computed date on your results page traces back to this one.",
       "required": false,
       "showIf": { "field": "favnDone", "equals": "yes" }
     },
@@ -166,6 +176,7 @@
       "id": "travelDateKnown",
       "type": "radio",
       "label": "Do you have a target travel date?",
+      "why": "If you already have a target date, PawPort checks it right now against your FAVN and rabies timelines and warns you immediately if it isn't actually achievable, rather than you finding out at the airport. If you don't have one yet, that check is simply skipped and you'll see earliest-possible-date guidance instead.",
       "options": [
         { "value": "yes", "label": "Yes" },
         { "value": "no", "label": "Not yet — just planning ahead" }
@@ -176,6 +187,7 @@
       "id": "travelDate",
       "type": "date",
       "label": "Target travel date (arrival in Japan)",
+      "why": "This is checked against three separate hard deadlines: the FAVN 180-day minimum wait, the FAVN's 2-year outer validity, and the 40-day advance-notification deadline for Japan's Animal Quarantine Service. If your date conflicts with any of them, PawPort flags it clearly on your results page rather than letting you find out too late.",
       "required": false,
       "showIf": { "field": "travelDateKnown", "equals": "yes" }
     },
@@ -184,6 +196,7 @@
       "type": "radio",
       "label": "Will your trip include any layover, stop, or overnight stay in a country other than your home country before you arrive in Japan?",
       "help": "Even a short overland stop (e.g. driving across a border before a direct flight) counts — that country may have its own separate pet rules.",
+      "why": "A layover or even a same-day overland stop in a third country can trigger that country's own, completely separate pet import or transit rules — rules that have nothing to do with Japan and aren't covered anywhere else in this checklist. It's easy to overlook because it doesn't feel like 'the trip to Japan,' but customs at that stop won't see it that way.",
       "options": [
         { "value": "yes", "label": "Yes" },
         { "value": "no", "label": "No — direct route only" },
@@ -198,7 +211,8 @@
     { "id": "paperwork", "title": "Paperwork & Government Sign-off", "icon": "📄", "blurb": "The forms and endorsements Japan actually requires." },
     { "id": "health", "title": "Health & Fitness to Fly", "icon": "❤️", "blurb": "Making sure your dog is cleared to travel safely." },
     { "id": "logistics", "title": "Travel Logistics", "icon": "✈️", "blurb": "Crates, airlines, and getting there." },
-    { "id": "arrival", "title": "Arrival in Japan", "icon": "🇯🇵", "blurb": "What happens when you land." }
+    { "id": "arrival", "title": "Arrival in Japan", "icon": "🇯🇵", "blurb": "What happens when you land." },
+    { "id": "return", "title": "Returning Home", "icon": "🔄", "blurb": "A separate process from getting into Japan — plan the trip home too." }
   ],
   "checklistItems": [
     {
@@ -359,16 +373,263 @@
       "title": "Present your dog and documents at Animal Quarantine on arrival",
       "body": "On arrival in Japan, you'll go through the Animal Quarantine Service counter before regular customs. If your advance notification was filed correctly and your documents are complete and consistent, inspection is typically quick. If documents are missing, inconsistent, or requirements weren't met, your dog can be held in quarantine for up to 180 days — which is exactly why getting the paperwork right in advance matters so much.",
       "showIf": null
+    },
+    {
+      "id": "return-japan-export",
+      "category": "return",
+      "title": "Apply for Japan's own export inspection — at least 14 days before departure",
+      "body": "Leaving Japan with your dog is its own separate process, run by the same Animal Quarantine Service (AQS) that handled your arrival — it does not happen automatically just because you're leaving. Apply for export inspection through NACCS, or by email to your local AQS office, at least 14 days before your desired inspection date, attaching your dog's veterinary certificates. The actual inspection happens within 10 days of departure, and AQS issues an English-language export certificate on the spot if everything checks out. If someone other than you brings the dog to the inspection, they'll need a Power of Attorney document from you.",
+      "showIf": null
+    },
+    {
+      "id": "return-import-home",
+      "category": "return",
+      "title": "Check what your home country requires to bring your dog back from Japan",
+      "body": "This is governed entirely by your OWN country's pet import rules, not Japan's — it's a completely separate process from everything else on this checklist. The good news: most countries classify Japan as low-risk for rabies, so returning is often (not always) simpler than the outbound trip was. Confirm directly with your country's own import authority well before you travel — don't assume it mirrors the outbound process.",
+      "countryNote": true,
+      "showIf": null
     }
   ],
   "countryDetails": {
     "default": {
       "form-ac": "Check with your country's national veterinary/export authority for how Form AC is submitted and whether it's paired with a generic export certificate.",
-      "gov-endorsement": "Search for your country's official animal export authority (often part of the agriculture or food safety ministry) to find their Form AC endorsement process and fees."
+      "gov-endorsement": "Search for your country's official animal export authority (often part of the agriculture or food safety ministry) to find their Form AC endorsement process and fees.",
+      "return-import-home": "Contact your country's own animal/agricultural import authority (often the same body that handles exports, sometimes a separate border biosecurity agency) to confirm what's required to bring your dog home from Japan — an advance import permit, a rabies titer test, or a waiting period may or may not apply depending on your country's current rules for animals arriving from Japan specifically."
     },
     "CA": {
       "form-ac": "In Canada, your treating vet completes Form AC directly — the CFIA's generic 'Canadian International Health Certificate' template is not a substitute and shouldn't be used instead of Form AC for Japan.",
-      "gov-endorsement": "In Canada, CFIA (Canadian Food Inspection Agency) endorses Form AC through the same official-vet endorsement process used for other export certificates — there's a fee, and it's worth confirming with CFIA or a pet relocation broker whether they want Form AC on its own or accompanied by the generic CFIA certificate as a cover document."
+      "gov-endorsement": "In Canada, CFIA (Canadian Food Inspection Agency) endorses Form AC through the same official-vet endorsement process used for other export certificates — there's a fee, and it's worth confirming with CFIA or a pet relocation broker whether they want Form AC on its own or accompanied by the generic CFIA certificate as a cover document.",
+      "return-import-home": "CFIA sets the import policy, and Canada Border Services Agency (CBSA) officers check compliance at the port of entry. No advance import permit is needed for a single personal pet dog returning to Canada — CFIA requires a rabies vaccination certificate (from a licensed vet, in English or French) for dogs 8 months or older, regardless of the exporting country's rabies status, so a dog from rabies-free Japan is treated the same as from anywhere else. There's no CFIA-mandated quarantine or rabies titer test for personal pets returning from Japan; CBSA verifies the vaccination paperwork and does a visual health check at entry."
+    },
+    "US": {
+      "form-ac": "A USDA-accredited veterinarian completes an export health certificate via APHIS's VEHCS system for most destinations, but Japan's own Form AC (microchip, vaccination history, FAVN titer, clinical exam) is the country-specific requirement — confirm on APHIS's Pet Travel site whether Japan additionally wants a standalone USDA certificate alongside Form AC or whether Form AC alone suffices.",
+      "gov-endorsement": "In the US, APHIS (part of the USDA) is the relevant export authority — a USDA-accredited vet completes your paperwork through the VEHCS system; confirm current Japan-specific detail directly on APHIS's Pet Travel site since requirements can change.",
+      "return-import-home": "The CDC — not USDA APHIS — governs dog entry into the US, under its dog-import rule: dogs must be at least 6 months old, have an ISO-compatible microchip, appear healthy, and travel with a completed online CDC Dog Import Form confirmation receipt. Because Japan is not on CDC's list of countries at high risk for dog rabies, no advance import permit, rabies vaccination certificate, titer test, or quarantine is required for a dog returning from Japan — just the standard Dog Import Form. Confirm current details on CDC's dog-importation site, since these federal rules have changed before."
+    },
+    "US-HI": {
+      "form-ac": "Same federal outbound process as the mainland: a USDA-accredited vet completes an export certificate via VEHCS, but Japan's own Form AC is the country-specific requirement — confirm via APHIS's Pet Travel site whether Japan also wants a separate USDA certificate alongside it.",
+      "gov-endorsement": "Same as mainland US — APHIS and a USDA-accredited vet via VEHCS. Confirm current Japan-specific detail on APHIS's Pet Travel site.",
+      "return-import-home": "Hawaii runs its OWN rabies quarantine program (Hawaii Department of Agriculture, Animal Industry Division) that's stricter than, and independent of, the federal CDC rule that applies to the US generally — and it applies to every dog arriving in Hawaii regardless of origin, including from a rabies-free region like Japan. To qualify for the shortened '5-Day-Or-Less' program instead of the default longer quarantine, submit paperwork and fees to HDOA in advance and show: an ISO microchip implanted before the rabies vaccinations, two properly-spaced rabies vaccinations with the most recent still valid, and a passing FAVN titer test from an HDOA-approved lab, not less than about 120 days old and not more than 36 months old at arrival. This is on top of, not instead of, whatever federal CDC Dog Import Form requirement applies. Verify exact current day-count thresholds directly on HDOA's site before travel."
+    },
+    "AR": {
+      "form-ac": "Argentina's SENASA (Servicio Nacional de Sanidad y Calidad Agroalimentaria) issues a Certificado Veterinario Internacional (CVI), drafted by a private vet and endorsed at a SENASA office, tailored to Japan's specific entry requirements. This CVI is issued alongside Japan's own mandatory Form AC — Japan requires Form AC regardless of what certificate Argentina itself uses.",
+      "gov-endorsement": "In Argentina, SENASA endorses the CVI at one of its offices after your vet completes it — confirm directly with SENASA (responde@senasa.gob.ar) exactly how this pairs with Form AC for Japan specifically.",
+      "return-import-home": "SENASA also handles pets returning to Argentina, but its public guidance doesn't spell out Japan-specific return rules. In general, animals re-entering need an official export health certificate from Japan's Animal Quarantine Service plus proof of current rabies vaccination; whether a titer test or quarantine applies wasn't confirmed from SENASA's public site — contact SENASA directly (responde@senasa.gob.ar) before travel."
+    },
+    "CL": {
+      "form-ac": "Chile's SAG (Servicio Agrícola y Ganadero) issues a Certificado Zoosanitario de Exportación (CZE) confirming the pet meets the destination country's entry requirements. SAG's own destination-requirements tool doesn't list Japan among its pre-summarized countries, so confirm separately whether Japan's Form AC is required alongside the CZE or instead of it.",
+      "gov-endorsement": "In Chile, SAG is the relevant export authority for the CZE — use their reqpecuaria.sag.gob.cl tool as a starting point, but verify Japan's Form AC requirement directly since Japan isn't one of SAG's pre-listed destinations.",
+      "return-import-home": "SAG also handles pets returning to Chile. No advance import permit is needed — checks happen at the border. The dog needs an official health certificate (issued within 10 days of travel, in Spanish and the origin country's language) showing either rabies vaccination 1-12 months before travel or a rabies antibody titer test 3-24 months before travel. SAG's published rules require a mandatory 10-day home quarantine/confinement in Chile regardless of origin country, with no stated exception for low-risk countries like Japan — plan for this."
+    },
+    "CO": {
+      "form-ac": "Colombia's ICA (Instituto Colombiano Agropecuario) is the competent authority for pet export certification and publishes an 'ABC salida de mascotas' guide, but the specific certificate name and any Japan-specific detail weren't confirmed in this research — contact ICA directly to confirm the exact certificate and how it pairs with Japan's Form AC.",
+      "gov-endorsement": "In Colombia, ICA is the relevant export authority — check their 'ABC salida de mascotas' guide and confirm directly with ICA how their export certification interacts with Japan's Form AC requirement.",
+      "return-import-home": "ICA also handles pets entering Colombia and publishes an 'ABC ingreso mascotas' guide, but whether an advance import permit, a rabies titer test, or quarantine applies specifically to dogs from Japan wasn't confirmed from ICA's public pages. Contact ICA's Dirección Técnica de Cuarentena Animal (cuarentena.animal@ica.gov.co, +57-601-794-4492 ext. 3407) to confirm current requirements before travel."
+    },
+    "FR": {
+      "form-ac": "France's DGAL (Direction Générale de l'Alimentation), through local veterinary services (DDPP/DDETSPP), issues an official export health certificate endorsed by an official veterinarian — this travels alongside Japan's Form AC, not instead of it.",
+      "gov-endorsement": "In France, your local DDPP/DDETSPP veterinary service (under DGAL) endorses the export certificate — confirm with them exactly how it pairs with Form AC for Japan.",
+      "return-import-home": "Entry is governed by the EU's non-commercial pet movement rules (Regulation 576/2013), enforced at the French border by DGAL through designated Traveller's Points of Entry. You'll need the EU health certificate completed by an official vet in Japan within 10 days of travel, plus microchip ID and valid rabies vaccination. Japan is generally treated as an EU 'Part 2 listed' country, which usually waives the advance rabies titer test — but confirm this against the current official list before relying on it."
+    },
+    "DE": {
+      "form-ac": "Germany's local Veterinäramt (district veterinary office), under the Federal Ministry of Food and Agriculture's framework, issues an export health certificate endorsed by an official veterinarian — this accompanies Japan's Form AC.",
+      "gov-endorsement": "In Germany, your local Veterinäramt endorses the export certificate — confirm with them how it pairs with Japan's Form AC.",
+      "return-import-home": "Entry is governed by the EU's non-commercial pet movement rules (Regulation 576/2013), enforced at German borders by the local Veterinäramt working with customs (Zoll). You'll need the EU health certificate completed by an official vet in Japan, plus microchip ID and rabies vaccination proof. Japan is generally an EU 'Part 2 listed' country, which usually waives the advance titer test — confirm against the current official list before relying on it."
+    },
+    "IT": {
+      "form-ac": "Italy's Ministero della Salute, through local ASL (Azienda Sanitaria Locale) veterinary services, issues an export health certificate endorsed by an official veterinarian, which accompanies Japan's Form AC.",
+      "gov-endorsement": "In Italy, your local ASL's official veterinarian endorses the export certificate; USMAF handles checks at ports/airports. Confirm with them how this pairs with Japan's Form AC.",
+      "return-import-home": "Entry is governed by the EU's non-commercial pet movement rules (Regulation 576/2013), enforced at Italian borders by the Ministero della Salute via USMAF at ports/airports. You'll need the EU certificate completed by an official vet in Japan, plus microchip ID and rabies vaccination proof. Japan is generally an EU 'Part 2 listed' country, which usually waives the advance titer test — confirm against the current official list before relying on it."
+    },
+    "ES": {
+      "form-ac": "Spain's Ministerio de Agricultura, Pesca y Alimentación (MAPA), through its animal health/border veterinary inspection services, issues and validates an export health certificate that accompanies Japan's Form AC.",
+      "gov-endorsement": "In Spain, MAPA's animal health / Sanidad Exterior services validate the export certificate at designated Traveller's Points of Entry — confirm with them how it pairs with Japan's Form AC.",
+      "return-import-home": "Entry is governed by the EU's non-commercial pet movement rules (Regulation 576/2013), enforced at the Spanish border by MAPA's Sanidad Exterior services. You'll need the EU certificate completed by an official vet in Japan, plus microchip ID and rabies vaccination. Japan is generally an EU 'Part 2 listed' country, which usually waives the advance titer test — confirm against the current official list before relying on it."
+    },
+    "PT": {
+      "form-ac": "Portugal's DGAV (Direção-Geral de Alimentação e Veterinária) issues and endorses export certificates through its online 'Certific@+' platform — an official veterinarian completes the certificate, collected from a designated DGAV office, and it accompanies Japan's Form AC.",
+      "gov-endorsement": "In Portugal, DGAV is the relevant export authority via its Certific@+ platform — confirm with them how their certificate pairs with Japan's Form AC.",
+      "return-import-home": "Entry is governed by the EU's non-commercial pet movement rules (Regulation 576/2013), enforced in Portugal by DGAV. You'll need the EU certificate completed by an official vet in Japan, plus microchip ID and rabies vaccination proof. Japan is commonly cited as an EU 'Part 2 listed' country (usually waiving the advance titer test), but DGAV's own pages don't confirm this for Japan specifically — verify directly with DGAV before relying on it."
+    },
+    "NL": {
+      "form-ac": "The Netherlands' NVWA (Nederlandse Voedsel- en Warenautoriteit) export service issues and endorses the official export health certificate, which accompanies Japan's Form AC.",
+      "gov-endorsement": "In the Netherlands, NVWA is the relevant export authority — confirm with them how their certificate pairs with Japan's Form AC.",
+      "return-import-home": "Entry is governed by the EU's non-commercial pet movement rules (Regulation 576/2013), enforced by NVWA, which offers an online eligibility tool for pets from non-EU countries. NVWA confirms an advance rabies titer test is mandatory for pets from higher-risk non-EU countries (prep starting about 4 months ahead); Japan is commonly cited as a lower-risk 'Part 2 listed' country that would be exempt, but NVWA's page doesn't name Japan specifically — confirm directly before relying on it. No tapeworm/echinococcus treatment is required for the Netherlands."
+    },
+    "BE": {
+      "form-ac": "Belgium's FASFC (Federal Agency for the Safety of the Food Chain), via its official veterinarians, endorses an export health certificate that typically accompanies Japan's Form AC.",
+      "gov-endorsement": "In Belgium, FASFC's official veterinarians endorse the export certificate — confirm with them how it pairs with Japan's Form AC.",
+      "return-import-home": "Entry is governed by the EU's non-commercial pet movement rules (Regulation 576/2013), enforced in Belgium by FASFC at approved points of entry (TRACES pre-notification may apply for some routings). You'll need the EU certificate completed by an official vet in Japan within 10 days of travel, plus microchip ID and rabies vaccination. Japan is generally an EU 'Part 2 listed' country, usually waiving the advance titer test — confirm against the current official list before relying on it."
+    },
+    "CH": {
+      "form-ac": "Switzerland's Federal Food Safety and Veterinary Office (FSVO/BLV/OSAV), together with the relevant cantonal veterinary office, issues and endorses a Swiss export health certificate that accompanies Japan's Form AC.",
+      "gov-endorsement": "In Switzerland, your cantonal veterinary office endorses the export certificate under FSVO/BLV/OSAV oversight — confirm with them how it pairs with Japan's Form AC.",
+      "return-import-home": "Switzerland is not an EU member and applies its own import rules rather than being directly bound by EU Regulation 576/2013, enforced by BLV/OSAV, cantonal veterinary offices, and Swiss customs (BAZG). You'll need an official health certificate from a vet in Japan, plus microchip ID and rabies vaccination proof. Whether Switzerland treats Japan the same as the EU's titer-test-exempt 'Part 2 listed' countries is NOT confirmed — Switzerland keeps its own country list under its bilateral veterinary agreement with the EU, so check directly with BLV/OSAV before relying on this."
+    },
+    "AT": {
+      "form-ac": "Austria's district veterinary office (Bezirksverwaltungsbehörde) issues and endorses an export health certificate that accompanies Japan's Form AC.",
+      "gov-endorsement": "In Austria, your district veterinary office (Bezirksverwaltungsbehörde) endorses the export certificate — confirm with them how it pairs with Japan's Form AC.",
+      "return-import-home": "Entry is governed by the EU's non-commercial pet movement rules (Regulation 576/2013), enforced in Austria by the district veterinary office at the point of entry. You'll need the EU certificate completed by an official vet in Japan, plus microchip ID and rabies vaccination. Japan is generally an EU 'Part 2 listed' country, usually waiving the advance titer test — confirm against the current official list before relying on it."
+    },
+    "AU": {
+      "form-ac": "Australia's DAFF (Department of Agriculture, Fisheries and Forestry) issues an export permit and official government health certificate based on a Notice of Intention (NOI) to Export Live Animals application and a pre-export veterinary inspection. Because Japan requires its own Form AC, this DAFF-endorsed certificate accompanies Form AC rather than replacing it.",
+      "gov-endorsement": "In Australia, DAFF is the relevant export authority — apply through their Notice of Intention (NOI) to Export Live Animals process.",
+      "return-import-home": "An import permit must be obtained from DAFF via the BICON system before the dog leaves Japan. Japan is classified as a 'Group 2' (rabies-free) country, so no rabies vaccination or RNATT titer test is required, but the dog still must complete a mandatory minimum 10-day post-entry quarantine at DAFF's Mickleham facility near Melbourne (versus 30 days minimum for higher-risk 'Group 3' countries). You'll also need microchip verification, a veterinary health certificate endorsed within 5 days of export, and evidence of 180 days' residency in an approved country (waived if the dog has stayed in Japan or another Group 1/2 country continuously since leaving Australia)."
+    },
+    "NZ": {
+      "form-ac": "New Zealand's MPI (Ministry for Primary Industries) issues an official export health certificate (and usually an Animal Welfare Export Certificate) through an MPI official veterinarian, based on Japan's Overseas Market Access Requirements (OMAR). Since Japan also requires its own Form AC, confirm with MPI whether their certificate must accompany Form AC.",
+      "gov-endorsement": "In New Zealand, MPI is the relevant export authority via an MPI official veterinarian.",
+      "return-import-home": "Japan is listed as a 'Category 2' rabies-free country under MPI's Import Health Standard for Cats and Dogs, so the dog can qualify by residency (living in Japan since birth or since being exported directly from NZ) rather than a rabies titer test. An MPI import permit is required before travel (apply at least 30 working days ahead), and the dog must undergo a mandatory minimum 10-day quarantine at an MPI-approved facility on arrival. A pre-export identification check by an official veterinarian, done at least 6 months before arrival, is also required under MPI's current Import Health Standard."
+    },
+    "FJ": {
+      "form-ac": "Fiji's Biosecurity Authority of Fiji (BAF) issues an export health certificate through a BAF veterinarian after a final pre-export inspection, prepared to meet Japan's specific import requirements. Since Japan also requires its own Form AC, check with BAF whether their certificate must accompany Form AC.",
+      "gov-endorsement": "In Fiji, BAF (Biosecurity Authority of Fiji) is the relevant export authority.",
+      "return-import-home": "Important asymmetry to know: although Fiji is one of Japan's designated (simplified) regions for the OUTBOUND leg, BAF classifies Japan in its stricter 'Group B' category (not the low-risk Pacific 'Group A') for the RETURN leg. A dog returning to Fiji from Japan needs rabies vaccination at least 30 days before export AND a rabies neutralizing antibody titer test (RNATT/FAVN, minimum 0.5 IU/mL) taken 180-365 days before export — plus an ISO-compatible microchip and a mandatory minimum 30-day post-entry quarantine (book kennel space 6-8 weeks ahead) at BAF's Post Entry Quarantine station in Koronivia, Nausori; home quarantine isn't permitted. A BAF import permit must be obtained before the dog leaves Japan."
+    },
+    "MX": {
+      "form-ac": "Mexico's SENASICA (Servicio Nacional de Sanidad, Inocuidad y Calidad Agroalimentaria), under SADER, is the national authority for pet export certification — a SENASICA-endorsed export health certificate would generally accompany Japan's mandatory Form AC. This pairing wasn't independently verified against a live official page — confirm directly with SENASICA before your vet appointment.",
+      "gov-endorsement": "In Mexico, SENASICA (part of SADER, the agriculture ministry) is the relevant export authority — confirm directly with them how their certificate interacts with Japan's Form AC.",
+      "return-import-home": "A dog returning to Mexico from Japan would generally need proof of microchip ID, valid rabies vaccination, and an official health certificate from Japan's veterinary authority, checked by SENASICA at the port of entry. Whether Japan's low-risk rabies status simplifies this beyond the general requirement wasn't independently verified — confirm directly with SENASICA before travel."
+    },
+    "BR": {
+      "form-ac": "Brazil's MAPA (Ministério da Agricultura, Pecuária e Abastecimento), through its VIGIAGRO agricultural border inspection service, is the national authority for pet export certification — a VIGIAGRO-endorsed export certificate would generally accompany Japan's mandatory Form AC. This pairing wasn't independently verified against a live official page — confirm directly with MAPA/VIGIAGRO first.",
+      "gov-endorsement": "In Brazil, MAPA's VIGIAGRO service (at your departure airport) endorses export paperwork — confirm directly with them how it pairs with Japan's Form AC.",
+      "return-import-home": "A dog returning to Brazil from Japan would generally need proof of microchip ID, valid rabies vaccination, and an official health certificate from Japan's veterinary authority, checked by VIGIAGRO at the port of entry. Whether Japan's low-risk rabies status simplifies this beyond the general requirement wasn't independently verified — confirm directly with MAPA/VIGIAGRO before travel."
+    },
+    "GU": {
+      "form-ac": "As a US territory, Guam follows the same federal outbound process as the US mainland: a USDA-accredited veterinarian completes an export certificate via APHIS's VEHCS system, with Japan's own Form AC as the country-specific requirement. Confirm via APHIS's Pet Travel site whether Japan also wants a separate USDA certificate alongside it.",
+      "gov-endorsement": "Same as the US mainland — APHIS and a USDA-accredited vet via VEHCS. Confirm current Japan-specific detail on APHIS's Pet Travel site.",
+      "return-import-home": "Guam's own Department of Agriculture handles territorial biosecurity in addition to whatever federal US entry rules apply — similar in spirit to Hawaii's extra layer, though Guam's specific rabies-related program wasn't independently verified in this research. Confirm directly with the Guam Department of Agriculture before relying on federal rules alone, since island territories often add their own rabies-free-status protections on top of federal ones."
+    },
+    "GB": {
+      "form-ac": "The UK has its own bilateral, Japan-specific export health certificate (EHC 6407, \"Export cats and dogs to Japan\"), signed by an APHA-approved certifying vet — this is used alongside Japan's mandatory Form AC, not instead of it.",
+      "gov-endorsement": "In the UK, APHA (Animal and Plant Health Agency) is the relevant authority for EHC 6407 — confirm with them exactly how it pairs with Form AC.",
+      "return-import-home": "Japan is officially treated as a 'listed' (low-risk) country under Great Britain's pet travel rules, so a dog returning from Japan does not need a rabies antibody titer test or quarantine. It still needs an ISO microchip, rabies vaccination, a Great Britain pet health certificate from an authorised vet, and tapeworm treatment 24-120 hours before arrival, entering via an approved route."
+    },
+    "IE": {
+      "form-ac": "Ireland's DAFM (Department of Agriculture, Food and the Marine) is the competent authority for export certification, but no published guidance confirms exactly how a DAFM certificate pairs with Japan's Form AC — confirm directly with DAFM's live animal export unit before your vet appointment.",
+      "gov-endorsement": "In Ireland, DAFM endorses export certificates — contact their live animal export unit to confirm the Form AC pairing for Japan specifically.",
+      "return-import-home": "As an EU member, Ireland follows the EU's non-commercial pet movement rules, and Japan is on the EU's low-risk 'listed' third-country list, so a dog returning from Japan should not need a rabies titer test or quarantine. You'll need a microchip, rabies vaccination, and an EU animal health certificate from an official vet in Japan, plus advance notice and a compliance check at a Travellers' Point of Entry on arrival."
+    },
+    "NO": {
+      "form-ac": "Norway's Mattilsynet (Norwegian Food Safety Authority) is the competent export authority, but no published guidance confirms exactly how its certificate pairs with Japan's Form AC — confirm directly with Mattilsynet before your vet appointment.",
+      "gov-endorsement": "In Norway, Mattilsynet endorses export certificates — confirm with them the Form AC pairing for Japan specifically.",
+      "return-import-home": "Norway applies the same EU/EEA framework as the EU (Regulation (EU) No 577/2013, Annex II), and Japan is one of the 'listed' low-risk third countries under that Annex, so a dog returning from Japan does not need a rabies titer test. It still needs a microchip, rabies vaccination, an EU-format health certificate from an official vet, and tapeworm treatment 24-120 hours before arrival; notify Mattilsynet at least 48 hours ahead and enter only via Oslo Airport or Storskog."
+    },
+    "IS": {
+      "form-ac": "Iceland's MAST (Icelandic Food and Veterinary Authority) doesn't publish an Iceland-specific certificate for Japan — it directs exporters straight to Japan's own AQS/MAFF requirements, meaning MAFF-mandated Form AC (MAST-endorsed) is the operative paperwork rather than a paired Icelandic certificate.",
+      "gov-endorsement": "In Iceland, MAST is the relevant government veterinary authority for endorsing your paperwork for Japan.",
+      "return-import-home": "Iceland is exceptionally strict — even though Japan is one of MAST's 'Category 1' rabies-free/low-risk countries, a dog returning from Japan still needs an advance MAST import permit (with a substantial fee, applied for well ahead of travel), rabies vaccination, a rabies antibody titer test (at least 0.5 IU/mL, drawn at least 30 days post-vaccination), parasite treatments and leptospirosis vaccination per MAST protocol, and a mandatory minimum 2-week quarantine on arrival at Keflavík Airport (the only permitted entry point) — regardless of Japan's low-risk status elsewhere."
+    },
+    "TH": {
+      "form-ac": "Thailand's Department of Livestock Development (DLD), via its Animal Quarantine Station at the departure international airport, issues a bilingual (Thai/English) export health certificate confirming microchip ID and rabies vaccination history — this accompanies Japan's Form AC, and the FAVN blood sample is drawn under DLD/accredited-vet supervision.",
+      "gov-endorsement": "In Thailand, DLD's Animal Quarantine Station at your departure airport issues and endorses the export certificate — confirm with them how it pairs with Form AC.",
+      "return-import-home": "A dog returning to Thailand from Japan generally needs an advance DLD import permit, a valid rabies vaccination certificate, microchip ID, and a health/export certificate from Japan's Animal Quarantine Service. Because Japan is treated as a rabies-free/low-risk origin, dogs typically avoid the longer facility quarantine required from higher-risk countries and are inspected/cleared at the airport quarantine counter — confirm current DLD import-permit conditions before travel."
+    },
+    "VN": {
+      "form-ac": "Vietnam's Department of Animal Health, via its regional Animal Health Sub-Department at the departure airport, issues an export veterinary health certificate after clinical inspection, verifying microchip and rabies vaccination — this accompanies Japan's Form AC and the FAVN blood-sample submission.",
+      "gov-endorsement": "In Vietnam, your regional Animal Health Sub-Department issues and endorses the export certificate — confirm with them how it pairs with Form AC.",
+      "return-import-home": "A dog returning to Vietnam from Japan generally needs an advance import permit from the regional Animal Health Sub-Department, a valid rabies vaccination certificate, microchip ID, and a health certificate from Japan's Animal Quarantine Service. Since Japan is a low-rabies-risk origin, clearance is typically handled via airport inspection/declaration rather than extended facility quarantine — verify current permit requirements before travel."
+    },
+    "ID": {
+      "form-ac": "Indonesia's Badan Karantina Indonesia (Barantin), via its Quarantine Office at the departure international airport, issues a veterinary health certificate after clinical inspection confirming microchip ID and rabies vaccination history — this accompanies Japan's Form AC and the FAVN blood-sample submission.",
+      "gov-endorsement": "In Indonesia, Barantin's Quarantine Office at your departure airport issues and endorses the export certificate — confirm with them how it pairs with Form AC.",
+      "return-import-home": "A dog returning to Indonesia from Japan generally needs an advance import permit/notification through Barantin's online quarantine system, a valid rabies vaccination certificate, microchip ID, and a health certificate from Japan's Animal Quarantine Service. Indonesia's internal rabies status varies by region (Bali in particular maintains stricter rabies-free-area rules), so quarantine duration on arrival can differ by port of entry — confirm current Barantin requirements for your specific arrival airport before travel."
+    },
+    "PL": {
+      "form-ac": "Poland's local Powiatowy Lekarz Weterynarii (district veterinary officer), under the Chief Veterinary Inspectorate, issues an export/intra-EU veterinary certificate confirming microchip ID, rabies vaccination, and clinical exam — this generally accompanies rather than replaces Japan's mandatory Form AC, which separately documents the FAVN result Japan requires.",
+      "gov-endorsement": "In Poland, your district veterinary officer (Powiatowy Lekarz Weterynarii) endorses the export certificate — confirm with them how it pairs with Form AC.",
+      "return-import-home": "As an EU member, Poland follows the EU's non-commercial pet movement framework (Regulation 576/2013 / 2021/403), enforced by border veterinary inspection at the EU point of entry. Japan is generally treated as a listed low-rabies-risk third country, so a returning dog typically needs microchip ID, valid rabies vaccination, and an EU-format or Japan-issued certificate, without the extended waiting period required for unlisted countries — confirm current Annex II listing status before travel."
+    },
+    "CZ": {
+      "form-ac": "The Czech Republic's SVS (State Veterinary Administration), via its regional inspectorates, issues an export health certificate covering microchip ID, vaccination, and clinical fitness — this generally accompanies rather than replaces Japan's mandatory Form AC.",
+      "gov-endorsement": "In the Czech Republic, your regional SVS inspectorate endorses the export certificate — confirm with them how it pairs with Form AC.",
+      "return-import-home": "As an EU member, the Czech Republic follows the EU's non-commercial pet movement rules (Regulation 576/2013 / 2021/403). Japan is generally treated as a listed low-rabies-risk country, so a returning dog typically needs microchip ID, current rabies vaccination, and a valid health certificate, without the extended titer-test waiting period required from unlisted countries — verify against the current official Annex II list before travel."
+    },
+    "GR": {
+      "form-ac": "Greece's Directorate of Veterinary Services, via the relevant regional/prefecture veterinary directorate, issues an export health certificate (microchip, vaccination, clinical exam) that generally accompanies rather than replaces Japan's mandatory Form AC.",
+      "gov-endorsement": "In Greece, your regional/prefecture veterinary directorate endorses the export certificate — confirm with them how it pairs with Form AC.",
+      "return-import-home": "As an EU member, Greece follows the EU's non-commercial pet movement framework (Regulation 576/2013 / 2021/403). Japan is generally treated as a listed low-rabies-risk third country, so a returning dog typically needs microchip ID, valid rabies vaccination, and a health certificate, without the extended titer-wait period required for unlisted countries — confirm against the current Annex II list before travel."
+    },
+    "TR": {
+      "form-ac": "Turkey's Ministry of Agriculture and Forestry (Veterinary Services), via provincial agriculture directorate veterinarians, issues an export health certificate (microchip, vaccination, clinical exam) — the exact interplay with Japan's mandatory Form AC (used alongside vs. replaced) could not be confirmed from an official source; check directly with your provincial directorate.",
+      "gov-endorsement": "In Turkey, your provincial agriculture directorate veterinarian endorses the export certificate — confirm with them how it pairs with Form AC.",
+      "return-import-home": "A dog returning to Turkey from Japan would generally need proof of microchip ID, valid rabies vaccination, and an official veterinary health certificate. Whether Japan's low-risk rabies status waives additional titer testing versus Turkey's generic policy could not be verified from an official source — confirm directly with the Ministry of Agriculture and Forestry before travel."
+    },
+    "RU": {
+      "form-ac": "Russia's local veterinary station (СББЖ) issues Certificate Form No. 1 (via the Mercury/Merkuriy system) after microchipping and vaccination, and Rosselkhoznadzor border officials then issue the country-specific export certificate. For Japan specifically, the rabies antibody titer test must be performed exclusively at the FGBU VGNKI Diagnostic Center in Moscow, alongside Japan's Form AC.",
+      "gov-endorsement": "In Russia, Rosselkhoznadzor (Federal Service for Veterinary and Phytosanitary Surveillance) is the relevant export authority, working through local veterinary stations for initial certification.",
+      "return-import-home": "Dogs returning to Russia (up to 2 per owner) need an International Veterinary Passport showing a vet exam within 14 days of travel and current vaccinations (rabies, distemper, hepatitis, parvo, lepto). More than 2 dogs, unaccompanied animals, or unvaccinated puppies under 3 months require Veterinary Certificate Form No. 15. No reduced requirement specific to arrivals from Japan was found — entry must be through a designated checkpoint with veterinary inspection facilities."
+    },
+    "UA": {
+      "form-ac": "Ukraine's Держпродспоживслужба (State Service on Food Safety and Consumer Protection), via its border veterinary inspection departments, requires microchip ID, a valid rabies vaccination certificate, and an international veterinary health certificate for non-commercial pet movement, alongside Japan's Form AC. The agency publishes no Japan-specific detail, so confirm current specifics directly before departure.",
+      "gov-endorsement": "In Ukraine, the State Service on Food Safety and Consumer Protection (border veterinary inspection) is the relevant authority.",
+      "return-import-home": "General re-entry rules require microchip ID, valid rabies vaccination, and an international veterinary certificate presented at an authorized border inspection point. No Japan-specific simplified return procedure was found — verify current requirements directly, and be aware Ukraine's wartime border-control conditions may add practical complications beyond paperwork."
+    },
+    "AE": {
+      "form-ac": "The UAE's Ministry of Climate Change and Environment (MOCCAE) oversees live animal export/import certification and permits — an export permit and official veterinary health certificate would need to be paired with Japan's mandatory Form AC; confirm the exact pairing directly with MOCCAE, since this could not be verified from an accessible official page.",
+      "gov-endorsement": "In the UAE, MOCCAE is the relevant export authority — confirm directly how their permit/certificate pairs with Japan's Form AC.",
+      "return-import-home": "The UAE runs a pre-approval import permit system through MOCCAE and classifies countries of origin by rabies risk; Japan likely qualifies as low-risk, which would generally mean no quarantine and simpler documentation (microchip, vaccination, health certificate) — but confirm the current permit portal specifics and low-risk country list directly with MOCCAE before travel."
+    },
+    "SA": {
+      "form-ac": "Saudi Arabia's Ministry of Environment, Water and Agriculture (MEWA) offers an 'Export Pets Permit' service via its e-services portal — a MEWA-endorsed veterinary export certificate would generally need to accompany Japan's mandatory Form AC; confirm the exact pairing directly with MEWA.",
+      "gov-endorsement": "In Saudi Arabia, MEWA is the relevant export authority via its e-services portal.",
+      "return-import-home": "A dog returning to Saudi Arabia from Japan would generally need microchip ID, rabies vaccination proof, an official health certificate, and MEWA import permit pre-approval. Whether Japan's low-rabies-risk status reduces additional requirements (titer testing, quarantine) compared to higher-risk countries could not be confirmed from an accessible official source — confirm directly with MEWA before travel."
+    },
+    "IL": {
+      "form-ac": "Israel's Ministry of Agriculture and Rural Development (Veterinary Services, Rabies Control) endorses export health certificates that would need to accompany Japan's mandatory Form AC; confirm the exact pairing directly with Veterinary Services, since this could not be verified from an accessible official page.",
+      "gov-endorsement": "In Israel, the Ministry of Agriculture's Veterinary Services (Rabies Control Unit) is the relevant export authority.",
+      "return-import-home": "A dog returning to Israel from Japan would generally need microchip ID, valid rabies vaccination, and an official health certificate. Israel's rules often distinguish rabies-free/low-risk countries (which may waive additional serology/titer testing) from higher-risk ones, and Japan would likely qualify as low-risk — but confirm current specifics directly with Veterinary Services before travel."
+    },
+    "ZA": {
+      "form-ac": "South Africa's DALRRD (Department of Agriculture, Land Reform and Rural Development), via a state veterinarian, must inspect and endorse an export health certificate that would accompany Japan's mandatory Form AC; confirm exact current form names directly with DALRRD.",
+      "gov-endorsement": "In South Africa, a state veterinarian under DALRRD's Directorate of Animal Health endorses the export certificate.",
+      "return-import-home": "South Africa generally requires an import permit obtained from DALRRD before travel, along with a veterinary health certificate from the country of origin, with requirements varying by the origin country's rabies risk classification. Japan-specific return requirements could not be verified against an official DALRRD source — confirm directly with DALRRD before relying on this."
+    },
+    "IN": {
+      "form-ac": "India's AQCS (Animal Quarantine and Certification Services, under the Dept. of Animal Husbandry and Dairying) issues a 'Veterinary Health Certificate for Pet Dogs' and an export No Objection Certificate (fee approx. Rs 500) via application to a regional AQCS station (Delhi, Mumbai, Kolkata, Chennai, Bengaluru, Hyderabad) — an AQCS officer examines the dog and endorses paperwork used alongside Japan's Form AC.",
+      "gov-endorsement": "In India, AQCS (a regional station of the Dept. of Animal Husbandry and Dairying) endorses your export paperwork — confirm the Form AC pairing with your nearest AQCS station.",
+      "return-import-home": "At least 7 working days before travel, apply through India's ATITHI 2.0 customs portal for an Advance NOC, submitting the Veterinary Health Certificate, vaccination/microchip records, travel documents, and (for re-import) your prior AQCS export certificate. On arrival, AQCS staff physically examine the dog and issue a Final NOC; a 15-day quarantine at an AQCS station applies only if the dog shows clinical signs of illness, not automatically for dogs from low-risk Japan."
+    },
+    "CN": {
+      "form-ac": "China's General Administration of Customs (GACC), successor to the former CIQ, is understood to issue an export quarantine/health certificate for pet dogs via the local Customs district office, which would need to be reconciled with Japan's mandatory Form AC — the exact current pairing could not be verified from an official source; confirm directly with GACC or a local Customs/CIQ office.",
+      "gov-endorsement": "In China, your local Customs district office (under GACC) is the relevant export authority — confirm the Form AC pairing directly with them.",
+      "return-import-home": "A dog returning to China from Japan would need to go through GACC's animal quarantine import process (advance application, rabies vaccination/microchip proof, inspection on arrival), but exact current requirements and any Japan-specific simplification could not be verified from an official source — confirm directly with GACC, a local port-of-entry quarantine office, or the Chinese embassy in Japan before travel."
+    },
+    "KR": {
+      "form-ac": "South Korea's QIA (Animal and Plant Quarantine Agency) publishes country-specific export guidance including one for Japan, and requires a rabies antibody (FAVN-type) test through its own designated testing system, with QIA issuing/endorsing the certificate that pairs with Japan's Form AC.",
+      "gov-endorsement": "In South Korea, QIA (under the Ministry of Agriculture, Food and Rural Affairs) is the relevant export authority — use its country-specific Japan guidance and reservation/certification system.",
+      "return-import-home": "Dogs entering South Korea, including from Japan, must arrive with a government-issued quarantine/health certificate from the departure country showing microchip ID and a rabies neutralizing antibody titer of at least 0.5 IU/mL from blood drawn within 24 months. QIA quarantine officers check this before customs release (e.g. at Incheon Airport); dogs without valid documents can be denied entry. There's no stated blanket exemption for rabies-free countries — verify Japan-specific conditions via QIA's current country list."
+    },
+    "PH": {
+      "form-ac": "The Philippines' BAI (Bureau of Animal Industry), via its National Veterinary Quarantine Division online Stakeholders portal, issues an Export Permit / International Veterinary Health Certificate (IVHC) used alongside Japan's mandatory Form AC.",
+      "gov-endorsement": "In the Philippines, BAI's National Veterinary Quarantine Division is the relevant export authority via its online Stakeholders portal.",
+      "return-import-home": "To bring a dog back into the Philippines from Japan, apply for a Sanitary and Phytosanitary Import Clearance (SPSIC) via BAI's online system, supplying vaccination and antiparasitic records, proof of microchip, and a photo of the pet; the initial rabies vaccination must be at least 14 days before the SPSIC application, and the dog must be at least 120 days old. Japan's veterinary authority must issue an Export Permit/IVHC within 10 calendar days of travel, presented to BAI officials on arrival."
+    },
+    "SG": {
+      "form-ac": "Singapore's AVS (Animal & Veterinary Service, under NParks) requires an export license (via the GoBusiness Licensing Portal) and a health certificate from a Singapore-licensed vet; AVS endorses the certificate template used alongside Japan's Form AC.",
+      "gov-endorsement": "In Singapore, AVS (National Parks Board) is the relevant export authority via the GoBusiness Licensing Portal.",
+      "return-import-home": "Japan is classified under Singapore's Schedule II rabies-risk category. A returning dog needs an AVS import license (S$50 standard / S$100 express), valid rabies vaccination (inactivated or recombinant vaccine) with blood sampling for rabies serology at least 28 days after vaccination, and the health certificate's Section IV endorsed by a licensed vet in Japan. A minimum 10-day quarantine applies — at home for personal import license holders, or at AVS's Animal Quarantine Centre for commercial import license holders."
+    },
+    "MY": {
+      "form-ac": "Malaysia's DVS (Department of Veterinary Services) administers pet export/import permits through its eVetPermit system and ePetPassport registration — DVS is expected to examine and endorse export paperwork alongside Japan's Form AC, though exact Japan-specific detail could not be confirmed from an accessible official page.",
+      "gov-endorsement": "In Malaysia, DVS is the relevant export authority via its eVetPermit online system — confirm current Japan-specific requirements directly with DVS.",
+      "return-import-home": "Returning a dog to Malaysia from Japan generally requires an advance DVS import permit (via eVetPermit) and an official health certificate from Japan's veterinary authority, but specific current conditions (quarantine duration, testing requirements) for dogs from Japan could not be confirmed from an accessible official source — verify directly with DVS before travel."
+    },
+    "SE": {
+      "form-ac": "Sweden's Jordbruksverket (Swedish Board of Agriculture) has no Japan-specific instructions — it issues a generic veterinary export certificate (form E9.189) meant only as a fallback for destinations without their own required certificate. Since Japan requires Form AC, confirm directly with Japan's Animal Quarantine Service whether Jordbruksverket's certificate must also accompany Form AC or whether Form AC alone is enough.",
+      "gov-endorsement": "In Sweden, Jordbruksverket (Swedish Board of Agriculture) is the relevant export authority — get written confirmation from Japan's AQS on exactly what's needed before your vet appointment, since there's no separately negotiated Japan certificate.",
+      "return-import-home": "Japan is an EU-'listed' third country for rabies purposes, so Sweden does not require an advance rabies antibody titer test for a dog returning from Japan — only valid rabies vaccination, ISO microchip ID, and an official health certificate from a Japanese veterinarian (valid 10 days to reach an EU entry point, then generally valid up to 4 months). Sweden does not require tapeworm treatment on entry."
+    },
+    "DK": {
+      "form-ac": "Denmark's Fødevarestyrelsen maintains a certificate database; since there's no separately negotiated Danish certificate for Japan, a generic third-country export certificate may be usable, but Fødevarestyrelsen doesn't guarantee Japan will accept it — confirm directly with Japanese authorities whether it must accompany Form AC or whether Form AC alone suffices.",
+      "gov-endorsement": "In Denmark, Fødevarestyrelsen (Danish Veterinary and Food Administration) is the relevant export authority — contact them if Japan's requirements go beyond their generic certificate.",
+      "return-import-home": "Japan is an EU-'listed' third country for rabies purposes, so an advance rabies antibody titer test is not required for a dog returning to Denmark from Japan — only valid rabies vaccination (given at least 21 days before entry), microchip ID, and an EU-model health certificate from an official vet in Japan. Denmark does not require tapeworm treatment on entry."
+    },
+    "FI": {
+      "form-ac": "Finland's Ruokavirasto (Finnish Food Authority) has no universal export certificate template for pets leaving the EU — it can be free-form or follow the destination's own model, with an official version available from a municipal vet if needed. Since Japan requires Form AC, confirm directly with Japanese authorities whether a Ruokavirasto-issued certificate must also accompany it.",
+      "gov-endorsement": "In Finland, Ruokavirasto (Finnish Food Authority) is the relevant export authority — email vienti.lemmikit@ruokavirasto.fi if you need an official certificate beyond what Japan requires directly.",
+      "return-import-home": "Japan is an EU-'listed' third country for rabies purposes, so an advance rabies antibody titer test is not required for a dog returning to Finland from Japan — but Finland has its own extra rule: unlike Sweden/Denmark, dogs must get anti-Echinococcus tapeworm treatment 24-120 hours before arrival (Japan is not on Finland's short exemption list), documented on the certificate."
     }
   },
   "caseStudy": {

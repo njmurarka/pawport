@@ -425,7 +425,14 @@
 
   /* ================= WIZARD ================= */
   function getVisibleSteps(answers) {
-    return DATA.wizard.filter(function (q) { return matches(q.showIf, answers); });
+    // Filter against EFFECTIVE answers, not raw ones: a downstream
+    // question's showIf can check a field (e.g. favnDate checks
+    // favnDone) whose OWN question is no longer reachable because an
+    // earlier answer changed (e.g. rabiesDoses dropped below '2+') —
+    // without this, the stale raw value can still satisfy that showIf
+    // and the wizard asks a question that's no longer valid to ask.
+    var eff = getEffectiveAnswers(answers);
+    return DATA.wizard.filter(function (q) { return matches(q.showIf, eff); });
   }
 
   function isAnswered(q, answers) {
@@ -456,10 +463,13 @@
       var pct = Math.round(((idx + 1) / steps.length) * 100);
 
       var html =
-        '<div class="card">' +
+        '<div class="card" data-question-id="' + escapeHtml(q.id) + '">' +
           '<div class="progress-track"><div class="progress-fill" style="width:' + pct + '%"></div></div>' +
           '<div class="progress-label"><span>Question ' + (idx + 1) + ' of ' + steps.length + '</span><span>' + pct + '%</span></div>' +
-          '<span class="question-label">' + escapeHtml(q.label) + '</span>' +
+          '<div class="question-label-row">' +
+            '<span class="question-label">' + escapeHtml(q.label) + '</span>' +
+            (q.why ? '<button type="button" class="why-btn" id="btnWhy" aria-label="Why is this asked?" title="Why is this asked?">?</button>' : '') +
+          '</div>' +
           (q.help ? '<p class="question-help">' + escapeHtml(q.help) + '</p>' : '') +
           '<div id="fieldHost"></div>' +
           '<p class="field-error" style="display:none;color:#b3261e;font-weight:600;margin-top:10px;">Please answer this question to continue.</p>' +
@@ -474,6 +484,13 @@
 
       container.innerHTML = html;
       renderField(q, answers, container.querySelector('#fieldHost'));
+
+      var whyBtn = container.querySelector('#btnWhy');
+      if (whyBtn) {
+        whyBtn.addEventListener('click', function () {
+          openModal('Why we ask this', el('<div><p>' + escapeHtml(q.why) + '</p></div>'));
+        });
+      }
 
       container.querySelector('#btnNext').addEventListener('click', function () {
         if (q.required && !isAnswered(q, answers)) {
@@ -978,7 +995,7 @@
   function init() {
     // ?v= bumped by hand alongside checklist-data.json edits, same
     // reasoning as the ?v= on the css/js tags in index.html.
-    fetch('data/checklist-data.json?v=3')
+    fetch('data/checklist-data.json?v=4')
       .then(function (r) { return r.json(); })
       .then(function (data) {
         DATA = data;
