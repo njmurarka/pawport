@@ -347,6 +347,14 @@ main#app { padding: 36px 20px 64px; min-height: 60vh; }
   background-clip: text;
   color: transparent;
   padding-bottom: 4px;
+  /* display:inline-block makes the gradient's own box hug the actual
+     rendered text width instead of the full (block-level) container —
+     without this, center-aligned text only ever samples a middle slice
+     of the gradient and can miss both vivid endpoints entirely,
+     landing in the muddy orange<->teal transition zone (this is
+     exactly what happened to the word "Japan" in short headings). */
+  display: inline-block;
+  max-width: 100%;
 }
 .hero p.lede {
   font-size: 1.18rem;
@@ -587,6 +595,8 @@ label.field-label { font-weight: 600; display: block; margin-bottom: 8px; }
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
+  display: inline-block; /* see .hero h1 comment — hugs actual text width so the gradient's endpoints land on the first/last characters, not lost in an oversized invisible box */
+  max-width: 100%;
 }
 .designated-banner {
   background: var(--color-success-light);

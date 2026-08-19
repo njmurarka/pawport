@@ -69,6 +69,31 @@ async function run() {
       }
     }
 
+    // ---------- Gradient heading text hugs its own width (not the full container) ----------
+    // Regression for a real bug: the results-page h1 used the gradient's
+    // CSS box for background-clip:text, but as a block element that box
+    // was the full wide container, not the (centered, shorter) rendered
+    // text. Short headings like "Your checklist for Japan" only ever
+    // sampled a middle slice of the gradient, missing the vivid teal
+    // endpoint entirely and landing in the muddy orange<->teal transition
+    // zone for the LAST word -- exactly the word a reader's eye lands on.
+    {
+      const page = await browser.newPage();
+      await setAnswers(page, {
+        originCountry: 'DE', healthConditions: ['none'], microchipDone: 'yes', rabiesDoses: '2+',
+        favnDone: 'no', travelDateKnown: 'no', hasTransit: 'no',
+      });
+      await goToResults(page);
+      const h1Box = await page.locator('.results-header h1').boundingBox();
+      const containerBox = await page.locator('.results-header').boundingBox();
+      check(
+        "Results heading's gradient box hugs its own text width, not the full container",
+        h1Box.width < containerBox.width * 0.85,
+        'h1 width=' + h1Box.width + ' container width=' + containerBox.width
+      );
+      await page.close();
+    }
+
     // ---------- "Start over" button on every wizard question ----------
     {
       const page = await browser.newPage();
