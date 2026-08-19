@@ -92,10 +92,190 @@ The repo's git remote is `https://github.com/njmurarka/pawport.git`, set up for 
   5. Skip GitHub's optional account-level domain *verification* — DuckDNS's API can't create the required TXT record on an arbitrary sub-label, and it isn't needed for HTTPS to work.
 - **Tooling note, resolved:** an earlier session found this cloud sandbox's egress blocked to `duckdns.org` (403 from the sandbox's own proxy). That is no longer the case as of this session — `curl` to `duckdns.org` and the DuckDNS update endpoint both succeeded directly from the sandbox. `gh` auth also needed a fresh interactive `gh auth login -h github.com` from the maintainer (the keyring token had gone invalid) before Pages API calls would work.
 
+## Session 2 (2026-08-18): quiz-logic hardening, dark mode, decision-tree audit, per-country research
+
+This was a long single-day session that moved the app from "working" to
+"defended by tests." In rough chronological order:
+
+### Bugs found and fixed in the wizard/results engine
+
+1. **The original bug report:** answering "no microchip" still asked "how
+   many rabies vaccinations since the microchip was implanted" — a
+   nonsensical question. Fixed by gating `rabiesDoses`/`favnDone` on
+   `microchipDone === 'yes'` in their `showIf`, and introducing
+   `getEffectiveAnswers()` in `js/app.js` to normalize stale downstream
+   answers whenever an earlier answer in the chain changes.
+2. **Missing-warning bug:** the results page gave no indication when a
+   stated travel date was actually impossible (e.g. no FAVN done yet,
+   flying in a week). Added a **feasibility engine**
+   (`computeFeasibilityAlerts`) that renders unmissable red/orange banners
+   at the top of the results page for: FAVN 180-day wait not met, FAVN
+   about to expire, rabies coverage lapsing/lapsed, and the 40-day AQS
+   advance-notification deadline already passed.
+3. **`favnDone` question fixed to also require `rabiesDoses === '2+'`** —
+   FAVN can't happen after only one dose, same category of bug as #1.
+4. **`travelDate` staleness:** changing "do you have a target date" from
+   yes to no left the old date in storage, still driving a false
+   "impossible" blocker. Fixed by adding `travelDate` to
+   `getEffectiveAnswers()`'s normalization.
+5. **A second, subtler cascade gap** found while fixing #4: flipping
+   `favnDone` directly from yes→no (with `rabiesDoses` staying `'2+'`)
+   left a stale `favnDate` behind, because it was only being cleared as a
+   side effect of the `rabiesDoses` cascade, not directly on its own
+   condition. Rewrote `getEffectiveAnswers()` to mirror each field's own
+   `showIf` condition independently rather than nesting them.
+6. **The exhaustive audit (see below) found the deepest bug of the day:**
+   `getVisibleSteps()` — the function that decides which question the
+   WIZARD shows next — was filtering against raw stored answers, not the
+   normalized ones. So going back and downgrading `rabiesDoses` from
+   `'2+'` to `'1'`, or downgrading `microchipDone` from `'yes'` to `'no'`,
+   could still show a now-invalid downstream question (e.g. "date of the
+   FAVN blood draw" after just saying only one rabies dose has happened).
+   Fixed by having `getVisibleSteps()` filter against
+   `getEffectiveAnswers(answers)` instead of raw `answers` — the exact
+   same normalization now drives both wizard navigation and the results
+   page, one source of truth.
+
+**Lesson worth remembering:** two rounds of "fix the bug you found" were
+each individually correct but incomplete, because they normalized answers
+at the RESULTS page without also normalizing them for WIZARD NAVIGATION.
+The fix that finally closed all the gaps was building an exhaustive,
+UI-driven test (not spot checks) and letting it find every remaining hole
+at once. See `tests/wizard-exhaustive.test.js`.
+
+### Exhaustive decision-tree audit and permanent tests
+
+Added a real test suite under `tests/`, checked into the repo (previously
+all testing was ad hoc, scratchpad-only, and thrown away each session):
+- `tests/wizard-exhaustive.test.js` — walks the REAL wizard UI through
+  all 66 structurally-distinct combinations of the conditional-field
+  chain, asserting the exact question sequence at every step against an
+  independent oracle, plus 6 targeted "go back, change an answer,
+  continue" mutation replays through the real UI (this is what caught bug
+  #6 above).
+- `tests/date-feasibility.test.js` — the blocker/urgent alert engine.
+- `tests/regression.test.js` — dark mode, the header-width bug the theme
+  toggle caused, the build-info footer's rate-limit fallback.
+- `npm install && npm test` runs everything. See `CLAUDE.md` for the
+  rules this depends on (cache-busting bumps, keeping `showIf` and
+  `getEffectiveAnswers()` in sync).
+- Two genuine TEST bugs were found and fixed along the way, worth
+  remembering if touching these tests again: (a) reusing one Playwright
+  page across many sequential wizard walks without clearing localStorage
+  makes every walk after the first RESUME instead of starting fresh
+  (the wizard's resume-progress feature working as intended, just wrong
+  for a test that wants a clean slate); (b) `waitForSelector('.results-header, .card')`
+  is a race — `.card` is generic enough to match the still-present prior
+  page during the async hashchange re-render, so it returns before the
+  new page actually populates. Always wait on `.results-header` alone.
+
+### Dark/light theme toggle
+
+Added a header toggle (icon + label, icon-only below 1080px width),
+default light, remembered via a cookie (`pawport_theme`, not
+localStorage — explicit user request), applied before first paint via an
+inline script in `index.html`'s `<head>` so there's no flash on reload.
+Full dark palette as CSS custom properties, redefined under
+`:root[data-theme="dark"]` — see `CLAUDE.md` for the "never hardcode a
+color" rule this depends on.
+
+**Regression this caused and fixed:** the added toggle pushed header
+content past the 900px width it shared with body content, wrapping nav
+links onto two lines at most desktop/laptop widths (not just narrow
+ones — reproduced from 721px up to 1440px). Fixed by giving the header
+its own wider wrap (1180px), making the toggle icon-only through the
+whole "nav still inline but not spacious" range, and raising the
+mobile-hamburger cutover from 720px to 900px so inline nav never has to
+squeeze into too little room again.
+
+### Footer build stamp
+
+Replaced the old hand-maintained "Content last reviewed" line with a
+live "Last published: [date] ([viewer's timezone])" plus a tiny, faint,
+clickable commit-hash link — both derived from a live fetch to GitHub's
+commits API (`api.github.com/repos/njmurarka/pawport/commits/main`) so
+neither needs manual updating. **This broke once already:** GitHub's
+unauthenticated API is capped at 60 requests/hour per IP, shared across
+whatever NAT/proxy a visitor's traffic sits behind, and a visitor hit an
+exhausted IP, seeing a bare "—" with no hash link. Fixed with a
+hand-maintained fallback (`fallbackCommitHash` / `fallbackPublishedAt` in
+`checklist-data.json`, rendered immediately, overwritten if the live
+fetch succeeds) — bump those two fields by hand alongside deploys.
+
+### Cache-busting
+
+Discovered a visitor was seeing a stale cached copy of the site after a
+deploy (missing a feature that was confirmed live in the served HTML).
+Added `?v=N` query params to `css/styles.css`, `js/app.js`, and the
+`checklist-data.json` fetch — **must be bumped by hand on every edit to
+those files**, there's no build step to do it automatically. See
+`CLAUDE.md` for the current convention.
+
+### "Why is this asked?" help popups
+
+Added a `why` field to every wizard question in `checklist-data.json`
+(distinct from the existing short inline `help` hint) and a small "?"
+button next to each question label that opens a modal with the fuller
+rationale — reusing the existing export/import modal system rather than
+building a new one.
+
+### Per-country agency/forms research — completed
+
+The maintainer asked for the app to cover, at minimum, which government
+agency and which form(s) are needed for EVERY country — both the
+outbound (into Japan) leg (previously only Canada had this) and,
+explicitly requested despite the extra research burden, the RETURN leg
+(Japan's own export process, plus each origin country's own
+re-entry/import rules for a dog coming back from Japan specifically).
+
+Added a new "Returning Home" category and two checklist items:
+`return-japan-export` (generic — Japan's own AQS export process:
+apply via NACCS at least 14 days ahead, inspection within 10 days of
+departure, English export certificate issued on the spot; a Power of
+Attorney is needed if someone else brings the dog to inspection) and
+`return-import-home` (per-country, using the same
+`countryDetails[code][itemId]` note-lookup pattern already used for
+Form AC/gov-endorsement).
+
+**All 47 real countries (excluding the generic `OTHER` fallback) now
+have researched `form-ac`, `gov-endorsement`, and `return-import-home`
+entries in `countryDetails`.** Research was dispatched to parallel
+subagents by region, instructed to mark anything unverified as
+`"confidence":"general"` (visible in the source research, not currently
+surfaced in the UI text itself) rather than fabricate a plausible-
+sounding agency name. A few countries (China, South Africa, UAE, Saudi
+Arabia, Israel) have official-source pages that repeatedly blocked
+automated fetches, so their entries are more hedged/general than most —
+worth a follow-up pass with a human or a different fetch path if this
+matters for real users from those countries. One substantive finding
+worth remembering: **Fiji is asymmetric** — it's one of Japan's own
+designated (simplified, no-FAVN) regions for the *outbound* leg, but
+Fiji's own Biosecurity Authority (BAF) classifies Japan as its stricter
+"Group B" for the *return* leg, requiring a full rabies titer test and a
+30-day quarantine — the opposite of what the outbound simplification
+might lead someone to assume.
+
+**Mid-research, the account hit its usage limit and every in-flight
+research agent failed simultaneously** (including, apparently, agents
+from an unrelated concurrent Claude Code session on the same repo,
+"pawport-2d" — gone/unreachable by the time this was investigated, no
+conflicting commits found, and it may have actually been contributing
+useful results via cross-session messages rather than truly unrelated).
+Re-launched after the limit reset and finished from there.
+
+**Caveat for future sessions:** this content was researched by AI agents
+against official sources where reachable, not fact-checked by a human
+or by the maintainer's own experience (unlike the Canada content, which
+is lived experience). Treat it as a strong first draft, not gospel —
+the per-item wording already says "confirm directly" for anything
+genuinely uncertain, but rules do change, and a periodic re-verification
+pass (or maintainer review) would be worth doing before leaning on this
+too heavily for a real trip.
+
 ## Open items / not yet done
 
 - Confirm the maintainer regenerated the DuckDNS token after pasting it in chat.
-- Only Canada has rich per-country detail (`countryDetails.CA`); every other country still gets the generic fallback text.
+- Per-country research is complete (all 47 countries) but AI-researched, not human-fact-checked — see the caveat immediately above before treating it as gospel.
 - The exporting-country ambiguity (Canada vs. the country a flight happens to depart from, for a route that transits a third country overland) is explicitly unresolved in the "Our story" content — flagged there as the single open question the maintainer is still hedging on by obtaining both countries' export certificates.
 - No accounts / cross-device sync beyond the manual export-import-JSON feature — intentional for v1; a real backend (accounts, admin content-editing UI) is the natural v2 if this gets traction, and was scoped from the start so none of the current logic/content would be wasted in that migration.
 - The "Our story" page uses the maintainer's real voice/timeline already; further personalization is optional, not required.

@@ -39,7 +39,7 @@ This is a JSON file — it looks like code, but it's really just structured text
 
 **Update your own voice on the About page.** That's actually in `js/app.js`, not the JSON file — search for `renderAbout` near the middle of the file and edit the text between the quotes. It's plain sentences, safe to rewrite freely as long as you keep the surrounding `'<p>...</p>' +` structure intact.
 
-**Add a country's specific details.** Open `data/checklist-data.json` and find `"countryDetails"`. Right now there's a `"default"` entry (generic advice for any country) and a `"CA"` entry (Canada, filled in from real experience). To add another country, copy the `"CA"` block, change `"CA"` to that country's two-letter code (the same code used in the `"countries"` list further up the file), and fill in that country's actual `form-ac` and `gov-endorsement` text.
+**Add a country's specific details.** Open `data/checklist-data.json` and find `"countryDetails"`. There's a `"default"` entry (generic advice used as a fallback) and a growing set of per-country entries. Each country entry can have up to three fields: `form-ac` and `gov-endorsement` (the outbound leg — what local paperwork accompanies Japan's Form AC, and who endorses it) and `return-import-home` (the return leg — what that country's own agency requires to bring the dog back home from Japan). To add or improve a country, copy an existing block, change the code to that country's two-letter code (matching the `"countries"` list further up the file), and fill in real, sourced information — never guess an agency or form name; this app exists specifically because guessed/wrong advice costs people months.
 
 **Add a country to the dropdown.** Find `"countries"` near the top of the file. Each entry looks like:
 ```
@@ -68,6 +68,17 @@ You don't need to buy hosting. All three of these are free for a site this size:
 **GitHub Pages** — If you put this folder in a GitHub repository, go to the repo's Settings → Pages, and point it at the main branch. GitHub gives you a free `username.github.io` URL.
 
 Any of these also let you connect a custom domain later if you want something like `yourdogname.com`.
+
+## Testing (for developers)
+
+There's now an automated test suite in `tests/`, using Playwright. It requires Node.js:
+
+```
+npm install     # one-time — downloads Playwright and a browser
+npm test        # runs everything
+```
+
+This walks the actual wizard through every meaningfully different combination of answers (not just a few examples) and checks that going back and changing an earlier answer correctly updates everything that depends on it — that's the single easiest way to accidentally introduce a bug in a checklist like this, so **run `npm test` after editing anything in the `"wizard"` section's `"showIf"` rules, or anything in the `getEffectiveAnswers()` function in `js/app.js`.** See `CLAUDE.md` for more detail if an AI assistant is helping with this.
 
 ## A note on accuracy
 
