@@ -569,6 +569,13 @@ label.field-label { font-weight: 600; display: block; margin-bottom: 8px; }
   text-decoration: underline;
   padding: 10px;
 }
+.wizard-startover-row {
+  display: flex;
+  justify-content: center;
+  margin-top: 4px;
+}
+.start-over-link { font-size: 0.85rem; }
+.start-over-link:hover { color: var(--color-danger); }
 
 /* ---------- Results / checklist ---------- */
 .results-header {

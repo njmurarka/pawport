@@ -480,6 +480,7 @@
               '<button type="button" class="btn-primary" id="btnNext">' + (idx === steps.length - 1 ? 'See my checklist →' : 'Continue →') + '</button>' +
             '</div>' +
           '</div>' +
+          '<div class="wizard-startover-row"><button type="button" class="skip-link start-over-link" id="btnStartOver">↺ Start over</button></div>' +
         '</div>';
 
       container.innerHTML = html;
@@ -491,6 +492,19 @@
           openModal('Why we ask this', el('<div><p>' + escapeHtml(q.why) + '</p></div>'));
         });
       }
+
+      container.querySelector('#btnStartOver').addEventListener('click', function () {
+        if (window.confirm('This clears all your saved answers and progress on this device. Continue?')) {
+          localStorage.removeItem(STORAGE_KEYS.answers);
+          localStorage.removeItem(STORAGE_KEYS.checked);
+          // Already on #/wizard, so re-set the hash would be a no-op
+          // (no hashchange fires) — reset the in-memory state directly
+          // and re-render instead of navigating.
+          answers = {};
+          idx = 0;
+          update();
+        }
+      });
 
       container.querySelector('#btnNext').addEventListener('click', function () {
         if (q.required && !isAnswered(q, answers)) {

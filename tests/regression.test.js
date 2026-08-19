@@ -69,6 +69,34 @@ async function run() {
       }
     }
 
+    // ---------- "Start over" button on every wizard question ----------
+    {
+      const page = await browser.newPage();
+      await page.goto(BASE + '/#/wizard');
+      await page.selectOption('#fieldInput', 'CA');
+      await page.locator('#btnNext').click();
+      await page.locator('#btnSkip').click(); // now on dogBreed (question 3)
+
+      // Cancelling the confirm must leave everything untouched.
+      page.once('dialog', (d) => d.dismiss());
+      await page.locator('#btnStartOver').click();
+      await page.waitForTimeout(150);
+      let label = await page.locator('.question-label').textContent();
+      let stored = await page.evaluate(() => localStorage.getItem('pawport_answers_v1'));
+      check('Start-over present on a non-first question', label.includes('breed'), 'got: ' + label);
+      check('Cancelling the Start Over confirm leaves answers untouched', stored !== null, 'stored=' + stored);
+
+      // Accepting it must clear storage and reset to question 1.
+      page.once('dialog', (d) => d.accept());
+      await page.locator('#btnStartOver').click();
+      await page.waitForTimeout(150);
+      label = await page.locator('.question-label').textContent();
+      stored = await page.evaluate(() => localStorage.getItem('pawport_answers_v1'));
+      check('Accepting Start Over resets to the first question', label.includes('country'), 'got: ' + label);
+      check('Accepting Start Over clears stored answers', stored === null, 'stored=' + stored);
+      await page.close();
+    }
+
     // ---------- "Why is this asked?" help popup ----------
     {
       const page = await browser.newPage();
