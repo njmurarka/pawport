@@ -340,19 +340,15 @@ main#app { padding: 36px 20px 64px; min-height: 60vh; }
 }
 .hero h1 {
   font-size: clamp(1.9rem, 5.5vw, 2.9rem);
-  /* Deliberately a SOLID color, not a gradient. A gradient swept across
-     arbitrary text (background-clip:text) is fundamentally fragile:
-     whichever word happens to land near the middle of an orange<->teal
-     gradient gets rendered in the muddy, desaturated RGB-interpolation
-     zone between them — and there's no reliable way to know in advance
-     which word that'll be once font loading, viewport width, and
-     wrapping are all in play. This bit real users twice. "Japan" gets
-     its own solid accent-word color instead (see .accent-word below) —
-     solid colors can't blend into mud. */
+  /* One uniform solid color for the whole heading, deliberately — no
+     gradient, no per-word accent color. A gradient swept across
+     arbitrary text (background-clip:text) is fundamentally fragile
+     (whichever word lands near the gradient's middle renders in a
+     muddy, desaturated blend), and a distinct accent color on just
+     "Japan" read as a coloring bug rather than a design choice. */
   color: var(--color-primary-dark);
   padding-bottom: 4px;
 }
-.accent-word { color: var(--color-accent); }
 .hero p.lede {
   font-size: 1.18rem;
   color: var(--color-text-muted);
@@ -900,5 +896,5 @@ details.faq-item p { margin-bottom: 0; }
   body { background: #fff; }
   .checklist-item input[type="checkbox"] { accent-color: #000; }
   a[href]:after { content: "" !important; }
-  .hero h1, .results-header h1, .accent-word { color: #000; }
+  .hero h1, .results-header h1 { color: #000; }
 }

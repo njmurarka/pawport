@@ -69,16 +69,17 @@ async function run() {
       }
     }
 
-    // ---------- Heading "Japan" accent is a solid color, not a gradient sweep ----------
-    // Regression for a real bug (twice): background-clip:text gradients
-    // swept across arbitrary heading text put whichever word landed near
-    // the gradient's midpoint into the muddy, desaturated RGB-interpolation
-    // zone between orange and teal -- and that word was reliably "Japan"
-    // (short results heading) or landed near it (longer hero heading),
-    // rendering as dull khaki instead of a color. No amount of gradient-stop
-    // tuning reliably fixes this for arbitrary text/viewport/wrapping, so
-    // "Japan" now gets its own solid .accent-word color instead -- solid
-    // colors can't blend into mud. Check both headings, both themes.
+    // ---------- Headings are ONE uniform solid color, no gradient, no per-word accent ----------
+    // Regression for a real bug (three rounds): background-clip:text
+    // gradients swept across arbitrary heading text put whichever word
+    // landed near the gradient's midpoint into the muddy, desaturated
+    // RGB-interpolation zone between orange and teal, rendering as dull
+    // khaki instead of a color. A follow-up attempt gave "Japan" its own
+    // distinct solid accent color, which fixed the muddiness but read as
+    // a NEW coloring bug (inconsistent heading color) rather than a
+    // design choice. Both headings are now a single solid color
+    // throughout, no exceptions -- check there's no .accent-word (or any
+    // per-word color split) left anywhere, in both themes.
     {
       for (const theme of ['light', 'dark']) {
         const context = theme === 'dark'
@@ -87,20 +88,18 @@ async function run() {
         const page = await context.newPage();
 
         await page.goto(BASE + '/index.html#/home');
-        let accent = await page.locator('.hero h1 .accent-word').evaluate((el) => getComputedStyle(el).color);
-        let rest = await page.locator('.hero h1').evaluate((el) => getComputedStyle(el).color);
-        check(theme + ': home hero "Japan" is a distinct solid color from the rest of the heading', accent !== rest, 'accent=' + accent + ' rest=' + rest);
-        check(theme + ': home hero "Japan" color is fully opaque (solid, not a transparent gradient-clip)', !accent.includes('0, 0, 0, 0)') , 'accent=' + accent);
+        check(theme + ': home hero has no .accent-word or gradient-clip span', await page.locator('.hero h1 .accent-word').count() === 0);
+        let heroColor = await page.locator('.hero h1').evaluate((el) => getComputedStyle(el).color);
+        check(theme + ': home hero heading color is fully opaque (solid, not transparent)', !heroColor.includes('0, 0, 0, 0)'), 'color=' + heroColor);
 
         await setAnswers(page, {
           originCountry: 'DE', healthConditions: ['none'], microchipDone: 'yes', rabiesDoses: '2+',
           favnDone: 'no', travelDateKnown: 'no', hasTransit: 'no',
         });
         await goToResults(page);
-        accent = await page.locator('.results-header h1 .accent-word').evaluate((el) => getComputedStyle(el).color);
-        rest = await page.locator('.results-header h1').evaluate((el) => getComputedStyle(el).color);
-        check(theme + ': results heading "Japan" is a distinct solid color from the rest of the heading', accent !== rest, 'accent=' + accent + ' rest=' + rest);
-        check(theme + ': results heading "Japan" color is fully opaque (solid, not a transparent gradient-clip)', !accent.includes('0, 0, 0, 0)'), 'accent=' + accent);
+        check(theme + ': results heading has no .accent-word or gradient-clip span', await page.locator('.results-header h1 .accent-word').count() === 0);
+        let resultsColor = await page.locator('.results-header h1').evaluate((el) => getComputedStyle(el).color);
+        check(theme + ': results heading color is fully opaque (solid, not transparent)', !resultsColor.includes('0, 0, 0, 0)'), 'color=' + resultsColor);
 
         await page.close();
       }

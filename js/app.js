@@ -309,7 +309,7 @@
     app.appendChild(el(
       '<section class="hero">' +
         '<span class="tag">Free &middot; No account needed &middot; Works on your phone</span>' +
-        '<h1>Your dog’s path to <span class="accent-word">Japan</span>, mapped out step by step.</h1>' +
+        '<h1>Your dog’s path to Japan, mapped out step by step.</h1>' +
         '<p class="lede">Bringing a dog into Japan involves microchips, blood tests, strict deadlines, and government paperwork — in an order that matters. This tool turns all of that into a personalized checklist for your situation, built from real experience so you don’t have to learn every lesson the hard way.</p>' +
         '<div class="cta-row">' +
           '<a href="#/wizard" class="btn-primary" data-nav>Build my checklist &rarr;</a>' +
@@ -836,7 +836,7 @@
 
     var header = el(
       '<div class="results-header">' +
-        '<h1>' + dogLabel + ' checklist for <span class="accent-word">Japan</span></h1>' +
+        '<h1>' + dogLabel + ' checklist for Japan</h1>' +
         '<p class="muted">Starting from ' + escapeHtml(country.name) + (answers.dogBreed ? ' &middot; ' + escapeHtml(answers.dogBreed) : '') + '</p>' +
       '</div>'
     );
