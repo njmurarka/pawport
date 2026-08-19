@@ -1,0 +1,11 @@
+{
+  "name": "pawport-tests",
+  "private": true,
+  "description": "Test-only package.json. The site itself has no build step and no runtime dependencies — this exists purely so `npm install` can fetch Playwright for the tests/ suite.",
+  "scripts": {
+    "test": "node tests/run-all.js"
+  },
+  "devDependencies": {
+    "playwright": "^1.62.1"
+  }
+}
