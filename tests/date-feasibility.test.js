@@ -101,6 +101,75 @@ async function run() {
       await page.close();
     }
 
+    // 6b. THE EXACT REPORTED BUG: already filed advance notification ON TIME
+    // -> no alert at all, even though "today" is past the 40-day mark.
+    {
+      const page = await browser.newPage();
+      await setAnswers(page, {
+        originCountry: 'CA', healthConditions: ['none'], microchipDone: 'yes', rabiesDoses: '2+',
+        lastRabiesDate: fmtISO(new Date(Date.now() - 300 * 86400000)), rabiesDuration: '3yr',
+        favnDone: 'yes', favnDate: fmtISO(new Date(Date.now() - 400 * 86400000)),
+        travelDateKnown: 'yes', travelDate: daysFromNow(10),
+        aqsNotified: 'yes', aqsNotifiedDate: fmtISO(new Date(Date.now() - 300 * 86400000)), // filed ages ago, well before the deadline
+        hasTransit: 'no',
+      });
+      await goToResults(page);
+      const alerts = await page.locator('.feasibility-alert').count();
+      check('Already filed AQS notification on time -> zero alerts even though today is past the 40-day mark', alerts === 0, 'count=' + alerts);
+      await page.close();
+    }
+
+    // 6c. Filed, but the date given is AFTER the deadline -> still urgent, different wording (acknowledges they filed).
+    {
+      const page = await browser.newPage();
+      await setAnswers(page, {
+        originCountry: 'CA', healthConditions: ['none'], microchipDone: 'yes', rabiesDoses: '2+',
+        lastRabiesDate: fmtISO(new Date(Date.now() - 300 * 86400000)), rabiesDuration: '3yr',
+        favnDone: 'yes', favnDate: fmtISO(new Date(Date.now() - 400 * 86400000)),
+        travelDateKnown: 'yes', travelDate: daysFromNow(10),
+        aqsNotified: 'yes', aqsNotifiedDate: daysFromNow(5), // filed, but only 5 days before travel -- after the 40-day deadline
+        hasTransit: 'no',
+      });
+      await goToResults(page);
+      const urgentTitle = await page.locator('.feasibility-alert.level-urgent .feasibility-alert-title').textContent().catch(() => '');
+      check('Filed AFTER the deadline -> urgent alert acknowledging they filed, not "you have not notified"', /may have been filed after the deadline/i.test(urgentTitle), 'title=' + urgentTitle);
+      await page.close();
+    }
+
+    // 6d. Filed, but no date given, deadline already passed -> urgent "confirm the timing" alert (distinct wording, we genuinely don't know).
+    {
+      const page = await browser.newPage();
+      await setAnswers(page, {
+        originCountry: 'CA', healthConditions: ['none'], microchipDone: 'yes', rabiesDoses: '2+',
+        lastRabiesDate: fmtISO(new Date(Date.now() - 300 * 86400000)), rabiesDuration: '3yr',
+        favnDone: 'yes', favnDate: fmtISO(new Date(Date.now() - 400 * 86400000)),
+        travelDateKnown: 'yes', travelDate: daysFromNow(10),
+        aqsNotified: 'yes', // no aqsNotifiedDate given
+        hasTransit: 'no',
+      });
+      await goToResults(page);
+      const urgentTitle = await page.locator('.feasibility-alert.level-urgent .feasibility-alert-title').textContent().catch(() => '');
+      check('Filed with no date given, deadline passed -> "confirm it was on time" alert', /confirm your aqs advance notification/i.test(urgentTitle), 'title=' + urgentTitle);
+      await page.close();
+    }
+
+    // 6e. NOT filed (explicitly "no"), deadline passed -> the original assertive "you are past the deadline" wording.
+    {
+      const page = await browser.newPage();
+      await setAnswers(page, {
+        originCountry: 'CA', healthConditions: ['none'], microchipDone: 'yes', rabiesDoses: '2+',
+        lastRabiesDate: fmtISO(new Date(Date.now() - 300 * 86400000)), rabiesDuration: '3yr',
+        favnDone: 'yes', favnDate: fmtISO(new Date(Date.now() - 400 * 86400000)),
+        travelDateKnown: 'yes', travelDate: daysFromNow(10),
+        aqsNotified: 'no',
+        hasTransit: 'no',
+      });
+      await goToResults(page);
+      const urgentTitle = await page.locator('.feasibility-alert.level-urgent .feasibility-alert-title').textContent().catch(() => '');
+      check('Explicitly not filed, deadline passed -> "you are past the deadline" alert', /you are past the 40-day/i.test(urgentTitle), 'title=' + urgentTitle);
+      await page.close();
+    }
+
     // 7. Designated region -> AQS urgent alert still applies (it's not FAVN-gated)
     {
       const page = await browser.newPage();

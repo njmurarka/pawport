@@ -4,17 +4,77 @@
   var STORAGE_KEYS = { answers: 'pawport_answers_v1', checked: 'pawport_checked_v1' };
   var DATA = null;
   var countriesByCode = {};
+  var DATA_SCHEMA_VERSION = 1;
+
+  /* ================= forward/backward-compatible answers =================
+     Answers live in localStorage indefinitely (an app UPDATE must never
+     lose them) and can also arrive via a JSON import from any previous
+     export, a different device, or a hand-edited file. A future update to
+     this app can add, remove, reorder, or rename wizard questions and
+     their option values — none of that may ever crash or show garbage.
+
+     Reordering DATA.wizard is inherently safe already: answers are keyed
+     by question id, never by position. The two real risks are (1) a
+     field/option that no longer exists under the CURRENTLY loaded data,
+     and (2) a malformed value (wrong type, hand-edited JSON, a future
+     breaking schema change). sanitizeAnswers rebuilds the answers object
+     from scratch, copying a value over only if it's still valid under
+     whatever DATA.wizard defines right now; anything that fails that
+     check is silently dropped rather than kept as stale/garbage data —
+     the wizard just asks that question again, which is the correct, safe
+     fallback. sanitizeChecked does the same for checklist-item ids. */
+  function sanitizeAnswers(raw) {
+    if (!raw || typeof raw !== 'object') return {};
+    var clean = {};
+    DATA.wizard.forEach(function (q) {
+      if (!Object.prototype.hasOwnProperty.call(raw, q.id)) return;
+      var val = raw[q.id];
+      if (q.type === 'checkboxGroup') {
+        if (!Array.isArray(val)) return;
+        var allowedValues = (q.options || []).map(function (o) { return o.value; });
+        var filtered = val.filter(function (v) { return allowedValues.indexOf(v) !== -1; });
+        if (filtered.length) clean[q.id] = filtered;
+      } else if (q.type === 'radio') {
+        var allowedRadio = (q.options || []).map(function (o) { return o.value; });
+        if (typeof val === 'string' && allowedRadio.indexOf(val) !== -1) clean[q.id] = val;
+      } else if (q.type === 'select') {
+        var validCodes = q.optionsFrom === 'countries' ? DATA.countries.map(function (c) { return c.code; }) : [];
+        if (typeof val === 'string' && validCodes.indexOf(val) !== -1) clean[q.id] = val;
+      } else if (q.type === 'date') {
+        if (typeof val === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(val) && !isNaN(Date.parse(val))) clean[q.id] = val;
+      } else if (q.type === 'text') {
+        if (typeof val === 'string') clean[q.id] = val;
+      }
+    });
+    return clean;
+  }
+  function sanitizeChecked(raw) {
+    if (!raw || typeof raw !== 'object') return {};
+    var validIds = {};
+    DATA.checklistItems.forEach(function (item) { validIds[item.id] = true; });
+    var clean = {};
+    Object.keys(raw).forEach(function (id) { if (validIds[id] && raw[id]) clean[id] = true; });
+    return clean;
+  }
+  /* Seam for future schema migrations. A no-op today — schema v1 is the
+     only version that has ever existed — but any future BREAKING change
+     (renaming a field, changing what an option value means) gets a real
+     migration step added here, keyed off payload.version, run before
+     sanitizeAnswers so the rest of the app never has to know the history. */
+  function migrateAnswers(payload) {
+    return (payload && payload.answers) || {};
+  }
 
   /* ================= storage ================= */
   function loadAnswers() {
-    try { return JSON.parse(localStorage.getItem(STORAGE_KEYS.answers)) || {}; }
+    try { return sanitizeAnswers(JSON.parse(localStorage.getItem(STORAGE_KEYS.answers)) || {}); }
     catch (e) { return {}; }
   }
   function saveAnswers(a) {
     try { localStorage.setItem(STORAGE_KEYS.answers, JSON.stringify(a)); } catch (e) {}
   }
   function loadChecked() {
-    try { return JSON.parse(localStorage.getItem(STORAGE_KEYS.checked)) || {}; }
+    try { return sanitizeChecked(JSON.parse(localStorage.getItem(STORAGE_KEYS.checked)) || {}); }
     catch (e) { return {}; }
   }
   function saveChecked(c) {
@@ -86,6 +146,8 @@
        favnDone         <- originCountry (designated) + microchipDone + rabiesDoses
        favnDate         <- favnDone
        travelDate       <- travelDateKnown
+       aqsNotified      <- travelDateKnown
+       aqsNotifiedDate  <- travelDateKnown + aqsNotified
      Add a line here for any new conditional wizard question. */
   function getEffectiveAnswers(answers) {
     var eff = {};
@@ -110,6 +172,11 @@
     }
     if (eff.travelDateKnown !== 'yes') {
       eff.travelDate = undefined;
+      eff.aqsNotified = undefined;
+      eff.aqsNotifiedDate = undefined;
+    }
+    if (eff.aqsNotified !== 'yes') {
+      eff.aqsNotifiedDate = undefined;
     }
     return eff;
   }
@@ -226,12 +293,37 @@
       }
     }
 
-    if (dates.advanceNotificationDeadline && today > dates.advanceNotificationDeadline.value) {
-      alerts.push({
-        level: 'urgent',
-        title: 'You are past the 40-day advance-notification deadline',
-        detail: 'Japan’s Animal Quarantine Service requires advance notification at least 40 days before arrival. Based on your travel date, that deadline was ' + fmtDate(dates.advanceNotificationDeadline.value) + '. Contact the AQS office at your port of entry immediately if you haven’t already notified them — being this late risks delays or denial at arrival.'
-      });
+    if (dates.advanceNotificationDeadline) {
+      var deadline = dates.advanceNotificationDeadline.value;
+      var notifiedDate = parseDate(eff.aqsNotifiedDate);
+      var deadlinePassed = today > deadline;
+
+      if (eff.aqsNotified === 'yes' && notifiedDate) {
+        if (notifiedDate > deadline) {
+          alerts.push({
+            level: 'urgent',
+            title: 'Your AQS advance notification may have been filed after the deadline',
+            detail: 'You told us you submitted advance notification on ' + fmtDate(notifiedDate) + ', but the 40-day deadline for your travel date was ' + fmtDate(deadline) + ' — after that. Contact the AQS office at your port of entry to confirm they’ll still accept it; being late risks delays or denial at arrival.'
+          });
+        }
+        // else: filed on or before the deadline — fully compliant, no alert.
+      } else if (eff.aqsNotified === 'yes') {
+        // Filed, but no date given to check it against the deadline.
+        if (deadlinePassed) {
+          alerts.push({
+            level: 'urgent',
+            title: 'Confirm your AQS advance notification was filed on time',
+            detail: 'You told us you already submitted advance notification, but didn’t give a date, so this can’t be checked against your 40-day deadline of ' + fmtDate(deadline) + '. If you filed after that date, contact the AQS office at your port of entry to confirm they’ll still accept it.'
+          });
+        }
+      } else if (deadlinePassed) {
+        // Not yet notified (or unsure/unanswered) and the deadline has passed.
+        alerts.push({
+          level: 'urgent',
+          title: 'You are past the 40-day advance-notification deadline',
+          detail: 'Japan’s Animal Quarantine Service requires advance notification at least 40 days before arrival. Based on your travel date, that deadline was ' + fmtDate(deadline) + '. Contact the AQS office at your port of entry immediately if you haven’t already notified them — being this late risks delays or denial at arrival.'
+        });
+      }
     }
 
     return alerts;
@@ -685,7 +777,7 @@
   function buildExportPayload() {
     return {
       pawportExport: true,
-      version: 1,
+      version: DATA_SCHEMA_VERSION,
       exportedAt: new Date().toISOString(),
       answers: loadAnswers(),
       checked: loadChecked()
@@ -727,11 +819,17 @@
   }
 
   function applyImportedPayload(parsed) {
-    var answers = (parsed && typeof parsed.answers === 'object' && parsed.answers) ? parsed.answers : null;
-    if (!answers) throw new Error('This file doesn’t look like a PawPort checklist export (no “answers” found).');
-    var checked = (parsed && typeof parsed.checked === 'object' && parsed.checked) ? parsed.checked : {};
-    saveAnswers(answers);
-    saveChecked(checked);
+    if (!parsed || typeof parsed.answers !== 'object' || !parsed.answers) {
+      throw new Error('This file doesn’t look like a PawPort checklist export (no “answers” found).');
+    }
+    // migrateAnswers + sanitizeAnswers together mean an export from an
+    // older or newer app version, a different device, or a hand-edited
+    // file can never crash the import or leave garbage behind — anything
+    // that no longer matches the currently loaded question set is simply
+    // dropped, not kept as stale data.
+    saveAnswers(sanitizeAnswers(migrateAnswers(parsed)));
+    saveChecked(sanitizeChecked(parsed.checked));
+    return parsed.version !== DATA_SCHEMA_VERSION;
   }
 
   function openImportModal() {
@@ -754,8 +852,9 @@
     function finishImport(rawText) {
       try {
         var parsed = JSON.parse(rawText);
-        applyImportedPayload(parsed);
-        statusEl.textContent = 'Checklist imported. Loading it now…';
+        var versionMismatch = applyImportedPayload(parsed);
+        statusEl.textContent = 'Checklist imported. Loading it now…' +
+          (versionMismatch ? ' (This was exported from a different app version — a few older answers may not have carried over if questions changed since then.)' : '');
         statusEl.className = 'modal-status ok';
         setTimeout(function () {
           handle.close();
@@ -904,8 +1003,15 @@
             body += '<br><br><strong>📍 Specific to ' + escapeHtml(country.name) + ':</strong> ' + escapeHtml(detail);
           }
         }
+        // Already told us this is done — don't show a "submit by" deadline
+        // callout for something already handled; confirm it instead.
+        var alreadyNotifiedAqs = item.id === 'advance-notification' && eff.aqsNotified === 'yes';
+        if (alreadyNotifiedAqs) {
+          var notifiedDateForItem = parseDate(eff.aqsNotifiedDate);
+          body += '<br><br>✅ You told us you already submitted this' + (notifiedDateForItem ? ' on ' + escapeHtml(fmtDate(notifiedDateForItem)) : '') + '. (See the top of this page if there was an issue with the timing.)';
+        }
         var dateCalloutHtml = '';
-        if (item.computedDate && dates[item.computedDate]) {
+        if (item.computedDate && dates[item.computedDate] && !alreadyNotifiedAqs) {
           var dc = dates[item.computedDate];
           dateCalloutHtml = '<div class="date-callout">' + escapeHtml(dc.label) + ': <span class="value">' + fmtDate(dc.value) + '</span>' +
             (dc.note ? '<div class="muted" style="font-weight:400;margin-top:4px;">' + escapeHtml(dc.note) + '</div>' : '') +
@@ -1009,7 +1115,7 @@
   function init() {
     // ?v= bumped by hand alongside checklist-data.json edits, same
     // reasoning as the ?v= on the css/js tags in index.html.
-    fetch('data/checklist-data.json?v=4')
+    fetch('data/checklist-data.json?v=5')
       .then(function (r) { return r.json(); })
       .then(function (data) {
         DATA = data;

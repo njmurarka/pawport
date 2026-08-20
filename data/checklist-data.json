@@ -192,6 +192,28 @@
       "showIf": { "field": "travelDateKnown", "equals": "yes" }
     },
     {
+      "id": "aqsNotified",
+      "type": "radio",
+      "label": "Have you already submitted advance notification to Japan's Animal Quarantine Service (AQS)?",
+      "help": "This is the email/notification to the AQS office at your planned port of entry — separate from all your vet paperwork.",
+      "why": "This determines whether we warn you about the 40-day deadline at all. If you've already filed, being past the 40-day mark isn't a problem to flag — it's already handled. If you haven't, PawPort needs to know so it can tell you clearly rather than staying quiet about something time-sensitive.",
+      "options": [
+        { "value": "yes", "label": "Yes, already submitted" },
+        { "value": "no", "label": "Not yet" },
+        { "value": "unsure", "label": "Not sure" }
+      ],
+      "required": true,
+      "showIf": { "field": "travelDateKnown", "equals": "yes" }
+    },
+    {
+      "id": "aqsNotifiedDate",
+      "type": "date",
+      "label": "What date did you submit that advance notification?",
+      "why": "The 40-day rule is measured from this date, not from today. If you filed before the deadline, you're fine even if today's date is past it — this is exactly what lets PawPort tell the difference between 'already handled' and 'genuinely still a problem.'",
+      "required": false,
+      "showIf": { "field": "aqsNotified", "equals": "yes" }
+    },
+    {
       "id": "hasTransit",
       "type": "radio",
       "label": "Will your trip include any layover, stop, or overnight stay in a country other than your home country before you arrive in Japan?",

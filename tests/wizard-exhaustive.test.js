@@ -36,6 +36,7 @@ const SAFE_DATES = {
   lastRabiesDate: fmtISO(new Date(Date.now() - 60 * 86400000)),
   favnDate: fmtISO(new Date(Date.now() - 200 * 86400000)),
   travelDate: fmtISO(new Date(Date.now() + 300 * 86400000)),
+  aqsNotifiedDate: fmtISO(new Date(Date.now() - 10 * 86400000)),
 };
 
 function expectedIdsFor(combo) {
@@ -49,7 +50,10 @@ function expectedIdsFor(combo) {
     }
   }
   ids.push('travelDateKnown');
-  if (combo.travelDateKnown === 'yes') ids.push('travelDate');
+  if (combo.travelDateKnown === 'yes') {
+    ids.push('travelDate', 'aqsNotified');
+    if (combo.aqsNotified === 'yes') ids.push('aqsNotifiedDate');
+  }
   ids.push('hasTransit');
   return ids;
 }
@@ -77,33 +81,42 @@ function expectedItems(combo) {
   };
 }
 
+// [travelDateKnown, aqsNotified] pairs — aqsNotified only exists (and only
+// varies) when travelDateKnown is 'yes'; 'no' gets a single null placeholder.
+const TRAVEL_VARIANTS = [
+  ['no', null],
+  ['yes', 'yes'],
+  ['yes', 'no'],
+  ['yes', 'unsure'],
+];
+
 function buildCombos() {
   const combos = [];
   for (const microchipDone of ['yes', 'no', 'unsure']) {
-    for (const travelDateKnown of ['yes', 'no']) {
+    for (const [travelDateKnown, aqsNotified] of TRAVEL_VARIANTS) {
       for (const hasTransit of ['yes', 'no', 'unsure']) {
-        combos.push({ designated: true, originCode: DESIGNATED, microchipDone, rabiesDoses: null, favnDone: null, travelDateKnown, hasTransit });
+        combos.push({ designated: true, originCode: DESIGNATED, microchipDone, rabiesDoses: null, favnDone: null, travelDateKnown, aqsNotified, hasTransit });
       }
     }
   }
   for (const microchipDone of ['no', 'unsure']) {
-    for (const travelDateKnown of ['yes', 'no']) {
+    for (const [travelDateKnown, aqsNotified] of TRAVEL_VARIANTS) {
       for (const hasTransit of ['yes', 'no', 'unsure']) {
-        combos.push({ designated: false, originCode: NON_DESIGNATED, microchipDone, rabiesDoses: null, favnDone: null, travelDateKnown, hasTransit });
+        combos.push({ designated: false, originCode: NON_DESIGNATED, microchipDone, rabiesDoses: null, favnDone: null, travelDateKnown, aqsNotified, hasTransit });
       }
     }
   }
   for (const rabiesDoses of ['0', '1', 'unsure']) {
-    for (const travelDateKnown of ['yes', 'no']) {
+    for (const [travelDateKnown, aqsNotified] of TRAVEL_VARIANTS) {
       for (const hasTransit of ['yes', 'no', 'unsure']) {
-        combos.push({ designated: false, originCode: NON_DESIGNATED, microchipDone: 'yes', rabiesDoses, favnDone: null, travelDateKnown, hasTransit });
+        combos.push({ designated: false, originCode: NON_DESIGNATED, microchipDone: 'yes', rabiesDoses, favnDone: null, travelDateKnown, aqsNotified, hasTransit });
       }
     }
   }
   for (const favnDone of ['yes', 'no', 'unsure']) {
-    for (const travelDateKnown of ['yes', 'no']) {
+    for (const [travelDateKnown, aqsNotified] of TRAVEL_VARIANTS) {
       for (const hasTransit of ['yes', 'no', 'unsure']) {
-        combos.push({ designated: false, originCode: NON_DESIGNATED, microchipDone: 'yes', rabiesDoses: '2+', favnDone, travelDateKnown, hasTransit });
+        combos.push({ designated: false, originCode: NON_DESIGNATED, microchipDone: 'yes', rabiesDoses: '2+', favnDone, travelDateKnown, aqsNotified, hasTransit });
       }
     }
   }
@@ -156,6 +169,12 @@ async function answerField(page, id, combo) {
       break;
     case 'travelDate':
       await page.fill('#fieldInput', SAFE_DATES.travelDate);
+      break;
+    case 'aqsNotified':
+      await page.locator('.option-item', { hasText: combo.aqsNotified === 'yes' ? 'Yes, already submitted' : (combo.aqsNotified === 'no' ? 'Not yet' : /^Not sure$/) }).click();
+      break;
+    case 'aqsNotifiedDate':
+      await page.fill('#fieldInput', SAFE_DATES.aqsNotifiedDate);
       break;
     case 'hasTransit':
       await page.locator('.option-item', { hasText: { yes: /^Yes$/, no: 'No — direct route only', unsure: 'Not sure yet' }[combo.hasTransit] }).click();
@@ -260,49 +279,61 @@ async function runMutationTests(browser, check) {
   // 1. THE EXACT REPORTED BUG: had a travel date, changed mind to "not yet".
   await mutateAndVerify(
     'travelDateKnown yes->no',
-    { designated: false, originCode: NON_DESIGNATED, microchipDone: 'yes', rabiesDoses: '2+', favnDone: 'no', travelDateKnown: 'yes', hasTransit: 'no' },
+    { designated: false, originCode: NON_DESIGNATED, microchipDone: 'yes', rabiesDoses: '2+', favnDone: 'no', travelDateKnown: 'yes', aqsNotified: 'no', hasTransit: 'no' },
     'travelDateKnown',
-    { designated: false, originCode: NON_DESIGNATED, microchipDone: 'yes', rabiesDoses: '2+', favnDone: 'no', travelDateKnown: 'no', hasTransit: 'no' }
+    { designated: false, originCode: NON_DESIGNATED, microchipDone: 'yes', rabiesDoses: '2+', favnDone: 'no', travelDateKnown: 'no', aqsNotified: null, hasTransit: 'no' }
+  );
+
+  // 7. NEW FIELD's OWN cascade: answered aqsNotified=yes with a date, then
+  // went back and changed travelDateKnown to "not yet" — aqsNotified and
+  // aqsNotifiedDate must not survive as stale answers (same class of bug
+  // as mutation #1, now for the fields added to fix the "were you asked
+  // if you'd already filed" complaint).
+  await mutateAndVerify(
+    'travelDateKnown yes (aqsNotified=yes+date) -> no',
+    { designated: false, originCode: NON_DESIGNATED, microchipDone: 'yes', rabiesDoses: '2+', favnDone: 'no', travelDateKnown: 'yes', aqsNotified: 'yes', hasTransit: 'no' },
+    'travelDateKnown',
+    { designated: false, originCode: NON_DESIGNATED, microchipDone: 'yes', rabiesDoses: '2+', favnDone: 'no', travelDateKnown: 'no', aqsNotified: null, hasTransit: 'no' }
   );
 
   // 2. THE SECOND GAP FOUND DURING AUDIT: favnDone yes->no directly (rabiesDoses stays 2+).
   await mutateAndVerify(
     'favnDone yes->no',
-    { designated: false, originCode: NON_DESIGNATED, microchipDone: 'yes', rabiesDoses: '2+', favnDone: 'yes', travelDateKnown: 'no', hasTransit: 'no' },
+    { designated: false, originCode: NON_DESIGNATED, microchipDone: 'yes', rabiesDoses: '2+', favnDone: 'yes', travelDateKnown: 'no', aqsNotified: null, hasTransit: 'no' },
     'favnDone',
-    { designated: false, originCode: NON_DESIGNATED, microchipDone: 'yes', rabiesDoses: '2+', favnDone: 'no', travelDateKnown: 'no', hasTransit: 'no' }
+    { designated: false, originCode: NON_DESIGNATED, microchipDone: 'yes', rabiesDoses: '2+', favnDone: 'no', travelDateKnown: 'no', aqsNotified: null, hasTransit: 'no' }
   );
 
   // 3. rabiesDoses dialed back down from 2+ to 1 (favnDone/favnDate must vanish).
   await mutateAndVerify(
     'rabiesDoses 2+->1',
-    { designated: false, originCode: NON_DESIGNATED, microchipDone: 'yes', rabiesDoses: '2+', favnDone: 'yes', travelDateKnown: 'no', hasTransit: 'no' },
+    { designated: false, originCode: NON_DESIGNATED, microchipDone: 'yes', rabiesDoses: '2+', favnDone: 'yes', travelDateKnown: 'no', aqsNotified: null, hasTransit: 'no' },
     'rabiesDoses',
-    { designated: false, originCode: NON_DESIGNATED, microchipDone: 'yes', rabiesDoses: '1', favnDone: null, travelDateKnown: 'no', hasTransit: 'no' }
+    { designated: false, originCode: NON_DESIGNATED, microchipDone: 'yes', rabiesDoses: '1', favnDone: null, travelDateKnown: 'no', aqsNotified: null, hasTransit: 'no' }
   );
 
   // 4. microchipDone yes->no (the original reported bug's root field).
   await mutateAndVerify(
     'microchipDone yes->no',
-    { designated: false, originCode: NON_DESIGNATED, microchipDone: 'yes', rabiesDoses: '2+', favnDone: 'yes', travelDateKnown: 'no', hasTransit: 'no' },
+    { designated: false, originCode: NON_DESIGNATED, microchipDone: 'yes', rabiesDoses: '2+', favnDone: 'yes', travelDateKnown: 'no', aqsNotified: null, hasTransit: 'no' },
     'microchipDone',
-    { designated: false, originCode: NON_DESIGNATED, microchipDone: 'no', rabiesDoses: null, favnDone: null, travelDateKnown: 'no', hasTransit: 'no' }
+    { designated: false, originCode: NON_DESIGNATED, microchipDone: 'no', rabiesDoses: null, favnDone: null, travelDateKnown: 'no', aqsNotified: null, hasTransit: 'no' }
   );
 
   // 5. originCountry switched from non-designated (with full FAVN chain done) to designated.
   await mutateAndVerify(
     'originCountry CA->AU (designated switch)',
-    { designated: false, originCode: NON_DESIGNATED, microchipDone: 'yes', rabiesDoses: '2+', favnDone: 'yes', travelDateKnown: 'no', hasTransit: 'no' },
+    { designated: false, originCode: NON_DESIGNATED, microchipDone: 'yes', rabiesDoses: '2+', favnDone: 'yes', travelDateKnown: 'no', aqsNotified: null, hasTransit: 'no' },
     'originCountry',
-    { designated: true, originCode: DESIGNATED, microchipDone: 'yes', rabiesDoses: null, favnDone: null, travelDateKnown: 'no', hasTransit: 'no' }
+    { designated: true, originCode: DESIGNATED, microchipDone: 'yes', rabiesDoses: null, favnDone: null, travelDateKnown: 'no', aqsNotified: null, hasTransit: 'no' }
   );
 
   // 6. Reverse direction: designated -> non-designated should correctly START ASKING the rabies/FAVN chain.
   await mutateAndVerify(
     'originCountry AU->CA (designated -> non-designated)',
-    { designated: true, originCode: DESIGNATED, microchipDone: 'yes', rabiesDoses: null, favnDone: null, travelDateKnown: 'no', hasTransit: 'no' },
+    { designated: true, originCode: DESIGNATED, microchipDone: 'yes', rabiesDoses: null, favnDone: null, travelDateKnown: 'no', aqsNotified: null, hasTransit: 'no' },
     'originCountry',
-    { designated: false, originCode: NON_DESIGNATED, microchipDone: 'yes', rabiesDoses: '0', favnDone: null, travelDateKnown: 'no', hasTransit: 'no' }
+    { designated: false, originCode: NON_DESIGNATED, microchipDone: 'yes', rabiesDoses: '0', favnDone: null, travelDateKnown: 'no', aqsNotified: null, hasTransit: 'no' }
   );
 
   await page.close();
