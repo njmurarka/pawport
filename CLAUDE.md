@@ -12,6 +12,14 @@ this file is the short, operational version: what to do, not why.
 per-country detail, FAQ, glossary). No framework, no bundler. Deployed via
 GitHub Pages directly from `main`, custom domain `pawport.duckdns.org`.
 
+One vendored third-party file: `js/vendor/html2canvas.min.js` (MIT,
+unmodified — see `js/vendor/README.md`), powering the results page's
+"Download as image" / "Download as one-page PDF" buttons. Vendored rather
+than CDN-loaded so those buttons don't depend on a third-party host being
+up. The PDF itself is hand-built in `js/app.js` (`buildSingleImagePdf`),
+not a second library — embedding one JPEG on one page is a tiny slice of
+the PDF spec.
+
 ## Rules that must not be violated
 
 1. **Cache-busting.** `index.html` loads `css/styles.css?v=N`,

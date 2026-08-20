@@ -348,6 +348,27 @@ Covered by `tests/data-resilience.test.js` (obsolete fields, invalid
 option values, missing newer required fields, garbage/malformed JSON, and
 plain localStorage self-healing).
 
+### Download as image / one-page PDF
+
+The maintainer explicitly dislikes the existing "Print / Save as PDF"
+button because browser print pagination breaks a long checklist across
+multiple letter-size pages — asked for two NEW one-click direct-download
+buttons instead (existing print button left untouched). Added
+`js/vendor/html2canvas.min.js` (v1.4.1, MIT, vendored not CDN-loaded —
+see `js/vendor/README.md`) to rasterize the results content (everything
+in `#app` except the `.results-actions` button row itself) to a canvas.
+"Download as image" saves that directly as a PNG. "Download as one-page
+PDF" converts it to a JPEG and wraps it in a hand-built minimal PDF
+(`buildSingleImagePdf` in `js/app.js`) — deliberately not a second
+vendored library, since embedding one JPEG on one page (Image XObject,
+`/Filter /DCTDecode`, no re-encoding needed) is a tiny, well-defined
+slice of the PDF spec. Validated during development against `qpdf
+--check`, `pdfinfo`, and `pdftoppm` rendering (not just visual
+inspection) — genuinely a valid, single-page (not paginated) PDF.
+`tests/export.test.js` re-checks the same structural properties in pure
+JS (PDF header/trailer/page-count/MediaBox, PNG signature/dimensions) so
+the suite has no dependency on those system tools being installed.
+
 ## Open items / not yet done
 
 - Confirm the maintainer regenerated the DuckDNS token after pasting it in chat.

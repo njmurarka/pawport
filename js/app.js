@@ -762,8 +762,7 @@
     }
   }
 
-  function downloadTextAsFile(filename, text) {
-    var blob = new Blob([text], { type: 'application/json' });
+  function downloadBlob(filename, blob) {
     var url = URL.createObjectURL(blob);
     var a = document.createElement('a');
     a.href = url;
@@ -772,6 +771,152 @@
     a.click();
     document.body.removeChild(a);
     setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+  }
+  function downloadTextAsFile(filename, text) {
+    downloadBlob(filename, new Blob([text], { type: 'application/json' }));
+  }
+
+  /* ================= checklist image / single-page PDF export =================
+     Renders the results content (everything except the action buttons
+     themselves) to a canvas via the vendored html2canvas, then either
+     downloads that directly as a PNG or wraps it in a hand-built minimal
+     single-page PDF. Deliberately NOT window.print(): that's what the
+     existing "Print / Save as PDF" button already does (and paginates,
+     per the maintainer's own complaint) — this is a genuinely different,
+     one-click direct file download, everything on one long image/page. */
+  function captureResultsCanvas() {
+    if (typeof window.html2canvas !== 'function') {
+      return Promise.reject(new Error('The image/PDF export library did not load. Try reloading the page.'));
+    }
+    var target = document.getElementById('app');
+    var bg = getComputedStyle(document.body).backgroundColor;
+    return window.html2canvas(target, {
+      backgroundColor: bg,
+      useCORS: true,
+      scale: Math.min(2, window.devicePixelRatio || 1),
+      ignoreElements: function (node) { return !!(node.classList && node.classList.contains('results-actions')); }
+    });
+  }
+
+  function exportFilenameBase() {
+    var a = loadAnswers();
+    return 'pawport-checklist' + (a.dogName ? '-' + a.dogName.toLowerCase().replace(/[^a-z0-9]+/g, '-') : '');
+  }
+
+  function downloadResultsAsPng() {
+    return captureResultsCanvas().then(function (canvas) {
+      return new Promise(function (resolve, reject) {
+        canvas.toBlob(function (blob) {
+          if (!blob) { reject(new Error('Could not create the image.')); return; }
+          downloadBlob(exportFilenameBase() + '.png', blob);
+          resolve();
+        }, 'image/png');
+      });
+    });
+  }
+
+  function stringToBytes(str) {
+    var bytes = new Uint8Array(str.length);
+    for (var i = 0; i < str.length; i++) bytes[i] = str.charCodeAt(i) & 0xff;
+    return bytes;
+  }
+  function dataUrlToBytes(dataUrl) {
+    var base64 = dataUrl.slice(dataUrl.indexOf(',') + 1);
+    var binary = atob(base64);
+    var bytes = new Uint8Array(binary.length);
+    for (var i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+    return bytes;
+  }
+  function pad10(n) {
+    var s = String(Math.round(n));
+    while (s.length < 10) s = '0' + s;
+    return s;
+  }
+
+  /* Hand-built rather than a second vendored PDF library: embedding one
+     JPEG on one page is a tiny, well-defined slice of the PDF spec (an
+     XObject Image with Filter /DCTDecode holds the JPEG bytes completely
+     unmodified — no re-encoding needed), so doing it directly avoids a
+     second ~300KB+ dependency for what is a very small amount of actual
+     structure. Every xref entry is exactly 20 bytes as the spec requires
+     — verified against `qpdf --check` and by rendering with `pdftoppm`
+     during development, not just visual inspection. */
+  function buildSingleImagePdf(jpegBytes, pxWidth, pxHeight, ptWidth, ptHeight) {
+    var parts = [];
+    var pos = 0;
+    var offsets = [];
+    function add(part) { parts.push(part); pos += part.length; }
+    function beginObj(num) { offsets[num] = pos; add(stringToBytes(num + ' 0 obj\n')); }
+    function endObj() { add(stringToBytes('endobj\n')); }
+
+    add(stringToBytes('%PDF-1.4\n'));
+
+    beginObj(1);
+    add(stringToBytes('<< /Type /Catalog /Pages 2 0 R >>\n'));
+    endObj();
+
+    beginObj(2);
+    add(stringToBytes('<< /Type /Pages /Kids [3 0 R] /Count 1 >>\n'));
+    endObj();
+
+    beginObj(3);
+    add(stringToBytes(
+      '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ' + ptWidth + ' ' + ptHeight + ']' +
+      ' /Resources << /XObject << /Im0 4 0 R >> >> /Contents 5 0 R >>\n'
+    ));
+    endObj();
+
+    beginObj(4);
+    add(stringToBytes(
+      '<< /Type /XObject /Subtype /Image /Width ' + pxWidth + ' /Height ' + pxHeight +
+      ' /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ' + jpegBytes.length + ' >>\nstream\n'
+    ));
+    add(jpegBytes);
+    add(stringToBytes('\nendstream\n'));
+    endObj();
+
+    var content = 'q ' + ptWidth + ' 0 0 ' + ptHeight + ' 0 0 cm /Im0 Do Q';
+    beginObj(5);
+    add(stringToBytes('<< /Length ' + content.length + ' >>\nstream\n' + content + '\nendstream\n'));
+    endObj();
+
+    var xrefStart = pos;
+    var xref = 'xref\n0 6\n0000000000 65535 f\r\n';
+    for (var n = 1; n <= 5; n++) xref += pad10(offsets[n]) + ' 00000 n\r\n';
+    add(stringToBytes(xref));
+    add(stringToBytes('trailer\n<< /Size 6 /Root 1 0 R >>\nstartxref\n' + xrefStart + '\n%%EOF'));
+
+    var total = 0;
+    parts.forEach(function (p) { total += p.length; });
+    var out = new Uint8Array(total);
+    var off = 0;
+    parts.forEach(function (p) { out.set(p, off); off += p.length; });
+    return out;
+  }
+
+  function downloadResultsAsPdf() {
+    var target = document.getElementById('app');
+    var cssWidth = target.offsetWidth;
+    var cssHeight = target.scrollHeight;
+    return captureResultsCanvas().then(function (canvas) {
+      var jpegBytes = dataUrlToBytes(canvas.toDataURL('image/jpeg', 0.92));
+      var ptWidth = Math.round(cssWidth * 0.75);
+      var ptHeight = Math.round(cssHeight * 0.75);
+      var pdfBytes = buildSingleImagePdf(jpegBytes, canvas.width, canvas.height, ptWidth, ptHeight);
+      downloadBlob(exportFilenameBase() + '.pdf', new Blob([pdfBytes], { type: 'application/pdf' }));
+    });
+  }
+
+  function withExportButton(btn, workFn) {
+    var original = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = 'Preparing…';
+    workFn().catch(function (err) {
+      window.alert('Sorry, that didn’t work: ' + (err && err.message ? err.message : err));
+    }).then(function () {
+      btn.disabled = false;
+      btn.textContent = original;
+    });
   }
 
   function buildExportPayload() {
@@ -962,6 +1107,8 @@
     var actions = el(
       '<div class="results-actions">' +
         '<button type="button" class="btn-secondary" id="btnPrint">🖨️ Print / Save as PDF</button>' +
+        '<button type="button" class="btn-secondary" id="btnDownloadPng">🖼️ Download as image</button>' +
+        '<button type="button" class="btn-secondary" id="btnDownloadPdf">📄 Download as one-page PDF</button>' +
         '<a href="#/wizard" class="btn-secondary" data-nav>✏️ Edit my answers</a>' +
         '<button type="button" class="btn-secondary" id="btnExport">⬇️ Export checklist</button>' +
         '<button type="button" class="btn-secondary" id="btnImport">⬆️ Import checklist</button>' +
@@ -970,6 +1117,12 @@
     );
     app.appendChild(actions);
     actions.querySelector('#btnPrint').addEventListener('click', function () { window.print(); });
+    actions.querySelector('#btnDownloadPng').addEventListener('click', function () {
+      withExportButton(this, downloadResultsAsPng);
+    });
+    actions.querySelector('#btnDownloadPdf').addEventListener('click', function () {
+      withExportButton(this, downloadResultsAsPdf);
+    });
     actions.querySelector('#btnExport').addEventListener('click', openExportModal);
     actions.querySelector('#btnImport').addEventListener('click', openImportModal);
     actions.querySelector('#btnStartOver').addEventListener('click', function () {
