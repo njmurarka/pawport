@@ -272,6 +272,82 @@ genuinely uncertain, but rules do change, and a periodic re-verification
 pass (or maintainer review) would be worth doing before leaning on this
 too heavily for a real trip.
 
+## Session 3 (2026-08-19): the heading-font saga, AQS notification question, data resilience
+
+### The heading font/color saga — three wrong fixes before the real one
+
+The maintainer reported "the fonts look fucked" pointing at the word
+"Japan" in headings. This took four rounds to actually fix, worth
+remembering the shape of the mistake:
+1. First fix: the gradient-clipped heading text's CSS box was sized to
+   the full (wide, block-level) container, not the shorter centered
+   text — so short headings never reached the gradient's teal endpoint,
+   landing in a muddy transition zone. Fixed the box sizing
+   (`display:inline-block`). **Wrong fix** — still muddy on other
+   headings/viewports where the box-sizing wasn't the whole story.
+2. Second fix: gave "Japan" its own solid accent color instead of a
+   gradient, reasoning that ANY word landing mid-gradient hits the same
+   muddy RGB-interpolation zone between orange and teal, regardless of
+   box sizing. This technically worked (verified via pixel sampling)
+   but **the maintainer rejected it anyway** — a heading in two visibly
+   different colors read as a NEW bug to him, not a design choice.
+3. Third fix: made the whole heading one uniform solid color, no
+   per-word accent. Maintainer's response: "still shit," pointed at the
+   letter **"J" specifically**.
+4. **The actual root cause**, finally: nothing to do with color at all.
+   Fraunces (the display serif font) draws "J" as a decorative swash
+   descender that curls back under the letter — genuine, intentional
+   typography for that font, but it reads as broken. Fixed by swapping
+   `--font-display` from Fraunces to Playfair Display (normal
+   letterforms), site-wide, via the one CSS variable.
+
+**Lesson:** three rounds of technically-correct color/gradient fixes
+never addressed the actual complaint because nobody looked at the
+GLYPH itself until directly asked "what specifically is wrong" and told
+"look at the J." When a visual bug report survives a fix that's been
+verified correct, stop iterating on the same theory (color) and
+question the premise (is it even a color problem?).
+
+### AQS advance-notification question
+
+Reported bug: the results page would warn "you are past the 40-day
+advance-notification deadline" unconditionally whenever today's date was
+past that computed deadline — without ever asking whether the user had
+actually already filed it. Added two wizard questions after `travelDate`:
+`aqsNotified` (yes/no/unsure) and `aqsNotifiedDate` (date, shown if yes).
+`computeFeasibilityAlerts()` now branches three ways: filed on/before the
+deadline → no alert at all (even though "today" is past it); filed but
+after the deadline (or filed with no date given to check) → urgent alert
+acknowledging they filed, asking them to confirm AQS will still accept
+it; not filed (or unsure/unanswered, the conservative default) → the
+original assertive warning. `tests/wizard-exhaustive.test.js`'s combo
+count grew from 66 to 132 to cover `aqsNotified`'s three values wherever
+`travelDateKnown` is 'yes'; `tests/date-feasibility.test.js` covers all
+three alert branches directly.
+
+### Data resilience — surviving the app's own future updates
+
+The maintainer asked, unprompted, for the exported-JSON and localStorage
+schema to survive future app updates that add/remove/reorder/rename
+wizard questions — imports from an old export, or localStorage left over
+from before an update, must never crash or show garbage. Added
+`sanitizeAnswers()`/`sanitizeChecked()` in `js/app.js`, which rebuild the
+answers/checked objects from whatever fields+types+option-values the
+CURRENTLY loaded data actually defines, silently dropping anything that
+no longer matches (obsolete field, invalid/renamed option, malformed
+value) rather than keeping it as stale data. Run on every `loadAnswers()`/
+`loadChecked()` call, not just imports — so a plain reload after an app
+update self-heals too. `migrateAnswers()` is a documented no-op seam for
+a future REAL migration (schema v1 is the only version that's ever
+existed) keyed off the export's `version` field. Reordering the wizard
+array needs no special handling — already safe by construction, since
+everything is keyed by question id, never array position; this is
+asserted in code comments rather than runtime-tested (would require
+mutating the real data file mid-test for marginal extra confidence).
+Covered by `tests/data-resilience.test.js` (obsolete fields, invalid
+option values, missing newer required fields, garbage/malformed JSON, and
+plain localStorage self-healing).
+
 ## Open items / not yet done
 
 - Confirm the maintainer regenerated the DuckDNS token after pasting it in chat.

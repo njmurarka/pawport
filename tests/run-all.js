@@ -2,7 +2,7 @@
 // Usage: npm test (from the repo root; requires `npm install` first).
 const { startServer } = require('./helpers');
 
-const SUITES = ['./wizard-exhaustive.test.js', './date-feasibility.test.js', './regression.test.js', './country-content.test.js'];
+const SUITES = ['./wizard-exhaustive.test.js', './date-feasibility.test.js', './regression.test.js', './country-content.test.js', './data-resilience.test.js'];
 
 async function main() {
   await startServer();

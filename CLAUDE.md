@@ -44,8 +44,31 @@ GitHub Pages directly from `main`, custom domain `pawport.duckdns.org`.
      `favnDone` flip. All three are now covered by
      `tests/wizard-exhaustive.test.js` and `tests/date-feasibility.test.js`
      — **run `npm test` after touching anything in this chain.**
+   - `aqsNotified` / `aqsNotifiedDate` (← `travelDateKnown` / `aqsNotified`)
+     follow the same rule: `computeFeasibilityAlerts()` must ask "did they
+     already file?" before warning about the 40-day AQS deadline — an
+     earlier version warned unconditionally whenever today was past the
+     deadline, even if the user had already filed on time.
 
-3. **No fabricated regulatory facts.** This app exists because scattered,
+3. **Answers must survive the app itself changing.** Exported JSON and
+   localStorage both persist indefinitely and can outlive several future
+   versions of this app. `sanitizeAnswers()` / `sanitizeChecked()` in
+   `js/app.js` rebuild the answers/checked objects from whatever the
+   CURRENTLY loaded `DATA.wizard` / `DATA.checklistItems` actually define,
+   copying a value over only if it's still a valid field+type+option under
+   today's schema — anything obsolete, renamed, or malformed is dropped,
+   never kept as stale data or shown as garbage. `loadAnswers()`/
+   `loadChecked()` run this on every load (including normal reloads, not
+   just imports), and `migrateAnswers()` is a currently-no-op seam for a
+   future real migration keyed off the export's `version` field. If you
+   rename a question id or change what an option value means, add real
+   logic to `migrateAnswers()` rather than relying on sanitize alone (which
+   can only drop invalid data, not translate it). Covered by
+   `tests/data-resilience.test.js`. Reordering `DATA.wizard` itself needs
+   no special handling — everything is keyed by question id, never by
+   array position.
+
+4. **No fabricated regulatory facts.** This app exists because scattered,
    sometimes-wrong advice cost the maintainer real time. Per-country
    agency/form names in `countryDetails` must come from an actual official
    government source (or be explicitly marked as general fallback guidance)
