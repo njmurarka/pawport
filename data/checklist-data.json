@@ -8,8 +8,8 @@
     { "label": "MAFF: Designated laboratories for the rabies antibody test", "url": "https://www.maff.go.jp/aqs/animal/dog/lab.html" }
   ],
   "lastVerified": "2026-10-19",
-  "fallbackCommitHash": "ffe47fd450dc0eb932d7c7ac5fd2eea9fe7caafe",
-  "fallbackPublishedAt": "2026-10-20T02:49:16-07:00",
+  "fallbackCommitHash": "d96344c1dcc18376b22f9516a16c51dc434443a0",
+  "fallbackPublishedAt": "2026-10-20T03:09:30-07:00",
   "countries": [
     { "code": "CA", "name": "Canada", "designated": false, "richDetail": true },
     { "code": "US", "name": "United States (mainland)", "designated": false },
