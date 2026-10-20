@@ -12,9 +12,24 @@
   document.documentElement.setAttribute('data-theme', theme);
 })();
 </script>
-<title>PawPort — Your dog's path to Japan, mapped out</title>
+<title>port.dog — Your dog's path to Japan, mapped out</title>
 <meta name="description" content="A free, personalized step-by-step checklist for bringing your dog to Japan from anywhere in the world.">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%90%BE%3C/text%3E%3C/svg%3E">
+<link rel="icon" href="favicon.ico" sizes="16x16 32x32 48x48">
+<link rel="icon" type="image/png" sizes="32x32" href="assets/icons/favicon-32.png">
+<link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png">
+<link rel="manifest" href="site.webmanifest">
+<meta name="theme-color" content="#17130f">
+<link rel="canonical" href="https://port.dog/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="port.dog">
+<meta property="og:url" content="https://port.dog/">
+<meta property="og:title" content="port.dog — Your dog's path to Japan, mapped out">
+<meta property="og:description" content="A free, personalized step-by-step checklist for bringing your dog to Japan from anywhere in the world.">
+<meta property="og:image" content="https://port.dog/assets/img/og-image.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="A boxer in aviator goggles and a travel harness, with a jet taking off behind him">
+<meta name="twitter:card" content="summary_large_image">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -22,7 +37,7 @@
      changes — there's no build step to hash filenames automatically,
      and without this, browsers can keep serving a stale cached copy
      after a deploy. -->
-<link rel="stylesheet" href="css/styles.css?v=8">
+<link rel="stylesheet" href="css/styles.css?v=9">
 </head>
 <body>
 
@@ -31,8 +46,8 @@
 <header class="site-header">
   <div class="wrap header-row">
     <a class="brand" href="#/home" data-nav>
-      <span class="brand-mark" aria-hidden="true">🐾</span>
-      <span class="brand-name">PawPort</span>
+      <img class="brand-mark" src="assets/img/avatar-96.webp" alt="" width="40" height="40">
+      <span class="brand-name">port<span class="brand-tld">.dog</span></span>
     </a>
     <div class="header-right">
       <button class="theme-toggle" id="themeToggle" type="button" aria-label="Switch to dark mode" title="Switch to dark mode">
@@ -65,6 +80,6 @@
      working even if a third-party CDN is slow, blocked, or down — see
      CLAUDE.md. MIT licensed, unmodified; see js/vendor/README.md. -->
 <script src="js/vendor/html2canvas.min.js?v=1" defer></script>
-<script src="js/app.js?v=19" defer></script>
+<script src="js/app.js?v=20" defer></script>
 </body>
 </html>

@@ -1,5 +1,5 @@
 {
-  "appName": "PawPort",
+  "appName": "port.dog",
   "tagline": "A personalized, step-by-step guide for bringing your dog to Japan — built from real experience, so you don't have to learn it the hard way.",
   "officialSources": [
     { "label": "MAFF: Guide to importing dogs and cats (non-designated regions)", "url": "https://www.maff.go.jp/aqs/animal/dog/attach/pdf/import-other-42.pdf" },
@@ -135,7 +135,7 @@
       "id": "lastRabiesDate",
       "type": "date",
       "label": "Date of the most recent rabies vaccination",
-      "why": "This date anchors two later calculations: how soon a second dose could safely follow (if needed), and — combined with the labeled duration below — when the next booster is due before coverage lapses. A wrong date here throws off every date PawPort calculates for you downstream.",
+      "why": "This date anchors two later calculations: how soon a second dose could safely follow (if needed), and — combined with the labeled duration below — when the next booster is due before coverage lapses. A wrong date here throws off every date port.dog calculates for you downstream.",
       "required": false,
       "showIf": { "field": "rabiesDoses", "in": ["1", "2+"] }
     },
@@ -143,7 +143,7 @@
       "id": "rabiesDuration",
       "type": "radio",
       "label": "What's the labeled immunity duration on that vaccine (check the certificate for a ‘duration of immunity’ or similar field)?",
-      "why": "Rabies vaccines are labeled for either 1 or 3 years of protection. This isn't a Japan-specific rule directly — it's about never letting coverage lapse. If a booster is given even one day after this labeled period ends, Japan no longer accepts your existing FAVN result at all, and the whole process (new vaccinations, new blood test, new 180-day wait) starts over from zero. This lets PawPort calculate a safe booster reminder date for you.",
+      "why": "Rabies vaccines are labeled for either 1 or 3 years of protection. This isn't a Japan-specific rule directly — it's about never letting coverage lapse. If a booster is given even one day after this labeled period ends, Japan no longer accepts your existing FAVN result at all, and the whole process (new vaccinations, new blood test, new 180-day wait) starts over from zero. This lets port.dog calculate a safe booster reminder date for you.",
       "options": [
         { "value": "1yr", "label": "1 year" },
         { "value": "3yr", "label": "3 years" },
@@ -177,7 +177,7 @@
       "id": "travelDateKnown",
       "type": "radio",
       "label": "Do you have a target travel date?",
-      "why": "If you already have a target date, PawPort checks it right now against your FAVN and rabies timelines and warns you immediately if it isn't actually achievable, rather than you finding out at the airport. If you don't have one yet, that check is simply skipped and you'll see earliest-possible-date guidance instead.",
+      "why": "If you already have a target date, port.dog checks it right now against your FAVN and rabies timelines and warns you immediately if it isn't actually achievable, rather than you finding out at the airport. If you don't have one yet, that check is simply skipped and you'll see earliest-possible-date guidance instead.",
       "options": [
         { "value": "yes", "label": "Yes" },
         { "value": "no", "label": "Not yet — just planning ahead" }
@@ -188,7 +188,7 @@
       "id": "travelDate",
       "type": "date",
       "label": "Target travel date (arrival in Japan)",
-      "why": "This is checked against three separate hard deadlines: the FAVN 180-day minimum wait, the FAVN's 2-year outer validity, and the 40-day advance-notification deadline for Japan's Animal Quarantine Service. If your date conflicts with any of them, PawPort flags it clearly on your results page rather than letting you find out too late.",
+      "why": "This is checked against three separate hard deadlines: the FAVN 180-day minimum wait, the FAVN's 2-year outer validity, and the 40-day advance-notification deadline for Japan's Animal Quarantine Service. If your date conflicts with any of them, port.dog flags it clearly on your results page rather than letting you find out too late.",
       "required": false,
       "showIf": { "field": "travelDateKnown", "equals": "yes" }
     },
@@ -197,7 +197,7 @@
       "type": "radio",
       "label": "Have you already submitted advance notification to Japan's Animal Quarantine Service (AQS)?",
       "help": "This is the notification (online via NACCS, or by email) to the AQS office at your planned port of entry — separate from all your vet paperwork.",
-      "why": "This determines whether we warn you about the 40-day deadline at all. If you've already filed, being past the 40-day mark isn't a problem to flag — it's already handled. If you haven't, PawPort needs to know so it can tell you clearly rather than staying quiet about something time-sensitive.",
+      "why": "This determines whether we warn you about the 40-day deadline at all. If you've already filed, being past the 40-day mark isn't a problem to flag — it's already handled. If you haven't, port.dog needs to know so it can tell you clearly rather than staying quiet about something time-sensitive.",
       "options": [
         { "value": "yes", "label": "Yes, already submitted" },
         { "value": "no", "label": "Not yet" },
@@ -210,7 +210,7 @@
       "id": "aqsNotifiedDate",
       "type": "date",
       "label": "What date did you submit that advance notification?",
-      "why": "The 40-day rule is measured from this date, not from today. If you filed before the deadline, you're fine even if today's date is past it — this is exactly what lets PawPort tell the difference between 'already handled' and 'genuinely still a problem.'",
+      "why": "The 40-day rule is measured from this date, not from today. If you filed before the deadline, you're fine even if today's date is past it — this is exactly what lets port.dog tell the difference between 'already handled' and 'genuinely still a problem.'",
       "required": false,
       "showIf": { "field": "aqsNotified", "equals": "yes" }
     },
@@ -709,7 +709,7 @@
         },
         {
           "q": "What's the deadline on the rabies vaccine, and why is that buffer so much bigger (a month or more)?",
-          "a": "This is the one to genuinely watch. Your dog's rabies vaccine has a labeled protection period printed on the vaccination certificate (commonly 1 or 3 years). As long as every booster is given before the previous one's protection period runs out, coverage counts as continuous — your FAVN result stays valid for its full 2-year life, and a later retest needs no new wait. But if that coverage lapses even briefly (a booster given even a day after the old one's protection technically ran out), Japan no longer accepts your existing FAVN result at all, regardless of how much of its 2-year window was left. This is the 'reset trap': you'd have to start completely over — a new vaccination series, a brand-new FAVN blood draw, and a fresh 180-day wait — six-plus months, from zero. That's why PawPort suggests a large safety buffer here (several weeks, scaled to your vaccine's labeled duration) — enough room that a delayed vet appointment doesn't turn into a six-month setback."
+          "a": "This is the one to genuinely watch. Your dog's rabies vaccine has a labeled protection period printed on the vaccination certificate (commonly 1 or 3 years). As long as every booster is given before the previous one's protection period runs out, coverage counts as continuous — your FAVN result stays valid for its full 2-year life, and a later retest needs no new wait. But if that coverage lapses even briefly (a booster given even a day after the old one's protection technically ran out), Japan no longer accepts your existing FAVN result at all, regardless of how much of its 2-year window was left. This is the 'reset trap': you'd have to start completely over — a new vaccination series, a brand-new FAVN blood draw, and a fresh 180-day wait — six-plus months, from zero. That's why port.dog suggests a large safety buffer here (several weeks, scaled to your vaccine's labeled duration) — enough room that a delayed vet appointment doesn't turn into a six-month setback."
         },
         {
           "q": "So what's the simple rule for how big a buffer should be?",

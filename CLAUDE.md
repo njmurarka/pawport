@@ -1,6 +1,6 @@
 # CLAUDE.md — working notes for this repo
 
-PawPort is a free, static (no build step) web app that walks someone through
+port.dog (formerly PawPort) is a free, static (no build step) web app that walks someone through
 bringing a dog into Japan from any other country, and back home again. See
 `PROJECT-MEMORY.md` for the full narrative history and product decisions —
 this file is the short, operational version: what to do, not why.
@@ -20,6 +20,23 @@ than CDN-loaded so those buttons don't depend on a third-party host being
 up. The PDF itself is hand-built in `js/app.js` (`buildSingleImagePdf`),
 not a second library — embedding one JPEG on one page is a tiny slice of
 the PDF spec.
+
+## Branding and images
+
+The visible brand is **port.dog** (renamed from PawPort on 2026-10-20). Internal
+identifiers deliberately keep the old prefix — `pawport_answers_v1` /
+`pawport_checked_v1` (localStorage), the `pawport_theme` cookie, and the
+`pawportExport` field in exported JSON. Renaming any of them would silently
+wipe every returning visitor's saved progress and break imports of files
+people already downloaded. Don't rename them without a real migration.
+
+All site imagery is cropped from `assets/brand/port-dog-original.jpeg`
+(2752×1536, kept unmodified). Derived files live in `assets/img/` (hero,
+thumbnails, avatar, story banner, `og-image.jpg`), `assets/icons/` (PNG
+favicons, manifest icons) and `favicon.ico` at the repo root. Crops avoid the
+artwork's baked-in text (the bottom-right headline and the garbled small text
+near the edges). Regenerate from the original rather than re-encoding a
+derived file.
 
 ## Rules that must not be violated
 

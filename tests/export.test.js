@@ -48,7 +48,7 @@ async function run() {
     // ---------- PNG ----------
     {
       const { filename, bytes } = await downloadViaButton(page, '#btnDownloadPng');
-      check('PNG filename includes the dog name', filename === 'pawport-checklist-miso.png', 'got: ' + filename);
+      check('PNG filename includes the dog name', filename === 'port-dog-checklist-miso.png', 'got: ' + filename);
       check('PNG has a valid PNG signature', bytes.slice(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])));
       const dims = readPngDimensions(bytes);
       check('PNG width matches the content column width (~900px)', dims.width >= 850 && dims.width <= 950, 'width=' + dims.width);
@@ -62,7 +62,7 @@ async function run() {
     // ---------- PDF ----------
     {
       const { filename, bytes } = await downloadViaButton(page, '#btnDownloadPdf');
-      check('PDF filename includes the dog name', filename === 'pawport-checklist-miso.pdf', 'got: ' + filename);
+      check('PDF filename includes the dog name', filename === 'port-dog-checklist-miso.pdf', 'got: ' + filename);
       const text = bytes.toString('latin1');
       check('PDF has a valid header', text.startsWith('%PDF-1.4'));
       check('PDF ends with %%EOF', text.trim().endsWith('%%EOF'));

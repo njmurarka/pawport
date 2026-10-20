@@ -1,4 +1,4 @@
-# PawPort — Project Memory & Handoff
+# port.dog (formerly PawPort) — Project Memory & Handoff
 
 This file is a full working-context dump of everything covered while building this project, so any future session (or contributor) can pick it up without re-deriving decisions from scratch. It intentionally keeps the same privacy stance as the rest of this repo — no real personal names, no city/state/province — because this repo is connected to a public GitHub remote (`github.com/njmurarka/pawport`) intended for GitHub Pages hosting. Fuller private research notes (with real dates, names, and document numbers from the original case this app is based on) live outside this repo, in a private Claude Project; they are deliberately not reproduced here.
 

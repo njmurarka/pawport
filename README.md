@@ -1,4 +1,4 @@
-# PawPort — maintainer guide
+# port.dog — maintainer guide
 
 This is a small, free web app that walks someone through bringing a dog into Japan from any other country. It's a plain website — no server, no database, no account system, no build step. That's on purpose: it costs nothing to run, it's easy to host, and you don't need to be a developer to keep it alive. You *will* want a little comfort editing a text file to keep the content current, and this guide covers exactly what you need.
 

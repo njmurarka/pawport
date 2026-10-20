@@ -1,4 +1,4 @@
-// Shared helpers for the PawPort Playwright test suite.
+// Shared helpers for the port.dog Playwright test suite.
 // Run via `npm test` (see tests/run-all.js) from the repo root.
 const { chromium } = require('playwright');
 const path = require('path');

@@ -400,6 +400,13 @@
   function renderHome(app) {
     app.appendChild(el(
       '<section class="hero">' +
+        '<figure class="hero-media">' +
+          '<picture>' +
+            '<source media="(max-width: 640px)" type="image/webp" srcset="assets/img/hero-mobile-720.webp 720w, assets/img/hero-mobile-1080.webp 1080w" sizes="100vw">' +
+            '<source type="image/webp" srcset="assets/img/hero-wide-1290.webp 1290w, assets/img/hero-wide-2150.webp 2150w" sizes="(max-width: 1160px) 100vw, 1120px">' +
+            '<img src="assets/img/hero-wide-1290.jpg" width="1290" height="546" fetchpriority="high" alt="A boxer in aviator goggles and a travel harness, with a jet climbing into a sunset sky behind him">' +
+          '</picture>' +
+        '</figure>' +
         '<span class="tag">Free &middot; No account needed &middot; Works on your phone</span>' +
         '<h1>Your dog’s path to Japan, mapped out step by step.</h1>' +
         '<p class="lede">Bringing a dog into Japan involves microchips, blood tests, strict deadlines, and government paperwork — in an order that matters. This tool turns all of that into a personalized checklist for your situation, built from real experience so you don’t have to learn every lesson the hard way.</p>' +
@@ -414,17 +421,20 @@
 
     app.appendChild(el(
       '<section class="feature-grid">' +
-        '<div class="feature-card"><span class="icon">🧭</span><h3>Personalized, not generic</h3><p>Answer a few plain-language questions about your dog and your country, and get a checklist tailored to your exact situation — including the simplified path if you’re coming from one of the handful of rabies-free “designated regions.”</p></div>' +
-        '<div class="feature-card"><span class="icon">⏳</span><h3>The deadlines, calculated for you</h3><p>The FAVN blood test’s 180-day wait, its 2-year outer limit, and safe booster timing all get worked out automatically from your dates — including safety buffers sized to how bad it is if you miss them.</p></div>' +
-        '<div class="feature-card"><span class="icon">✅</span><h3>A checklist you actually check off</h3><p>Track your progress, print it, or come back later — your answers and progress are saved right on your device.</p></div>' +
+        '<div class="feature-card"><img class="feature-thumb" src="assets/img/thumb-japan.webp" width="64" height="64" alt="" loading="lazy"><h3>Personalized, not generic</h3><p>Answer a few plain-language questions about your dog and your country, and get a checklist tailored to your exact situation — including the simplified path if you’re coming from one of the handful of rabies-free “designated regions.”</p></div>' +
+        '<div class="feature-card"><img class="feature-thumb" src="assets/img/thumb-flight.webp" width="64" height="64" alt="" loading="lazy"><h3>The deadlines, calculated for you</h3><p>The FAVN blood test’s 180-day wait, its 2-year outer limit, and safe booster timing all get worked out automatically from your dates — including safety buffers sized to how bad it is if you miss them.</p></div>' +
+        '<div class="feature-card"><img class="feature-thumb" src="assets/img/thumb-passport.webp" width="64" height="64" alt="" loading="lazy"><h3>A checklist you actually check off</h3><p>Track your progress, print it, or come back later — your answers and progress are saved right on your device.</p></div>' +
       '</section>'
     ));
 
     app.appendChild(el(
-      '<section class="story-callout">' +
+      '<section class="story-callout story-callout-portrait">' +
+        '<img class="story-portrait" src="assets/img/avatar-192.webp" width="96" height="96" alt="" loading="lazy">' +
+        '<div>' +
         '<h2>Why this exists</h2>' +
         '<p>This app exists because someone went through this process for real — the confusing forms, the vet visits, the conflicting advice, the deadlines that quietly reset to zero if you get them wrong — and wanted to spare the next person some of that stress. It’s a work in progress, and it’ll keep improving as more people share what they learn.</p>' +
         '<p><a href="#/about" data-nav>Read the full story &rarr;</a></p>' +
+        '</div>' +
       '</section>'
     ));
 
@@ -440,6 +450,9 @@
   function renderAbout(app) {
     app.appendChild(el(
       '<section class="card">' +
+        '<figure class="story-banner">' +
+          '<img src="assets/img/story-banner-900.webp" srcset="assets/img/story-banner-900.webp 900w, assets/img/story-banner-1600.webp 1600w" sizes="(max-width: 940px) 100vw, 900px" width="900" height="347" alt="A boxer in aviator goggles looking toward a sunset, a jet and a boarding pass beside him">' +
+        '</figure>' +
         '<h1>Our story</h1>' +
         '<p class="muted">This account is accurate to our actual timeline, including real dates. We’ve left out city, clinic, and personal names — everything else here happened as described.</p>' +
 
@@ -800,7 +813,7 @@
 
   function exportFilenameBase() {
     var a = loadAnswers();
-    return 'pawport-checklist' + (a.dogName ? '-' + a.dogName.toLowerCase().replace(/[^a-z0-9]+/g, '-') : '');
+    return 'port-dog-checklist' + (a.dogName ? '-' + a.dogName.toLowerCase().replace(/[^a-z0-9]+/g, '-') : '');
   }
 
   function downloadResultsAsPng() {
@@ -933,7 +946,7 @@
     var payload = buildExportPayload();
     var json = JSON.stringify(payload, null, 2);
     var dogBit = payload.answers.dogName ? ' for ' + payload.answers.dogName : '';
-    var filename = 'pawport-checklist' + (payload.answers.dogName ? '-' + payload.answers.dogName.toLowerCase().replace(/[^a-z0-9]+/g, '-') : '') + '.json';
+    var filename = 'port-dog-checklist' + (payload.answers.dogName ? '-' + payload.answers.dogName.toLowerCase().replace(/[^a-z0-9]+/g, '-') : '') + '.json';
 
     var body = el(
       '<div>' +
@@ -965,7 +978,7 @@
 
   function applyImportedPayload(parsed) {
     if (!parsed || typeof parsed.answers !== 'object' || !parsed.answers) {
-      throw new Error('This file doesn’t look like a PawPort checklist export (no “answers” found).');
+      throw new Error('This file doesn’t look like a port.dog checklist export (no “answers” found).');
     }
     // migrateAnswers + sanitizeAnswers together mean an export from an
     // older or newer app version, a different device, or a hand-edited
@@ -1268,7 +1281,7 @@
   function init() {
     // ?v= bumped by hand alongside checklist-data.json edits, same
     // reasoning as the ?v= on the css/js tags in index.html.
-    fetch('data/checklist-data.json?v=13')
+    fetch('data/checklist-data.json?v=14')
       .then(function (r) { return r.json(); })
       .then(function (data) {
         DATA = data;
