@@ -10,7 +10,8 @@ this file is the short, operational version: what to do, not why.
 `index.html` + `css/styles.css` + `js/app.js` (one IIFE, hash router) +
 `data/checklist-data.json` (all content — wizard questions, checklist items,
 per-country detail, FAQ, glossary). No framework, no bundler. Deployed via
-GitHub Pages directly from `main`, custom domain `pawport.duckdns.org`.
+GitHub Pages directly from `main`, custom domain `port.dog` (DNS at Namecheap;
+formerly `pawport.duckdns.org`).
 
 One vendored third-party file: `js/vendor/html2canvas.min.js` (MIT,
 unmodified — see `js/vendor/README.md`), powering the results page's

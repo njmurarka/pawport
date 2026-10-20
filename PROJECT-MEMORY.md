@@ -77,6 +77,10 @@ The repo's git remote is `https://github.com/njmurarka/pawport.git`, set up for 
 
 ## Deployment status as of this writing
 
+**Moved to https://port.dog/ on 2026-10-20** (domain registered at Namecheap; DNS on Namecheap BasicDNS, `dns1`/`dns2.registrar-servers.com`). Records in Namecheap's Advanced DNS: four apex `A @` records to GitHub Pages' IPs `185.199.108.153` / `.109.153` / `.110.153` / `.111.153`, and `CNAME www → njmurarka.github.io.` (GitHub redirects `www` to the apex). Pages custom domain switched with `gh api -X PUT repos/njmurarka/pawport/pages -f cname=port.dog`, which auto-committed the new `CNAME` file. Domain verified at the GitHub account level via a `_github-pages-challenge-njmurarka` TXT record (anti-takeover protection). A GitHub Pages site serves exactly one custom domain, so `pawport.duckdns.org` no longer serves PawPort.
+
+The DuckDNS-era setup below is kept for history.
+
 **Live and fully deployed as of 2026-08-18 at https://pawport.duckdns.org/** — DNS, GitHub Pages, and HTTPS are all confirmed working end-to-end.
 
 - The site's current file set (`index.html`, `css/`, `js/`, `data/`, `README.md`) was pushed to `origin/main` at `github.com/njmurarka/pawport`.
