@@ -447,8 +447,8 @@
         '<p>On March 24, 2026, our vet in Canada confirmed the ISO-compliant microchip our dog has had since 2014, gave his second rabies vaccination (the first was in 2024), and drew blood for the antibody test Japan requires — all in one visit. Japan allows the blood draw on the same day as the second vaccination; a dog starting from scratch couldn’t compress it this far, because the chip has to come first, then two vaccinations at least 30 days apart, and only then the blood draw. That single date became the anchor for everything downstream: a 180-day minimum wait before travel, a 2-year outer limit on the test result, and a chain of booster and retest deadlines that all trace back to it.</p>' +
         '<p>Four separate pieces had to line up correctly: the right kind of microchip, the right kind of rabies vaccine, a blood sample sent to a lab Japan actually recognizes, and a Japan-specific import form that our own country’s standard export paperwork doesn’t cover. A fifth complication sat underneath all of it — our dog has a heart condition, and a possible surgery meant the travel date itself couldn’t be treated as fixed.</p>' +
 
-        '<h2>Advice that didn’t hold up</h2>' +
-        '<p>A vet mentioned, in passing, that our documents needed blue-ink signatures. We couldn’t find that requirement written down anywhere official, and an original document isn’t something you casually redo, so we chased it down. A designated lab’s own FAQ states plainly that a black-ink signature is fine. Japan’s official import guide specifies no signature ink color at all — it rules out pencil and correction fluid, which is a different requirement entirely. The blue-ink rule exists for some countries’ export certificates; it does not apply to this one.</p>' +
+        '<h2>Advice that needed a second look</h2>' +
+        '<p>A vet mentioned, in passing, that our documents needed blue-ink signatures. We couldn’t find that requirement in Japan’s rules, and an original document isn’t something you casually redo, so we chased it down. Japan’s official import guide specifies no signature ink color at all — it rules out pencil, erasable ink and correction fluid, which is a different requirement — and a designated lab’s own FAQ says a black-ink signature on the antibody test report is fine. We were ready to call it a myth. Then CFIA told us in writing that it does require a wet blue-ink signature from our vet on the rabies vaccination certificates we bring to the endorsement appointment, and recommended a wet-ink signature on the original Japan health certificate. The vet was right — just about a different document, and a different authority, than we first assumed. The lesson: Japan’s rules and your own export authority’s rules are separate, so check each one directly.</p>' +
         '<p>The same pattern showed up with the export certificate itself. Our home country issues a standard, generic international health certificate that covers exporting an animal to most destinations. Japan is not “most destinations”: it has its own recommended form, any certificate it accepts has to cover everything on that form, and our own country’s official guidance says not to use the generic certificate when the destination country supplies its own. We only caught this by reading past the first search result and cross-checking two official sources against each other — and it changed which document our vet actually needed to complete.</p>' +
 
         '<h2>The country nobody could agree on</h2>' +
@@ -1268,7 +1268,7 @@
   function init() {
     // ?v= bumped by hand alongside checklist-data.json edits, same
     // reasoning as the ?v= on the css/js tags in index.html.
-    fetch('data/checklist-data.json?v=11')
+    fetch('data/checklist-data.json?v=12')
       .then(function (r) { return r.json(); })
       .then(function (data) {
         DATA = data;
