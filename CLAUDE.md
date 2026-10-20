@@ -30,8 +30,11 @@ identifiers deliberately keep the old prefix — `pawport_answers_v1` /
 wipe every returning visitor's saved progress and break imports of files
 people already downloaded. Don't rename them without a real migration.
 
-All site imagery is cropped from `assets/brand/port-dog-original.jpeg`
-(2752×1536, kept unmodified). Derived files live in `assets/img/` (hero,
+Site imagery is cropped from `assets/brand/port-dog-hero-original.jpeg`
+(2594×1632; its top ~150px is a mock site header baked into the artwork —
+always crop below y=152). The earlier `assets/brand/port-dog-original.jpeg`
+(2752×1536) is kept for history and is now only the source of the small
+round header avatar; don't use it for rectangular crops. Derived files live in `assets/img/` (hero,
 thumbnails, avatar, story banner, `og-image.jpg`), `assets/icons/` (PNG
 favicons, manifest icons) and `favicon.ico` at the repo root. Exception: the
 favicon/app icons are a simple white paw on brand orange

@@ -383,6 +383,9 @@
   }
 
   function navigate() {
+    // A popup belongs to the page it was opened on — close it if the
+    // route changes underneath it (back button, a link inside it, etc.).
+    if (activeModalClose) activeModalClose();
     var route = currentRoute();
     document.querySelectorAll('.site-nav a').forEach(function (a) {
       a.classList.toggle('active', a.getAttribute('href') === '#/' + route);
@@ -427,9 +430,9 @@
 
     app.appendChild(el(
       '<section class="feature-grid">' +
-        '<div class="feature-card"><img class="feature-thumb" src="assets/img/thumb-japan.webp" width="64" height="64" alt="" loading="lazy"><h3>Personalized, not generic</h3><p>Answer a few plain-language questions about your dog and your country, and get a checklist tailored to your exact situation — including the simplified path if you’re coming from one of the handful of rabies-free “designated regions.”</p></div>' +
-        '<div class="feature-card"><img class="feature-thumb" src="assets/img/thumb-flight.webp" width="64" height="64" alt="" loading="lazy"><h3>The deadlines, calculated for you</h3><p>The FAVN blood test’s 180-day wait, its 2-year outer limit, and safe booster timing all get worked out automatically from your dates — including safety buffers sized to how bad it is if you miss them.</p></div>' +
-        '<div class="feature-card"><img class="feature-thumb" src="assets/img/thumb-passport.webp" width="64" height="64" alt="" loading="lazy"><h3>A checklist you actually check off</h3><p>Track your progress, print it, or come back later — your answers and progress are saved right on your device.</p></div>' +
+        '<div class="feature-card"><img class="feature-thumb" src="assets/img/feature-route.webp" width="64" height="64" alt="" loading="lazy"><h3>Personalized, not generic</h3><p>Answer a few plain-language questions about your dog and your country, and get a checklist tailored to your exact situation — including the simplified path if you’re coming from one of the handful of rabies-free “designated regions.”</p></div>' +
+        '<div class="feature-card"><img class="feature-thumb" src="assets/img/feature-plane.webp" width="64" height="64" alt="" loading="lazy"><h3>The deadlines, calculated for you</h3><p>The FAVN blood test’s 180-day wait, its 2-year outer limit, and safe booster timing all get worked out automatically from your dates — including safety buffers sized to how bad it is if you miss them.</p></div>' +
+        '<div class="feature-card"><img class="feature-thumb" src="assets/img/feature-passport.webp" width="64" height="64" alt="" loading="lazy"><h3>A checklist you actually check off</h3><p>Track your progress, print it, or come back later — your answers and progress are saved right on your device.</p></div>' +
       '</section>'
     ));
 
@@ -504,7 +507,7 @@
     app.appendChild(el(
       '<section class="card">' +
         '<figure class="story-banner">' +
-          '<img src="assets/img/story-banner-900.webp" srcset="assets/img/story-banner-900.webp 900w, assets/img/story-banner-1600.webp 1600w" sizes="(max-width: 940px) 100vw, 900px" width="900" height="347" alt="A boxer in aviator goggles looking toward a sunset, a jet and a boarding pass beside him">' +
+          '<img src="assets/img/story-hero-900.webp" srcset="assets/img/story-hero-900.webp 900w, assets/img/story-hero-1600.webp 1600w" sizes="(max-width: 940px) 100vw, 900px" width="900" height="347" alt="A boxer in aviator goggles and a PORT.DOG harness, with a jet over a sunset skyline behind him">' +
         '</figure>' +
         '<h1>Our story</h1>' +
         '<p class="muted">This account is accurate to our actual timeline, including real dates. We’ve left out the city, the clinic, and other people’s names — everything else here happened as described.</p>' +
@@ -780,8 +783,10 @@
     }
   }
 
-  /* ================= MODAL (export / import) ================= */
+  /* ================= MODAL (export / import / about / donate) ================= */
+  var activeModalClose = null;
   function openModal(title, bodyEl) {
+    if (activeModalClose) activeModalClose(); // only ever one popup at a time
     var overlay = el('<div class="modal-overlay"></div>');
     var modal = el(
       '<div class="modal-card" role="dialog" aria-modal="true">' +
@@ -797,7 +802,9 @@
     function close() {
       overlay.remove();
       document.removeEventListener('keydown', onKey);
+      if (activeModalClose === close) activeModalClose = null;
     }
+    activeModalClose = close;
     function onKey(e) { if (e.key === 'Escape') close(); }
     document.addEventListener('keydown', onKey);
     modal.querySelector('.modal-close').addEventListener('click', close);

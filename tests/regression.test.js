@@ -208,6 +208,43 @@ async function run() {
       await page.close();
     }
 
+    // ---------- No horizontal overflow on any page, phone to desktop ----------
+    // Anything wider than the viewport (outside an intentional scroll/clip
+    // container) means sideways scrolling on a phone.
+    {
+      const answers = { originCountry: 'CA', dogName: 'Miso', healthConditions: ['heart'], microchipDone: 'yes', rabiesDoses: '2+',
+        lastRabiesDate: '2026-03-24', rabiesDuration: '3yr', favnDone: 'yes', favnDate: '2026-03-24',
+        travelDateKnown: 'yes', travelDate: daysFromNow(20), aqsNotified: 'no', hasTransit: 'yes' };
+      for (const w of [320, 360, 390, 600, 768, 901, 1024, 1440]) {
+        const ctx = await browser.newContext({ viewport: { width: w, height: 900 } });
+        const page = await ctx.newPage();
+        await page.goto(BASE + '/#/home');
+        await page.evaluate((a) => localStorage.setItem('pawport_answers_v1', JSON.stringify(a)), answers);
+        for (const [route, sel] of [['home', '.support-card'], ['wizard', '.card'], ['results', '.results-header'], ['resources', 'h1'], ['about', '.story-banner']]) {
+          await page.goto(BASE + '/#/' + route);
+          await page.waitForSelector(sel);
+          await page.waitForTimeout(150);
+          const o = await page.evaluate(() => {
+            const vw = document.documentElement.clientWidth;
+            const bad = [];
+            for (const e of document.querySelectorAll('body *')) {
+              const r = e.getBoundingClientRect();
+              if (!r.width || (r.right <= vw + 1 && r.left >= -1)) continue;
+              let a = e, clipped = false;
+              while ((a = a.parentElement)) {
+                const ox = getComputedStyle(a).overflowX;
+                if (ox !== 'visible') { const pr = a.getBoundingClientRect(); if (pr.right <= vw + 1 && pr.left >= -1) { clipped = true; break; } }
+              }
+              if (!clipped) bad.push(e.tagName + '.' + [...e.classList].join('.'));
+            }
+            return { sw: document.documentElement.scrollWidth, vw, bad: bad.slice(0, 5) };
+          });
+          check('No horizontal overflow: #/' + route + ' at ' + w + 'px', o.sw <= o.vw && o.bad.length === 0, JSON.stringify(o));
+        }
+        await ctx.close();
+      }
+    }
+
     // ---------- About-the-maker popup and donate panel ----------
     {
       const page = await browser.newPage();

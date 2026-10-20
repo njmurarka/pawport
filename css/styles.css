@@ -362,6 +362,15 @@ main#app.route-enter { animation: routeFadeIn 0.35s ease both; }
   .brand { gap: 8px; font-size: 1.15rem; }
   .brand-mark { width: 34px; height: 34px; }
 }
+/* Smallest phones (320px, e.g. iPhone SE 1st gen). */
+@media (max-width: 360px) {
+  .header-row { padding: 0 12px; }
+  .header-right { gap: 6px; }
+  .donate-btn, .icon-btn, .theme-toggle { width: 36px; height: 36px; }
+  .nav-toggle { width: 38px; }
+  .brand { gap: 6px; font-size: 1.05rem; }
+  .brand-mark { width: 30px; height: 30px; }
+}
 /* Icon-only through the whole "nav still inline but not spacious" range
    (roughly 721-1080px real-world windows) — the text label only has
    room once the header is genuinely wide. Icon + tooltip + aria-label
@@ -565,6 +574,10 @@ main#app { padding: 36px 20px 64px; min-height: 60vh; }
   height: auto;
   aspect-ratio: 900 / 347;
   object-fit: cover;
+}
+@media (max-width: 640px) {
+  /* Taller on phones so the dog isn't a thin strip; keep him in frame. */
+  .story-banner img { aspect-ratio: 16 / 9; object-position: 28% center; }
 }
 
 /* ---------- Cards / surfaces ---------- */
