@@ -33,7 +33,10 @@ people already downloaded. Don't rename them without a real migration.
 All site imagery is cropped from `assets/brand/port-dog-original.jpeg`
 (2752×1536, kept unmodified). Derived files live in `assets/img/` (hero,
 thumbnails, avatar, story banner, `og-image.jpg`), `assets/icons/` (PNG
-favicons, manifest icons) and `favicon.ico` at the repo root. Crops avoid the
+favicons, manifest icons) and `favicon.ico` at the repo root. Exception: the
+favicon/app icons are a simple white paw on brand orange
+(`assets/icons/favicon.svg`; PNG/ICO rendered from the same shapes), since the
+artwork is unrecognizable at 16px. Crops avoid the
 artwork's baked-in text (the bottom-right headline and the garbled small text
 near the edges). Regenerate from the original rather than re-encoding a
 derived file.
