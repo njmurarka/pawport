@@ -408,9 +408,9 @@
       '<section class="hero">' +
         '<figure class="hero-media">' +
           '<picture>' +
-            '<source media="(max-width: 640px)" type="image/webp" srcset="assets/img/hero-mobile-720.webp 720w, assets/img/hero-mobile-1080.webp 1080w" sizes="100vw">' +
-            '<source type="image/webp" srcset="assets/img/hero-wide-1290.webp 1290w, assets/img/hero-wide-2150.webp 2150w" sizes="(max-width: 1160px) 100vw, 1120px">' +
-            '<img src="assets/img/hero-wide-1290.jpg" width="1290" height="546" fetchpriority="high" alt="A boxer in aviator goggles and a travel harness, with a jet climbing into a sunset sky behind him">' +
+            '<source media="(max-width: 640px)" type="image/webp" srcset="assets/img/hero-main-mobile-720.webp 720w, assets/img/hero-main-mobile-1080.webp 1080w" sizes="100vw">' +
+            '<source type="image/webp" srcset="assets/img/hero-main-1290.webp 1290w, assets/img/hero-main-2150.webp 2150w" sizes="(max-width: 1160px) 100vw, 1120px">' +
+            '<img src="assets/img/hero-main-1290.jpg" width="1290" height="621" fetchpriority="high" alt="A boxer in aviator goggles and a PORT.DOG harness, with a jet climbing over a sunset globe behind him">' +
           '</picture>' +
         '</figure>' +
         '<span class="tag">Free &middot; No account needed &middot; Works on your phone</span>' +

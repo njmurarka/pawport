@@ -416,7 +416,7 @@ main#app { padding: 36px 20px 64px; min-height: 60vh; }
   display: block;
   width: 100%;
   height: auto;
-  aspect-ratio: 1290 / 546;
+  aspect-ratio: 1290 / 621;
   object-fit: cover;
 }
 @media (max-width: 640px) {
