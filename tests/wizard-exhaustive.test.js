@@ -68,16 +68,21 @@ function expectedItems(combo) {
     'Implant an ISO-compliant microchip (if not already done)': !combo.designated && (combo.microchipDone === 'no' || combo.microchipDone === 'unsure'),
     'Complete two rabies vaccinations, at least 30 days apart': rabiesDoses === '0',
     'Complete the second rabies vaccination': rabiesDoses === '1',
-    'inactivated (killed) or recombinant, not live': !combo.designated,
+    'recombinant — not live or RNA': !combo.designated,
     'Get a FAVN (or RFFIT) antibody titer test': !combo.designated,
     'Wait out the 180-day clock': !combo.designated,
     "Know your FAVN's 2-year outer validity": !combo.designated,
-    'plan a redraw with a small buffer': !combo.designated && favnDone === 'yes',
+    'get a second antibody test — no new 180-day wait': !combo.designated && favnDone === 'yes',
     "Set a booster reminder well before your vaccine's labeled expiry": !combo.designated && hasLastRabiesDate,
     'Implant an ISO-compliant microchip</span>': false, // placeholder unused; designated-microchip checked separately below
     'Confirm your dog meets the residency requirement': !!combo.designated,
     "current designated-region status directly with MAFF": !!combo.designated,
     "Check the separate pet rules for any country you'll pass through": combo.hasTransit === 'yes' || combo.hasTransit === 'unsure',
+    // Designated regions use Form AB (MAFF import-free.html), everyone else Form AC.
+    'recommended certificate, Form AC': !combo.designated,
+    'certificate for designated regions, Form AB': !!combo.designated,
+    // MAFF: designated-region transit via a non-designated country needs a crate seal or ANNEX.
+    'transiting a non-designated country needs a crate seal': !!combo.designated && (combo.hasTransit === 'yes' || combo.hasTransit === 'unsure'),
   };
 }
 

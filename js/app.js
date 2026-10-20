@@ -191,12 +191,12 @@
       out.favn180 = { label: 'Earliest possible travel date', value: addDays(favnDate, 180) };
       var validityEnd = addYears(favnDate, 2);
       out.favnValidityEnd = { label: 'FAVN 2-year outer validity ends', value: validityEnd };
-      var trueDeadline = addDays(validityEnd, -180);
-      var bufferDeadline = addDays(trueDeadline, -7);
-      out.favnRedrawDeadline = {
-        label: 'Suggested FAVN redraw-by date (1-week buffer)',
-        value: bufferDeadline,
-        note: 'True no-gap deadline: ' + fmtDate(trueDeadline) + '. A late redraw is a soft failure — you just wait out a new 180-day clock — so a modest buffer is enough.'
+      // MAFF: a second antibody test needs no new 180-day wait if vaccine
+      // coverage never lapsed and its draw is >= 180 days after the first.
+      out.favnRetestEarliest = {
+        label: 'Earliest date for a second antibody test (only if needed)',
+        value: addDays(favnDate, 180),
+        note: 'Only needed if you’ll arrive after ' + fmtDate(validityEnd) + '. No new 180-day wait, as long as your dog’s rabies vaccination never lapses — just leave time for lab results before your pre-export paperwork.'
       };
     }
     if (lastRabiesDate && answers.rabiesDuration && answers.rabiesDuration !== 'unsure') {
@@ -267,9 +267,9 @@
 
       if (eff.favnDone === 'yes' && dates.favnValidityEnd && travelDate && travelDate > dates.favnValidityEnd.value) {
         alerts.push({
-          level: 'blocker',
-          title: 'Your FAVN result will have expired before your travel date',
-          detail: 'Your FAVN is only valid for 2 years from the blood draw, until ' + fmtDate(dates.favnValidityEnd.value) + '. Your stated travel date of ' + fmtDate(travelDate) + ' is after that. You need a new blood draw — and a fresh 180-day wait — before you can travel.'
+          level: 'urgent',
+          title: 'You’ll need a second antibody test before your travel date',
+          detail: 'Your FAVN is only valid for 2 years from the blood draw, until ' + fmtDate(dates.favnValidityEnd.value) + '. Your stated travel date of ' + fmtDate(travelDate) + ' is after that, so you need a second antibody test (at a designated lab, 0.5 IU/mL or higher) whose result covers your arrival. Japan does not require a new 180-day wait for it, as long as your dog’s rabies vaccination never lapses and the new blood draw is on or after ' + fmtDate(addDays(parseDate(eff.favnDate), 180)) + '. Leave time for lab results before your pre-export paperwork.'
         });
       }
 
@@ -1268,7 +1268,7 @@
   function init() {
     // ?v= bumped by hand alongside checklist-data.json edits, same
     // reasoning as the ?v= on the css/js tags in index.html.
-    fetch('data/checklist-data.json?v=7')
+    fetch('data/checklist-data.json?v=8')
       .then(function (r) { return r.json(); })
       .then(function (data) {
         DATA = data;

@@ -369,10 +369,55 @@ inspection) — genuinely a valid, single-page (not paginated) PDF.
 JS (PDF header/trailer/page-count/MediaBox, PNG signature/dimensions) so
 the suite has no dependency on those system tools being installed.
 
+## Session 3 (2026-10-19): full re-verification against official sources
+
+Every country's `form-ac` / `gov-endorsement` / `return-import-home`
+text, plus every Japan-side fact, was re-checked by parallel research
+agents against official government pages (research only; edits applied
+afterwards by hand, `lastVerified` → 2026-10-19). Findings that changed
+the app, not just wording:
+
+- **Second antibody test needs no new 180-day wait.** MAFF
+  (import-other.html, guide PDF Sep 2026 rev.): if rabies coverage has
+  been continuous since the first dose, the new draw is ≥180 days after
+  the first draw, and titer ≥0.5, no further waiting period is needed —
+  even if the first result already expired. The old "redraw = new
+  180-day clock / soft failure" model was wrong. `favnRedrawDeadline`
+  became `favnRetestEarliest` (first draw + 180), and the
+  "FAVN expires before travel" alert is now `urgent`, not `blocker`.
+- **Designated regions use Form AB, not Form AC.** New `form-ab` item
+  (designated only); `form-ac` is now non-designated only; designated
+  countries' `countryDetails` key is `form-ab`. New `designated-transit`
+  item (crate seal or ANNEX when transiting a non-designated country).
+- **Form AC is "recommended", not mandatory** — Japan accepts any
+  government certificate with the required items. UK EHC 6407 and
+  Spain's digital ASE-3293 replace Form AC outright.
+- **EU pet-travel law replaced on 22 April 2026** (Delegated Reg. (EU)
+  2026/131, Impl. Regs 2026/636 and 2026/705). Japan confirmed in
+  Annex II (no titer). EU residents can usually return on their EU pet
+  passport alone. Norway still on 577/2013 "until further notice".
+- Also: AQS notification via NACCS (email as fallback); RNA vaccines
+  not accepted; Dec 2025 duplicate-`900`-chip warning; Biobest (UK)
+  delisted as a designated lab.
+
+Still unverifiable (kept hedged): Israel (gov.il blocks automated
+access), Saudi titer/quarantine, South Africa's quarantine category for
+Japan, whether Chile recognizes Japan as rabies-free, Vietnam's advance
+permit, Thailand's export process, China (state-media sources only, not
+GACC directly), Greece's pet-specific endorsement. AU/NZ facts came via
+search snippets of DAFF/MPI pages (direct fetches blocked).
+
+Deliberately NOT changed, pending the maintainer: `countryDetails.CA`
+(CFIA lists Japan as rabies-free, which contradicts the current return
+text — but Canada is the maintainer's lived-experience content) and the
+"Our story" paragraph that describes a retest as restarting the 180-day
+clock (maintainer's own voice).
+
 ## Open items / not yet done
 
 - Confirm the maintainer regenerated the DuckDNS token after pasting it in chat.
-- Per-country research is complete (all 47 countries) but AI-researched, not human-fact-checked — see the caveat immediately above before treating it as gospel.
+- Per-country research is complete (all 47 countries) and was re-verified against official sources on 2026-10-19 (see Session 3), but is still AI-researched, not human-fact-checked — treat it as a strong draft, not gospel.
+- Canada's return text and the "Our story" retest paragraph need the maintainer's review (see Session 3).
 - The exporting-country ambiguity (Canada vs. the country a flight happens to depart from, for a route that transits a third country overland) is explicitly unresolved in the "Our story" content — flagged there as the single open question the maintainer is still hedging on by obtaining both countries' export certificates.
 - No accounts / cross-device sync beyond the manual export-import-JSON feature — intentional for v1; a real backend (accounts, admin content-editing UI) is the natural v2 if this gets traction, and was scoped from the start so none of the current logic/content would be wasted in that migration.
 - The "Our story" page uses the maintainer's real voice/timeline already; further personalization is optional, not required.

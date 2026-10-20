@@ -39,7 +39,10 @@ async function run() {
       await page.close();
     }
 
-    // 3. FAVN will have expired (2yr) before travel -> blocker
+    // 3. FAVN will have expired (2yr) before travel -> urgent, NOT a blocker:
+    //    MAFF allows a second antibody test with no new 180-day wait as long
+    //    as rabies coverage never lapsed, so this is an action item, not an
+    //    impossible date.
     {
       const page = await browser.newPage();
       await setAnswers(page, {
@@ -51,7 +54,11 @@ async function run() {
       });
       await goToResults(page);
       const blockers = await page.locator('.feasibility-alert.level-blocker').count();
-      check('FAVN will have expired before travel date -> blocker', blockers >= 1, 'count=' + blockers);
+      check('FAVN will have expired before travel date -> no blocker', blockers === 0, 'count=' + blockers);
+      const urgent = page.locator('.feasibility-alert.level-urgent', { hasText: 'second antibody test' });
+      check('FAVN will have expired before travel date -> "second antibody test" urgent alert', (await urgent.count()) === 1, 'count=' + (await urgent.count()));
+      const text = await urgent.first().innerText();
+      check('Second-test alert says no new 180-day wait', text.includes('does not require a new 180-day wait'), text.slice(0, 120));
       await page.close();
     }
 
