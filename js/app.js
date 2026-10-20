@@ -6,6 +6,12 @@
   var countriesByCode = {};
   var DATA_SCHEMA_VERSION = 1;
 
+  // The maintainer's own links. The QR code in assets/img/paypal-qr.svg
+  // encodes DONATE_URL — regenerate it if this ever changes.
+  var DONATE_URL = 'https://paypal.me/loquitus';
+  var DONATE_LABEL = 'paypal.me/loquitus';
+  var LINKEDIN_URL = 'https://www.linkedin.com/in/njmurarka/';
+
   /* ================= forward/backward-compatible answers =================
      Answers live in localStorage indefinitely (an app UPDATE must never
      lose them) and can also arrive via a JSON import from any previous
@@ -444,6 +450,52 @@
         '<p>This tool focuses on <strong>dogs</strong> traveling <strong>to Japan</strong> from anywhere else in the world. It’s built and maintained by pet owners, not lawyers or vets — always confirm current, exact requirements with your own veterinarian, your country’s export authority, and Japan’s Animal Quarantine Service before you travel. Rules can and do change.</p>' +
       '</section>'
     ));
+
+    app.appendChild(el('<section class="support-card">' + donateInnerHtml('h2') + '</section>'));
+  }
+
+  /* ================= about the maker / donate ================= */
+  function donateInnerHtml(headingTag) {
+    return (
+      '<div class="donate-text">' +
+        '<' + headingTag + ' class="donate-heading">Help keep port.dog free</' + headingTag + '>' +
+        '<p>port.dog is free to use — no ads, no accounts. If it saved you time or stress, you can chip in to help keep it running and improving. Every bit is appreciated.</p>' +
+        '<p class="donate-actions"><a class="btn-primary" href="' + DONATE_URL + '" target="_blank" rel="noopener">Donate with PayPal &rarr;</a></p>' +
+        '<p class="muted donate-link">Or go to <a href="' + DONATE_URL + '" target="_blank" rel="noopener">' + DONATE_LABEL + '</a></p>' +
+      '</div>' +
+      '<figure class="donate-qr">' +
+        '<img src="assets/img/paypal-qr.svg" width="180" height="180" alt="QR code that opens ' + DONATE_LABEL + ' in PayPal" loading="lazy">' +
+        '<figcaption>Scan with your phone’s camera to open PayPal</figcaption>' +
+      '</figure>'
+    );
+  }
+
+  function openDonateModal() {
+    openModal('Support port.dog', el('<div class="donate-layout">' + donateInnerHtml('h4') + '</div>'));
+  }
+
+  function openAboutModal() {
+    var m = openModal('About the maker', el(
+      '<div>' +
+        '<div class="about-maker">' +
+          '<img class="about-avatar" src="assets/img/avatar-192.webp" width="88" height="88" alt="">' +
+          '<div>' +
+            '<p class="about-name">Neeraj Murarka</p>' +
+            '<p class="about-role">Creator of port.dog</p>' +
+          '</div>' +
+        '</div>' +
+        '<p>CEO and co-founder of Bluzelle Networks, where he’s spent years building blockchain and decentralized computing systems, and an advisor to blockchain companies. Off the clock, he’s a licensed airplane and seaplane pilot in Canada and the US, a Class 1 truck driver, an amateur radio operator, and first-aid certified.</p>' +
+        '<p class="about-dogs">But above all, he’s a dog person — completely, unapologetically devoted to dogs. port.dog grew out of preparing to bring his own dog to Japan, and he built it so the next dog (and their person) has an easier time.</p>' +
+        '<div class="modal-actions">' +
+          '<a class="btn-secondary" href="' + LINKEDIN_URL + '" target="_blank" rel="noopener">LinkedIn profile &#8599;</a>' +
+          '<button type="button" class="btn-primary" id="aboutDonateBtn">Support port.dog</button>' +
+        '</div>' +
+      '</div>'
+    ));
+    m.modal.querySelector('#aboutDonateBtn').addEventListener('click', function () {
+      m.close();
+      openDonateModal();
+    });
   }
 
   /* ================= ABOUT ================= */
@@ -454,7 +506,7 @@
           '<img src="assets/img/story-banner-900.webp" srcset="assets/img/story-banner-900.webp 900w, assets/img/story-banner-1600.webp 1600w" sizes="(max-width: 940px) 100vw, 900px" width="900" height="347" alt="A boxer in aviator goggles looking toward a sunset, a jet and a boarding pass beside him">' +
         '</figure>' +
         '<h1>Our story</h1>' +
-        '<p class="muted">This account is accurate to our actual timeline, including real dates. We’ve left out city, clinic, and personal names — everything else here happened as described.</p>' +
+        '<p class="muted">This account is accurate to our actual timeline, including real dates. We’ve left out the city, the clinic, and other people’s names — everything else here happened as described.</p>' +
 
         '<h2>How it started</h2>' +
         '<p>On March 24, 2026, our vet in Canada confirmed the ISO-compliant microchip our dog has had since 2014, gave his second rabies vaccination (the first was in 2024), and drew blood for the antibody test Japan requires — all in one visit. Japan allows the blood draw on the same day as the second vaccination; a dog starting from scratch couldn’t compress it this far, because the chip has to come first, then two vaccinations at least 30 days apart, and only then the blood draw. That single date became the anchor for everything downstream: a 180-day minimum wait before travel, a 2-year outer limit on the test result, and a chain of booster and retest deadlines that all trace back to it.</p>' +
@@ -1232,6 +1284,14 @@
       document.getElementById('navToggle').setAttribute('aria-expanded', open ? 'true' : 'false');
     });
     wireThemeToggle();
+    document.getElementById('aboutBtn').addEventListener('click', openAboutModal);
+    // Footer (and any other) triggers, by data attribute.
+    document.addEventListener('click', function (e) {
+      var t = e.target.closest && e.target.closest('[data-open-donate], [data-open-about]');
+      if (!t) return;
+      e.preventDefault();
+      if (t.hasAttribute('data-open-donate')) openDonateModal(); else openAboutModal();
+    });
     loadBuildInfo();
   }
 

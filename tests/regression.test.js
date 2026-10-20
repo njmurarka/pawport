@@ -207,6 +207,32 @@ async function run() {
       check('A successful live fetch overrides the fallback commit hash', hashText.trim() === 'deadbee', 'got: "' + hashText + '"');
       await page.close();
     }
+
+    // ---------- About-the-maker popup and donate panel ----------
+    {
+      const page = await browser.newPage();
+      await page.goto(BASE + '/#/home');
+      await page.waitForSelector('.support-card');
+      const cardHref = await page.locator('.support-card a.btn-primary').getAttribute('href');
+      check('Home support card links to the PayPal.Me page', cardHref === 'https://paypal.me/loquitus', 'got: ' + cardHref);
+      check('Home support card shows the QR code', (await page.locator('.support-card .donate-qr img[src="assets/img/paypal-qr.svg"]').count()) === 1);
+
+      await page.click('#aboutBtn');
+      const about = page.locator('.modal-card', { hasText: 'Neeraj Murarka' });
+      check('Header info button opens the About popup', (await about.count()) === 1);
+      const li = await about.locator('a', { hasText: 'LinkedIn' }).getAttribute('href');
+      check('About popup links to the LinkedIn profile', li === 'https://www.linkedin.com/in/njmurarka/', 'got: ' + li);
+      await page.keyboard.press('Escape');
+      check('Escape closes the About popup', (await page.locator('.modal-overlay').count()) === 0);
+
+      await page.click('[data-open-donate]');
+      const donate = page.locator('.modal-card', { hasText: 'Support port.dog' });
+      check('Footer link opens the donate popup', (await donate.count()) === 1);
+      check('Donate popup has the QR code', (await donate.locator('img[src="assets/img/paypal-qr.svg"]').count()) === 1);
+      const qrStatus = await page.evaluate(() => fetch('assets/img/paypal-qr.svg').then((r) => r.status));
+      check('QR code image is served', qrStatus === 200, 'status=' + qrStatus);
+      await page.close();
+    }
   });
 
   console.log('\n=== regression.test.js SUMMARY ===');

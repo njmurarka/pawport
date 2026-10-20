@@ -41,7 +41,7 @@
      changes — there's no build step to hash filenames automatically,
      and without this, browsers can keep serving a stale cached copy
      after a deploy. -->
-<link rel="stylesheet" href="css/styles.css?v=9">
+<link rel="stylesheet" href="css/styles.css?v=10">
 </head>
 <body>
 
@@ -54,6 +54,9 @@
       <span class="brand-name">port<span class="brand-tld">.dog</span></span>
     </a>
     <div class="header-right">
+      <button class="icon-btn" id="aboutBtn" type="button" aria-label="About the maker" title="About the maker">
+        <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 11v6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><circle cx="12" cy="7.4" r="1.4" fill="currentColor"/></svg>
+      </button>
       <button class="theme-toggle" id="themeToggle" type="button" aria-label="Switch to dark mode" title="Switch to dark mode">
         <span class="theme-toggle-icon" aria-hidden="true">🌙</span>
         <span class="theme-toggle-label">Dark mode</span>
@@ -76,6 +79,7 @@
 <footer class="site-footer">
   <div class="wrap">
     <p><strong>This is a community tool, not legal or veterinary advice.</strong> Rules for importing animals into Japan can change, and every situation has its own details. Always confirm current requirements with your veterinarian, your country's export authority, and Japan's Animal Quarantine Service (AQS) before you travel.</p>
+    <p class="footer-links"><button type="button" class="link-btn" data-open-donate>&#9829; Support port.dog</button><span aria-hidden="true">&middot;</span><button type="button" class="link-btn" data-open-about>About the maker</button></p>
     <p class="muted">Built with love (and a lot of hard-won lessons) by someone who's been through it — for anyone else about to start this journey with their dog. Last published: <span id="publishedAt">—</span>. <a href="#" id="buildHashLink" class="build-hash" target="_blank" rel="noopener" title="Build commit — click to view on GitHub"></a></p>
   </div>
 </footer>
@@ -84,6 +88,6 @@
      working even if a third-party CDN is slow, blocked, or down — see
      CLAUDE.md. MIT licensed, unmodified; see js/vendor/README.md. -->
 <script src="js/vendor/html2canvas.min.js?v=1" defer></script>
-<script src="js/app.js?v=22" defer></script>
+<script src="js/app.js?v=23" defer></script>
 </body>
 </html>

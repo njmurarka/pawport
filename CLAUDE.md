@@ -36,7 +36,15 @@ thumbnails, avatar, story banner, `og-image.jpg`), `assets/icons/` (PNG
 favicons, manifest icons) and `favicon.ico` at the repo root. Exception: the
 favicon/app icons are a simple white paw on brand orange
 (`assets/icons/favicon.svg`; PNG/ICO rendered from the same shapes), since the
-artwork is unrecognizable at 16px. Crops avoid the
+artwork is unrecognizable at 16px.
+
+The maintainer's own links live in constants at the top of `js/app.js`
+(`DONATE_URL`, `LINKEDIN_URL`). `assets/img/paypal-qr.svg` encodes
+`DONATE_URL` — if that URL changes, regenerate the QR (e.g. Python `segno`,
+error level H) and verify it decodes before shipping. The QR keeps a white
+backing (`--qr-surface`) in both themes so phones can scan it. The "About
+the maker" popup deliberately names the maintainer (his choice, 2026-10-20);
+everything else on the site still leaves out personal names. Crops avoid the
 artwork's baked-in text (the bottom-right headline and the garbled small text
 near the edges). Regenerate from the original rather than re-encoding a
 derived file.
