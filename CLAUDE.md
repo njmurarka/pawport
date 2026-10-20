@@ -43,7 +43,9 @@ The maintainer's own links live in constants at the top of `js/app.js`
 `DONATE_URL` — if that URL changes, regenerate the QR (e.g. Python `segno`,
 error level H) and verify it decodes before shipping. The QR keeps a white
 backing (`--qr-surface`) in both themes so phones can scan it. The "About
-the maker" popup deliberately names the maintainer (his choice, 2026-10-20);
+the maker" popup deliberately names the maintainer (his choice, 2026-10-20)
+and shows his photo, cropped from `assets/brand/maker-photo-original.jpg`
+into `assets/img/maker-176.webp` / `maker-352.webp`;
 everything else on the site still leaves out personal names. Crops avoid the
 artwork's baked-in text (the bottom-right headline and the garbled small text
 near the edges). Regenerate from the original rather than re-encoding a

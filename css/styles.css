@@ -321,6 +321,47 @@ main#app.route-enter { animation: routeFadeIn 0.35s ease both; }
 }
 .icon-btn:hover { border-color: var(--color-primary); color: var(--color-primary-dark); transform: translateY(-1px); box-shadow: var(--shadow-sm); }
 .icon-btn:focus-visible { outline: 3px solid var(--color-primary); outline-offset: 2px; }
+
+/* Header donate button: outlined in the brand color so it's clearly a
+   call to action without competing with the filled "Build my checklist". */
+.donate-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  height: 44px;
+  padding: 0 16px 0 13px;
+  flex-shrink: 0;
+  border-radius: 999px;
+  border: 2px solid var(--color-primary);
+  background: var(--color-primary-light);
+  color: var(--color-primary-dark);
+  font-weight: 700;
+  font-size: 0.92rem;
+  line-height: 1;
+  transition: background 0.15s ease, color 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
+}
+.donate-btn:hover { background: var(--color-primary); color: var(--color-surface); transform: translateY(-1px); box-shadow: var(--shadow-glow); }
+.donate-btn:focus-visible { outline: 3px solid var(--color-primary); outline-offset: 2px; }
+@media (max-width: 1180px) {
+  .donate-btn { width: 44px; padding: 0; }
+  .donate-btn-label { display: none; }
+}
+/* Inline-nav range just above the hamburger breakpoint: three round
+   buttons + four nav links only fit at 901px with tighter gaps (guarded
+   by the header-width test in tests/regression.test.js). */
+@media (min-width: 901px) and (max-width: 1080px) {
+  .header-right { gap: 10px; }
+  .site-nav { gap: 16px; }
+  .nav-cta { padding: 11px 16px !important; }
+}
+/* Small phones: logo + three round buttons + menu must fit in ~360px. */
+@media (max-width: 480px) {
+  .header-right { gap: 8px; }
+  .donate-btn, .icon-btn, .theme-toggle { width: 40px; height: 40px; }
+  .brand { gap: 8px; font-size: 1.15rem; }
+  .brand-mark { width: 34px; height: 34px; }
+}
 /* Icon-only through the whole "nav still inline but not spacious" range
    (roughly 721-1080px real-world windows) — the text label only has
    room once the header is genuinely wide. Icon + tooltip + aria-label

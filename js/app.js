@@ -459,7 +459,8 @@
     return (
       '<div class="donate-text">' +
         '<' + headingTag + ' class="donate-heading">Help keep port.dog free</' + headingTag + '>' +
-        '<p>port.dog is free to use — no ads, no accounts. If it saved you time or stress, you can chip in to help keep it running and improving. Every bit is appreciated.</p>' +
+        '<p>port.dog is a volunteer project. We don’t charge for anything — we simply want life to be easier for everyone traveling with their dog. Bringing your babies with you is a basic human right.</p>' +
+        '<p>The site does have real costs, like the domain and hosting. If you’re able to chip in, it’s hugely appreciated. If you’re not, that’s completely okay — everything here is yours to use, free.</p>' +
         '<p class="donate-actions"><a class="btn-primary" href="' + DONATE_URL + '" target="_blank" rel="noopener">Donate with PayPal &rarr;</a></p>' +
         '<p class="muted donate-link">Or go to <a href="' + DONATE_URL + '" target="_blank" rel="noopener">' + DONATE_LABEL + '</a></p>' +
       '</div>' +
@@ -478,7 +479,7 @@
     var m = openModal('About the maker', el(
       '<div>' +
         '<div class="about-maker">' +
-          '<img class="about-avatar" src="assets/img/avatar-192.webp" width="88" height="88" alt="">' +
+          '<img class="about-avatar" src="assets/img/maker-176.webp" srcset="assets/img/maker-176.webp 1x, assets/img/maker-352.webp 2x" width="88" height="88" alt="Neeraj Murarka">' +
           '<div>' +
             '<p class="about-name">Neeraj Murarka</p>' +
             '<p class="about-role">Creator of port.dog</p>' +
@@ -1285,6 +1286,7 @@
     });
     wireThemeToggle();
     document.getElementById('aboutBtn').addEventListener('click', openAboutModal);
+    document.getElementById('donateBtn').addEventListener('click', openDonateModal);
     // Footer (and any other) triggers, by data attribute.
     document.addEventListener('click', function (e) {
       var t = e.target.closest && e.target.closest('[data-open-donate], [data-open-about]');

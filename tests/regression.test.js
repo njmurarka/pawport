@@ -222,8 +222,15 @@ async function run() {
       check('Header info button opens the About popup', (await about.count()) === 1);
       const li = await about.locator('a', { hasText: 'LinkedIn' }).getAttribute('href');
       check('About popup links to the LinkedIn profile', li === 'https://www.linkedin.com/in/njmurarka/', 'got: ' + li);
+      check('About popup shows the maker photo', (await about.locator('img.about-avatar[src="assets/img/maker-176.webp"]').count()) === 1);
       await page.keyboard.press('Escape');
       check('Escape closes the About popup', (await page.locator('.modal-overlay').count()) === 0);
+
+      await page.click('#donateBtn');
+      const headerDonate = page.locator('.modal-card', { hasText: 'Support port.dog' });
+      check('Header Donate button opens the donate popup', (await headerDonate.count()) === 1);
+      check('Donate popup explains it is a volunteer project', (await headerDonate.locator('text=volunteer project').count()) === 1);
+      await page.keyboard.press('Escape');
 
       await page.click('[data-open-donate]');
       const donate = page.locator('.modal-card', { hasText: 'Support port.dog' });
