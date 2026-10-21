@@ -349,9 +349,10 @@ main#app.route-enter { animation: routeFadeIn 0.35s ease both; }
 /* ---------- Header responsive tiers ----------
    Wide (>1320px): Donate and theme buttons show their text labels.
    <=1320px: those two become icon-only.
-   <=1100px, OR whenever the inline nav doesn't fit (JS adds .nav-compact
-   — translated labels vary a lot in length): nav collapses into the
-   hamburger menu.
+   <=900px: nav collapses into the hamburger menu.
+   Above that, fitHeader() in js/app.js fits the row in any language by
+   first going icon-only, then tightening, and only as a last resort
+   collapsing the nav (.nav-compact) — translated labels vary a lot.
    <=600px: the About and theme buttons move into the menu (.nav-extra)
    so the language button fits on phones.
    Guarded by the header-width and overflow tests in
@@ -363,7 +364,14 @@ main#app.route-enter { animation: routeFadeIn 0.35s ease both; }
   .donate-btn, .theme-toggle { width: 44px; padding: 0; }
   .donate-btn-label, .theme-toggle .theme-toggle-label { display: none; }
 }
-@media (max-width: 1100px) {
+/* Set by fitHeader() in js/app.js, in this order, only as far as needed. */
+.site-header.hdr-icons .donate-btn, .site-header.hdr-icons .theme-toggle { width: 44px; padding: 0; }
+.site-header.hdr-icons .donate-btn-label, .site-header.hdr-icons .theme-toggle .theme-toggle-label { display: none; }
+.site-header.hdr-tight .header-right { gap: 10px; }
+.site-header.hdr-tight .site-nav { gap: 16px; }
+.site-header.hdr-tight .nav-cta { padding: 11px 16px !important; }
+.site-header.hdr-tight .brand-name { font-size: 1.15rem; }
+@media (max-width: 900px) {
   .nav-toggle { display: flex; }
   .site-nav {
     position: absolute;
@@ -550,7 +558,10 @@ html:lang(hi) {
 }
 /* Long compound words (German, Dutch, Russian) must never push a heading
    or checklist title past the screen edge. */
-h1, h2, h3, .item-title, .question-label, .feasibility-alert-title { overflow-wrap: break-word; hyphens: auto; }
+h1, h2, h3, .item-title, .question-label, .feasibility-alert-title { overflow-wrap: break-word; }
+html:lang(de) :is(h1, h2, h3, .item-title, .question-label, .feasibility-alert-title),
+html:lang(nl) :is(h1, h2, h3, .item-title, .question-label, .feasibility-alert-title),
+html:lang(ru) :is(h1, h2, h3, .item-title, .question-label, .feasibility-alert-title) { hyphens: auto; }
 
 /* ---------- Layout sections ---------- */
 main#app { padding: 36px 20px 64px; min-height: 60vh; }

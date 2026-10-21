@@ -157,7 +157,27 @@ async function run() {
       }
     }
 
-    // ---------- 6. No horizontal overflow in any language, phone to desktop ----------
+    // ---------- 6. Desktop: the full menu (incl. "Build my checklist") is visible ----------
+    // Regression: long translated labels once collapsed the whole menu into
+    // the hamburger even at 1440px. The header must shed button labels and
+    // spacing first; collapsing is only for genuinely narrow screens.
+    for (const lang of ['en'].concat(LANGS)) {
+      for (const w of [1180, 1280, 1366, 1440, 1920]) {
+        const { ctx, page } = await newPageIn(browser, lang, { width: w, height: 400 });
+        await page.goto(BASE + '/#/home');
+        await page.waitForSelector('.support-card');
+        await page.waitForTimeout(150);
+        const st = await page.evaluate(() => ({
+          navShown: getComputedStyle(document.querySelector('.site-nav')).display !== 'none',
+          compact: document.querySelector('.site-header').classList.contains('nav-compact'),
+          ctaVisible: !!document.querySelector('.site-nav .nav-cta').getClientRects().length,
+        }));
+        check(lang + ' at ' + w + 'px: full menu visible with "Build my checklist"', st.navShown && !st.compact && st.ctaVisible, JSON.stringify(st));
+        await ctx.close();
+      }
+    }
+
+    // ---------- 7. No horizontal overflow in any language, phone to desktop ----------
     for (const lang of LANGS) {
       for (const w of [320, 390, 1024, 1440]) {
         const { ctx, page } = await newPageIn(browser, lang, { width: w, height: 900 });

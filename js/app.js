@@ -19,7 +19,7 @@
      The choice lives in a cookie (like the theme) and switching
      reloads the page, so every renderer just reads the merged DATA. */
   var I18N = window.PortDogI18n;
-  var I18N_VERSION = 1; // bump whenever any data/i18n/*.json changes (cache-busting)
+  var I18N_VERSION = 2; // bump whenever any data/i18n/*.json changes (cache-busting)
   var LANG_COOKIE = 'portdog_lang';
   function langInfo(code) {
     for (var i = 0; i < I18N.LANGS.length; i++) if (I18N.LANGS[i].code === code) return I18N.LANGS[i];
@@ -1324,8 +1324,17 @@
     var header = document.querySelector('.site-header');
     var row = header && header.querySelector('.header-row');
     if (!row) return;
-    header.classList.remove('nav-compact');
-    if (row.scrollWidth > row.clientWidth + 1) header.classList.add('nav-compact');
+    function fits() { return row.scrollWidth <= row.clientWidth + 1; }
+    // Degrade step by step and stop as soon as everything fits: the nav
+    // links (especially "Build my checklist") must stay visible whenever
+    // there's any way to fit them — collapsing into the menu is last.
+    header.classList.remove('hdr-icons', 'hdr-tight', 'nav-compact');
+    if (fits()) return;
+    header.classList.add('hdr-icons');   // Donate / theme buttons icon-only
+    if (fits()) return;
+    header.classList.add('hdr-tight');   // tighter gaps and button padding
+    if (fits()) return;
+    header.classList.add('nav-compact'); // last resort: hamburger menu
   }
   var fitQueued = false;
   function queueFitHeader() {

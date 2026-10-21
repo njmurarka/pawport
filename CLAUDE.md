@@ -86,6 +86,11 @@ NACCS, … — see `PROTECTED` in `scripts/i18n.js`). Bump `I18N_VERSION` in
 reason as the `?v=` rule). Non-English pages show a notice that the English
 version is authoritative — keep it.
 
+Before deploying anything that touches layout or text, also run
+`node scripts/audit-site.js` (and `WIDTHS=nav node scripts/audit-site.js`):
+it visits every page, wizard step and popup in all 9 languages at several
+widths and must print `NO PROBLEMS FOUND`.
+
 ## Rules that must not be violated
 
 1. **Cache-busting.** `index.html` loads `css/styles.css?v=N`,
