@@ -12,6 +12,7 @@
     "ui.header.donateAria": ["ad0622b6","Faire un don à port.dog"],
     "ui.footer.disclaimer": ["45c957cb","<strong>Ceci est un outil communautaire, pas un conseil juridique ni vétérinaire.</strong> Les règles d’importation d’animaux au Japon peuvent changer, et chaque situation a ses particularités. Vérifiez toujours les exigences en vigueur auprès de votre vétérinaire, de l’autorité d’exportation de votre pays et du Service de quarantaine animale du Japon (AQS) avant de voyager."],
     "ui.footer.support": ["a8982452","♥ Soutenir port.dog"],
+    "ui.footer.privacy": ["76ec36ce","Confidentialité : nous comptons les visites de façon anonyme (sans cookies ni données personnelles). Vos réponses et votre progression restent sur votre appareil."],
     "ui.footer.built": ["a1884586","Réalisé avec amour (et beaucoup de leçons durement apprises) par quelqu’un qui est passé par là — pour toutes celles et ceux qui s’apprêtent à entreprendre ce voyage avec leur chien. Dernière publication :"],
     "ui.lang.button": ["913758cb","Langue : {language}"],
     "ui.lang.title": ["9a73db9b","Langue"],

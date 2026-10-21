@@ -220,7 +220,7 @@ async function run() {
         const page = await ctx.newPage();
         await page.goto(BASE + '/#/home');
         await page.evaluate((a) => localStorage.setItem('pawport_answers_v1', JSON.stringify(a)), answers);
-        for (const [route, sel] of [['home', '.support-card'], ['wizard', '.card'], ['results', '.results-header'], ['resources', 'h1'], ['about', '.story-banner']]) {
+        for (const [route, sel] of [['home', '.feature-grid'], ['wizard', '.card'], ['results', '.results-header'], ['resources', 'h1'], ['about', '.story-banner']]) {
           await page.goto(BASE + '/#/' + route);
           await page.waitForSelector(sel);
           await page.waitForTimeout(150);
@@ -245,14 +245,54 @@ async function run() {
       }
     }
 
+    // ---------- Anonymous analytics: right events, never personal data ----------
+    {
+      const page = await browser.newPage();
+      // Swap the real (vendored) GoatCounter script for a recorder.
+      await page.route('**/js/vendor/goatcounter-count.js*', (route) => route.fulfill({
+        contentType: 'text/javascript',
+        body: 'window.goatcounter = { count: function (v) { (window.__gc = window.__gc || []).push(v); } };',
+      }));
+      await page.goto(BASE + '/#/home');
+      await page.waitForSelector('.feature-grid');
+      await page.evaluate((a) => localStorage.setItem('pawport_answers_v1', JSON.stringify(a)), {
+        originCountry: 'CA', dogName: 'SecretDogName', healthConditions: ['none'], microchipDone: 'yes', rabiesDoses: '2+',
+        lastRabiesDate: '2026-03-24', rabiesDuration: '3yr', favnDone: 'yes', favnDate: '2026-03-24', travelDateKnown: 'no', hasTransit: 'no',
+      });
+      await page.goto(BASE + '/#/results');
+      await page.waitForSelector('.results-header');
+      await page.click('#donateBtn');
+      await page.waitForSelector('.modal-card');
+      await page.waitForTimeout(200);
+      const sent = await page.evaluate(() => window.__gc || []);
+      const paths = sent.map((v) => v.path);
+      check('Analytics counts page views by route name', paths.includes('/home') && paths.includes('/results'), JSON.stringify(paths));
+      check('Analytics counts opening the donate panel as an event', sent.some((v) => v.path === 'donate-panel-opened' && v.event === true));
+      const blob = JSON.stringify(sent);
+      check('Analytics never sends answers, dog names or dates', !/SecretDogName|\d{4}-\d{2}-\d{2}|CA\b/.test(blob), blob);
+      await page.close();
+    }
+    {
+      // The real script must never report visits from localhost (tests/dev).
+      const page = await browser.newPage();
+      const outbound = [];
+      page.on('request', (r) => { if (/goatcounter\.com/.test(r.url())) outbound.push(r.url()); });
+      await page.goto(BASE + '/#/home');
+      await page.waitForSelector('.feature-grid');
+      await page.goto(BASE + '/#/resources');
+      await page.waitForTimeout(800);
+      check('No analytics requests are sent from localhost', outbound.length === 0, outbound.join(', '));
+      check('The vendored GoatCounter script loaded', await page.evaluate(() => !!(window.goatcounter && window.goatcounter.count)));
+      await page.close();
+    }
+
     // ---------- About-the-maker popup and donate panel ----------
     {
       const page = await browser.newPage();
       await page.goto(BASE + '/#/home');
-      await page.waitForSelector('.support-card');
-      const cardHref = await page.locator('.support-card a.btn-primary').getAttribute('href');
-      check('Home support card links to the PayPal.Me page', cardHref === 'https://paypal.me/loquitus', 'got: ' + cardHref);
-      check('Home support card shows the QR code', (await page.locator('.support-card .donate-qr img[src="assets/img/paypal-qr.svg"]').count()) === 1);
+      await page.waitForSelector('.feature-grid');
+      // Donating is offered quietly (header button + footer link), never as a card on the page itself.
+      check('Home page has no donate card or QR code', (await page.locator('main .support-card, main .donate-qr').count()) === 0);
 
       await page.click('#aboutBtn');
       const about = page.locator('.modal-card', { hasText: 'Neeraj Murarka' });
@@ -273,6 +313,8 @@ async function run() {
       const donate = page.locator('.modal-card', { hasText: 'Support port.dog' });
       check('Footer link opens the donate popup', (await donate.count()) === 1);
       check('Donate popup has the QR code', (await donate.locator('img[src="assets/img/paypal-qr.svg"]').count()) === 1);
+      const popupHref = await donate.locator('a.btn-primary').getAttribute('href');
+      check('Donate popup links to the PayPal.Me page', popupHref === 'https://paypal.me/loquitus', 'got: ' + popupHref);
       const qrStatus = await page.evaluate(() => fetch('assets/img/paypal-qr.svg').then((r) => r.status));
       check('QR code image is served', qrStatus === 200, 'status=' + qrStatus);
       await page.close();

@@ -79,7 +79,7 @@ async function inspect(page, lang, label, leaks, problems, opts) {
       const go = async (route, sel) => { await page.goto(h.BASE + '/#/' + route); await page.waitForSelector(sel); await page.waitForTimeout(200); };
       const check = async (label) => { counts[lang]++; await inspect(page, lang, tag + ' ' + label, leaks, problems, { checkNav: w >= 1180 }); };
 
-      await go('home', '.support-card'); await check('home'); await shot('home');
+      await go('home', '.feature-grid'); await check('home'); await shot('home');
       // popups from the home page
       for (const [btn, name] of [['#aboutBtn', 'about-popup'], ['[data-open-donate]', 'donate-popup'], ['#btnImportHome', 'import-popup']]) {
         if (w < 600 && btn === '#aboutBtn') { await page.click('#navToggle'); await page.click('.site-nav [data-open-about]'); }

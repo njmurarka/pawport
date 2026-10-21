@@ -12,6 +12,7 @@
     "ui.header.donateAria": ["ad0622b6","An port.dog spenden"],
     "ui.footer.disclaimer": ["45c957cb","<strong>Dies ist ein Community-Werkzeug, keine rechtliche oder tierärztliche Beratung.</strong> Die Regeln für die Einfuhr von Tieren nach Japan können sich ändern, und jede Situation hat ihre eigenen Besonderheiten. Klären Sie die aktuellen Anforderungen vor der Reise immer mit Ihrer Tierärztin oder Ihrem Tierarzt, der Exportbehörde Ihres Landes und dem japanischen Tierquarantänedienst (AQS) ab."],
     "ui.footer.support": ["a8982452","♥ port.dog unterstützen"],
+    "ui.footer.privacy": ["76ec36ce","Datenschutz: Wir zählen Besuche anonym (ohne Cookies, ohne personenbezogene Daten). Ihre Antworten und Ihr Fortschritt bleiben auf Ihrem Gerät."],
     "ui.footer.built": ["a1884586","Mit Liebe (und vielen mühsam gelernten Lektionen) gebaut von jemandem, der es selbst durchgemacht hat – für alle, die diese Reise mit ihrem Hund gerade beginnen. Zuletzt veröffentlicht:"],
     "ui.lang.button": ["913758cb","Sprache: {language}"],
     "ui.lang.title": ["9a73db9b","Sprache"],

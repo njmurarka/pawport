@@ -12,6 +12,33 @@
   var DONATE_LABEL = 'paypal.me/loquitus';
   var LINKEDIN_URL = 'https://www.linkedin.com/in/njmurarka/';
 
+  /* ================= anonymous analytics (GoatCounter) =================
+     Cookie-free and no personal data: only page names (/home, /wizard…)
+     and a few named milestones are ever sent — never answers, dog names,
+     dates or anything typed. js/vendor/goatcounter-count.js loads async
+     and ignores localhost, so tests and local dev send nothing. Calls
+     made before it finishes loading are queued, then flushed. */
+  var trackQueue = [];
+  function track(path, title, isEvent) {
+    trackQueue.push({ path: path, title: title || path, event: !!isEvent });
+    flushTracking();
+  }
+  function flushTracking() {
+    var gc = window.goatcounter;
+    if (!gc || typeof gc.count !== 'function') return;
+    while (trackQueue.length) {
+      try { gc.count(trackQueue.shift()); } catch (e) { /* analytics must never break the site */ }
+    }
+  }
+  function trackLanguageOnce() {
+    if (LANG === 'en') return;
+    try {
+      if (sessionStorage.getItem('portdog_lang_tracked') === LANG) return;
+      sessionStorage.setItem('portdog_lang_tracked', LANG);
+    } catch (e) { /* private mode etc. — just count it */ }
+    track('language/' + LANG, 'Viewed in ' + langInfo(LANG).english, true);
+  }
+
   /* ================= language =================
      English (data/checklist-data.json) is the source of truth; other
      languages are overlays in data/i18n/<code>.json applied at load —
@@ -19,7 +46,7 @@
      The choice lives in a cookie (like the theme) and switching
      reloads the page, so every renderer just reads the merged DATA. */
   var I18N = window.PortDogI18n;
-  var I18N_VERSION = 2; // bump whenever any data/i18n/*.json changes (cache-busting)
+  var I18N_VERSION = 3; // bump whenever any data/i18n/*.json changes (cache-busting)
   var LANG_COOKIE = 'portdog_lang';
   function langInfo(code) {
     for (var i = 0; i < I18N.LANGS.length; i++) if (I18N.LANGS[i].code === code) return I18N.LANGS[i];
@@ -436,6 +463,7 @@
     // eslint-disable-next-line no-unused-expressions
     void app.offsetWidth; // restart the fade-in animation on every navigation
     app.classList.add('route-enter');
+    track('/' + route, route);
     if (route === 'wizard') renderWizard(app);
     else if (route === 'results') renderResults(app);
     else if (route === 'resources') renderResources(app);
@@ -494,7 +522,6 @@
       '</section>'
     ));
 
-    app.appendChild(el('<section class="support-card">' + donateInnerHtml('h2') + '</section>'));
   }
 
   /* ================= about the maker / donate ================= */
@@ -515,6 +542,7 @@
   }
 
   function openDonateModal() {
+    track('donate-panel-opened', 'Opened the donate panel', true);
     openModal(t('donate.title'), el('<div class="donate-layout">' + donateInnerHtml('h4') + '</div>'));
   }
 
@@ -708,7 +736,7 @@
         }
         saveAnswers(answers);
         if (idx < steps.length - 1) { idx++; update(); }
-        else { location.hash = '#/results'; }
+        else { track('wizard-finished', 'Finished the wizard', true); location.hash = '#/results'; }
       });
       container.querySelector('#btnBack').addEventListener('click', function () {
         if (idx > 0) { idx--; update(); } else { location.hash = '#/home'; }
@@ -1427,6 +1455,17 @@
     wireThemeToggle();
     document.getElementById('aboutBtn').addEventListener('click', openAboutModal);
     document.getElementById('donateBtn').addEventListener('click', openDonateModal);
+    // Outbound clicks worth knowing about (counted, never blocked).
+    document.addEventListener('click', function (e) {
+      var a = e.target.closest && e.target.closest('a[href]');
+      if (!a) return;
+      if (a.getAttribute('href') === DONATE_URL) track('donate-paypal-click', 'Clicked through to PayPal', true);
+      else if (a.getAttribute('href') === LINKEDIN_URL) track('maker-linkedin-click', 'Opened the maker\'s LinkedIn', true);
+    });
+    var gcScript = document.getElementById('gcScript');
+    if (gcScript) gcScript.addEventListener('load', flushTracking);
+    flushTracking();
+    trackLanguageOnce();
     // Footer (and any other) triggers, by data attribute.
     document.addEventListener('click', function (e) {
       var t = e.target.closest && e.target.closest('[data-open-donate], [data-open-about]');

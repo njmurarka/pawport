@@ -106,6 +106,7 @@
     <p data-i18n="footer.disclaimer"><strong>This is a community tool, not legal or veterinary advice.</strong> Rules for importing animals into Japan can change, and every situation has its own details. Always confirm current requirements with your veterinarian, your country's export authority, and Japan's Animal Quarantine Service (AQS) before you travel.</p>
     <p class="footer-links"><button type="button" class="link-btn" data-open-donate data-i18n="footer.support">&#9829; Support port.dog</button><span aria-hidden="true">&middot;</span><button type="button" class="link-btn" data-open-about data-i18n="maker.title">About the maker</button></p>
     <p class="muted"><span data-i18n="footer.built">Built with love (and a lot of hard-won lessons) by someone who's been through it — for anyone else about to start this journey with their dog. Last published:</span> <span id="publishedAt">—</span>. <a href="#" id="buildHashLink" class="build-hash" target="_blank" rel="noopener" title="Build commit — click to view on GitHub"></a></p>
+    <p class="muted" data-i18n="footer.privacy">Privacy: we count anonymous visits (no cookies, no personal data). Your answers and progress stay on your device.</p>
   </div>
 </footer>
 
@@ -113,7 +114,11 @@
      working even if a third-party CDN is slow, blocked, or down — see
      CLAUDE.md. MIT licensed, unmodified; see js/vendor/README.md. -->
 <script src="js/vendor/html2canvas.min.js?v=1" defer></script>
+<!-- Anonymous, cookie-free visit counting (GoatCounter, ISC license,
+     vendored — see js/vendor/README.md). no_onload: js/app.js counts each
+     hash route itself, since this is a single-page app. -->
+<script id="gcScript" data-goatcounter="https://portdog.goatcounter.com/count" data-goatcounter-settings='{"no_onload": true}' async src="js/vendor/goatcounter-count.js?v=1"></script>
 <script src="js/i18n.js?v=1" defer></script>
-<script src="js/app.js?v=35" defer></script>
+<script src="js/app.js?v=37" defer></script>
 </body>
 </html>

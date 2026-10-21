@@ -12,6 +12,7 @@
     "header.donateAria": "Donate to port.dog",
     "footer.disclaimer": "<strong>This is a community tool, not legal or veterinary advice.</strong> Rules for importing animals into Japan can change, and every situation has its own details. Always confirm current requirements with your veterinarian, your country's export authority, and Japan's Animal Quarantine Service (AQS) before you travel.",
     "footer.support": "♥ Support port.dog",
+    "footer.privacy": "Privacy: we count anonymous visits (no cookies, no personal data). Your answers and progress stay on your device.",
     "footer.built": "Built with love (and a lot of hard-won lessons) by someone who's been through it — for anyone else about to start this journey with their dog. Last published:",
     "lang.button": "Language: {language}",
     "lang.title": "Language",

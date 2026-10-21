@@ -45,7 +45,18 @@ The maintainer's own links live in constants at the top of `js/app.js`
 (`DONATE_URL`, `LINKEDIN_URL`). `assets/img/paypal-qr.svg` encodes
 `DONATE_URL` — if that URL changes, regenerate the QR (e.g. Python `segno`,
 error level H) and verify it decodes before shipping. The QR keeps a white
-backing (`--qr-surface`) in both themes so phones can scan it. The "About
+backing (`--qr-surface`) in both themes so phones can scan it. Donating is offered
+quietly — the header ♥ button and the footer link open the donate popup;
+the maintainer explicitly does NOT want a donate card or QR code on the
+pages themselves ("too demanding").
+
+Analytics: GoatCounter (https://portdog.goatcounter.com), cookie-free and
+vendored at `js/vendor/goatcounter-count.js`. `track()` in `js/app.js`
+sends only route names and a few named milestones — never answers, dog
+names, dates or typed text (asserted in `tests/regression.test.js`). The
+footer's privacy line promises exactly this; keep them in sync. Share
+links with `?ref=<source>` (e.g. `https://port.dog/?ref=mightyhearts`) to
+see where visitors come from. The "About
 the maker" popup deliberately names the maintainer (his choice, 2026-10-20)
 and shows his photo, cropped from `assets/brand/maker-photo-original.jpg`
 into `assets/img/maker-176.webp` / `maker-352.webp`;

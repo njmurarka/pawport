@@ -12,6 +12,7 @@
     "ui.header.donateAria": ["ad0622b6","向 port.dog 捐助"],
     "ui.footer.disclaimer": ["45c957cb","<strong>这是一个社区工具，不构成法律或兽医建议。</strong>日本的动物入境规定可能会变化，而且每个人的情况都有各自的细节。出行前，请务必向您的兽医、您所在国家的出口主管机构以及日本动物检疫所（AQS）确认最新要求。"],
     "ui.footer.support": ["a8982452","♥ 支持 port.dog"],
+    "ui.footer.privacy": ["76ec36ce","隐私：我们只统计匿名访问量（不使用 Cookie，不收集个人数据）。您的回答和进度只保存在您的设备上。"],
     "ui.footer.built": ["a1884586","由一位亲身经历过整个流程的人用心打造（也凝聚了许多来之不易的教训）——献给每一位即将带着狗狗踏上这段旅程的人。最后发布时间："],
     "ui.lang.button": ["913758cb","语言：{language}"],
     "ui.lang.title": ["9a73db9b","语言"],

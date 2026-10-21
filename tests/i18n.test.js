@@ -69,7 +69,7 @@ async function run() {
       const ov = overlay(lang);
       const { ctx, page } = await newPageIn(browser, lang);
       await page.goto(BASE + '/#/home');
-      await page.waitForSelector('.support-card');
+      await page.waitForSelector('.feature-grid');
       const htmlLang = await page.evaluate(() => document.documentElement.lang);
       check(lang + ': <html lang> set', htmlLang === (lang === 'zh' ? 'zh-Hans' : lang), 'got ' + htmlLang);
       const navHome = (await page.locator('.site-nav a[href="#/home"]').textContent()).trim();
@@ -86,7 +86,7 @@ async function run() {
     {
       const { ctx, page } = await newPageIn(browser, 'en');
       await page.goto(BASE + '/#/home');
-      await page.waitForSelector('.support-card');
+      await page.waitForSelector('.feature-grid');
       check('en: default language with no cookie', (await page.evaluate(() => document.documentElement.lang)) === 'en');
       check('en: no AI-translation notice', !(await page.locator('#langNotice').isVisible()));
       await ctx.close();
@@ -96,22 +96,22 @@ async function run() {
     {
       const { ctx, page } = await newPageIn(browser, 'en');
       await page.goto(BASE + '/#/home');
-      await page.waitForSelector('.support-card');
+      await page.waitForSelector('.feature-grid');
       await page.click('#langBtn');
       const opts = page.locator('#langMenu .lang-option');
       check('picker lists all 9 languages', (await opts.count()) === 9, 'count=' + (await opts.count()));
       const flags = await page.locator('#langMenu .lang-option img').evaluateAll((imgs) => imgs.map((i) => i.naturalWidth > 0 || i.getAttribute('src')));
       check('every option has a flag image', flags.length === 9 && flags.every(Boolean));
       await Promise.all([page.waitForNavigation(), opts.filter({ hasText: 'Deutsch' }).click()]);
-      await page.waitForSelector('.support-card');
+      await page.waitForSelector('.feature-grid');
       check('choosing Deutsch switches to German', (await page.evaluate(() => document.documentElement.lang)) === 'de');
       const cookies = await ctx.cookies();
       check('choice is remembered in a cookie', cookies.some((c) => c.name === 'portdog_lang' && c.value === 'de'));
       await page.reload();
-      await page.waitForSelector('.support-card');
+      await page.waitForSelector('.feature-grid');
       check('choice survives a reload', (await page.evaluate(() => document.documentElement.lang)) === 'de');
       await Promise.all([page.waitForNavigation(), page.click('#btnReadEnglish')]);
-      await page.waitForSelector('.support-card');
+      await page.waitForSelector('.feature-grid');
       check('"Read in English" switches back', (await page.evaluate(() => document.documentElement.lang)) === 'en');
       await page.click('#langBtn');
       await page.keyboard.press('Escape');
@@ -130,7 +130,7 @@ async function run() {
         await route.fulfill({ response: res, json: data });
       });
       await page.goto(BASE + '/#/home');
-      await page.waitForSelector('.support-card');
+      await page.waitForSelector('.feature-grid');
       const h1 = (await page.locator('.hero h1').textContent()).trim();
       check('a translation whose English changed falls back to the new English', h1 === changed, 'got "' + h1 + '"');
       const nav = (await page.locator('.site-nav a[href="#/home"]').textContent()).trim();
@@ -165,7 +165,7 @@ async function run() {
       for (const w of [1180, 1280, 1366, 1440, 1920]) {
         const { ctx, page } = await newPageIn(browser, lang, { width: w, height: 400 });
         await page.goto(BASE + '/#/home');
-        await page.waitForSelector('.support-card');
+        await page.waitForSelector('.feature-grid');
         await page.waitForTimeout(150);
         const st = await page.evaluate(() => ({
           navShown: getComputedStyle(document.querySelector('.site-nav')).display !== 'none',
@@ -183,7 +183,7 @@ async function run() {
         const { ctx, page } = await newPageIn(browser, lang, { width: w, height: 900 });
         await page.goto(BASE + '/#/home');
         await page.evaluate((a) => localStorage.setItem('pawport_answers_v1', JSON.stringify(a)), ANSWERS);
-        for (const [route, sel] of [['home', '.support-card'], ['wizard', '.card'], ['results', '.results-header'], ['resources', 'h1'], ['about', '.story-banner']]) {
+        for (const [route, sel] of [['home', '.feature-grid'], ['wizard', '.card'], ['results', '.results-header'], ['resources', 'h1'], ['about', '.story-banner']]) {
           await page.goto(BASE + '/#/' + route);
           await page.waitForSelector(sel);
           await page.waitForTimeout(120);
