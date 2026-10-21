@@ -417,6 +417,25 @@ text — but Canada is the maintainer's lived-experience content) and the
 "Our story" paragraph that describes a retest as restarting the 180-day
 clock (maintainer's own voice).
 
+## 2026-10-20: port.dog rebrand, donate/about, nine languages
+
+- Rebranded to **port.dog** (domain at Namecheap, GitHub Pages). Internal
+  storage keys keep the `pawport_` prefix on purpose (saved progress).
+- New hero artwork (`assets/brand/port-dog-hero-original.jpeg`), simple
+  paw favicon, PayPal donate panel + QR, "About the maker" popup with
+  the maintainer's photo and LinkedIn (his explicit choice).
+- **Translations**: English + zh, hi, es, fr, de, ja, ru, nl, picked from
+  a flag menu in the header and remembered in the `portdog_lang` cookie.
+  All 534 strings (UI, checklist, country notes, FAQ, story) were
+  AI-translated by one agent per language, then machine-checked
+  (`scripts/i18n.js check`: numbers, placeholders, HTML, URLs, protected
+  terms like Form AC/FAVN/NACCS). Not reviewed by native speakers —
+  non-English pages say so and link back to English. Translations are
+  hash-pinned to their English source, so editing English makes them fall
+  back to English until re-translated (see CLAUDE.md "Translations").
+  One manual correction: Japanese "Approval of Import Inspection" is
+  MAFF's own term 「届出受理書」.
+
 ## Open items / not yet done
 
 - Confirm the maintainer regenerated the DuckDNS token after pasting it in chat.

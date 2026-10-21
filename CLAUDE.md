@@ -54,6 +54,38 @@ artwork's baked-in text (the bottom-right headline and the garbled small text
 near the edges). Regenerate from the original rather than re-encoding a
 derived file.
 
+## Translations (9 languages)
+
+English in `data/checklist-data.json` is the **only** source of truth —
+including all interface text, which lives in its `ui` section (code calls
+`t('key')`; never hard-code visible English in `js/app.js` or `index.html`,
+add a `ui` key instead; static shell text uses `data-i18n` /
+`data-i18n-aria` attributes). Other languages are overlays in
+`data/i18n/<code>.json` (zh, hi, es, fr, de, ja, ru, nl), loaded per the
+`portdog_lang` cookie. `js/i18n.js` defines the language list, which
+strings are translatable, and the overlay format.
+
+Each translation stores a hash of the English it was translated from. **If
+you edit any English string, its translations automatically fall back to
+English until re-translated** — so a translation can never show an outdated
+rule. That also means `tests/i18n.test.js` will fail (stale keys) until you
+re-translate. Workflow after changing English:
+
+```
+node scripts/i18n.js check              # see what's missing/stale per language
+node scripts/i18n.js extract /tmp/src.json   # English source {key: text}
+# translate the needed keys into {key: text} per language, then:
+node scripts/i18n.js pack de /tmp/de.json    # writes data/i18n/de.json (hash-stamped)
+node scripts/i18n.js check              # must report 0 integrity errors
+```
+
+`check` rejects any translation that changes a number, drops a
+`{placeholder}`, HTML tag, URL/email, or a protected term (Form AC, FAVN,
+NACCS, … — see `PROTECTED` in `scripts/i18n.js`). Bump `I18N_VERSION` in
+`js/app.js` whenever any `data/i18n/*.json` changes (cache-busting, same
+reason as the `?v=` rule). Non-English pages show a notice that the English
+version is authoritative — keep it.
+
 ## Rules that must not be violated
 
 1. **Cache-busting.** `index.html` loads `css/styles.css?v=N`,

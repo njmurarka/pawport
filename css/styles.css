@@ -111,6 +111,9 @@ body {
   color: var(--color-text);
   line-height: 1.6;
   font-size: 17px;
+  /* Never let one long unbroken word (German compounds, URLs, email
+     addresses in agency notes) push the page wider than the screen. */
+  overflow-wrap: break-word;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   position: relative;
@@ -196,7 +199,7 @@ main#app.route-enter { animation: routeFadeIn 0.35s ease both; }
   align-items: center;
   justify-content: space-between;
   height: 68px;
-  max-width: 1180px; /* wider than the 900px body-content .wrap it also uses — room for the theme toggle without crowding the nav */
+  max-width: 1240px; /* wider than the 900px body-content .wrap it also uses — room for the header buttons without crowding the nav */
 }
 .header-right {
   display: flex;
@@ -343,44 +346,24 @@ main#app.route-enter { animation: routeFadeIn 0.35s ease both; }
 }
 .donate-btn:hover { background: var(--color-primary); color: var(--color-surface); transform: translateY(-1px); box-shadow: var(--shadow-glow); }
 .donate-btn:focus-visible { outline: 3px solid var(--color-primary); outline-offset: 2px; }
-@media (max-width: 1180px) {
-  .donate-btn { width: 44px; padding: 0; }
-  .donate-btn-label { display: none; }
+/* ---------- Header responsive tiers ----------
+   Wide (>1320px): Donate and theme buttons show their text labels.
+   <=1320px: those two become icon-only.
+   <=1100px, OR whenever the inline nav doesn't fit (JS adds .nav-compact
+   — translated labels vary a lot in length): nav collapses into the
+   hamburger menu.
+   <=600px: the About and theme buttons move into the menu (.nav-extra)
+   so the language button fits on phones.
+   Guarded by the header-width and overflow tests in
+   tests/regression.test.js, in every language (tests/i18n.test.js). */
+.brand, .site-nav a, .lang-btn, .donate-btn, .theme-toggle { white-space: nowrap; }
+.header-right { flex-shrink: 0; }
+.nav-extra { display: none; }
+@media (max-width: 1320px) {
+  .donate-btn, .theme-toggle { width: 44px; padding: 0; }
+  .donate-btn-label, .theme-toggle .theme-toggle-label { display: none; }
 }
-/* Inline-nav range just above the hamburger breakpoint: three round
-   buttons + four nav links only fit at 901px with tighter gaps (guarded
-   by the header-width test in tests/regression.test.js). */
-@media (min-width: 901px) and (max-width: 1080px) {
-  .header-right { gap: 10px; }
-  .site-nav { gap: 16px; }
-  .nav-cta { padding: 11px 16px !important; }
-}
-/* Small phones: logo + three round buttons + menu must fit in ~360px. */
-@media (max-width: 480px) {
-  .header-right { gap: 8px; }
-  .donate-btn, .icon-btn, .theme-toggle { width: 40px; height: 40px; }
-  .brand { gap: 8px; font-size: 1.15rem; }
-  .brand-mark { width: 34px; height: 34px; }
-}
-/* Smallest phones (320px, e.g. iPhone SE 1st gen). */
-@media (max-width: 360px) {
-  .header-row { padding: 0 12px; }
-  .header-right { gap: 6px; }
-  .donate-btn, .icon-btn, .theme-toggle { width: 36px; height: 36px; }
-  .nav-toggle { width: 38px; }
-  .brand { gap: 6px; font-size: 1.05rem; }
-  .brand-mark { width: 30px; height: 30px; }
-}
-/* Icon-only through the whole "nav still inline but not spacious" range
-   (roughly 721-1080px real-world windows) — the text label only has
-   room once the header is genuinely wide. Icon + tooltip + aria-label
-   stays clear on its own; sun/moon is a well-understood affordance. */
-@media (max-width: 1080px) {
-  .theme-toggle { width: 44px; padding: 0; }
-  .theme-toggle-label { display: none; }
-}
-
-@media (max-width: 900px) {
+@media (max-width: 1100px) {
   .nav-toggle { display: flex; }
   .site-nav {
     position: absolute;
@@ -401,6 +384,173 @@ main#app.route-enter { animation: routeFadeIn 0.35s ease both; }
   .site-nav a::after { display: none; }
   .nav-cta { text-align: center; margin-top: 6px; }
 }
+.site-header.nav-compact .nav-toggle { display: flex; }
+.site-header.nav-compact .site-nav {
+  position: absolute;
+  top: 68px;
+  left: 0;
+  right: 0;
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+  flex-direction: column;
+  align-items: stretch;
+  padding: 8px 20px 18px;
+  gap: 6px;
+  display: none;
+  box-shadow: var(--shadow);
+}
+.site-header.nav-compact .site-nav.open { display: flex; }
+.site-header.nav-compact .site-nav a { padding: 12px 4px; border-radius: var(--radius-sm); }
+.site-header.nav-compact .site-nav a::after { display: none; }
+.site-header.nav-compact .nav-cta { text-align: center; margin-top: 6px; }
+@media (max-width: 600px) {
+  #aboutBtn, #themeToggle { display: none; }
+  .site-nav .nav-extra {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: none;
+    border: none;
+    padding: 12px 4px;
+    font: inherit;
+    font-weight: 500;
+    color: var(--color-text);
+    text-align: left;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+  }
+  .site-nav .nav-extra:first-of-type { border-top: 1px solid var(--color-border); border-radius: 0; margin-top: 4px; padding-top: 16px; }
+}
+/* Small phones: logo + donate + language + menu must fit in ~360px. */
+@media (max-width: 480px) {
+  .header-right { gap: 8px; }
+  .donate-btn, .icon-btn, .theme-toggle { width: 40px; height: 40px; }
+  .brand { gap: 8px; font-size: 1.15rem; }
+  .brand-mark { width: 34px; height: 34px; }
+}
+/* Smallest phones (320px, e.g. iPhone SE 1st gen). */
+@media (max-width: 360px) {
+  .header-row { padding: 0 12px; }
+  .header-right { gap: 6px; }
+  .donate-btn, .icon-btn, .theme-toggle { width: 36px; height: 36px; }
+  .nav-toggle { width: 38px; }
+  .brand { gap: 6px; font-size: 1.05rem; }
+  .brand-mark { width: 30px; height: 30px; }
+}
+
+/* ---------- Language picker ---------- */
+.lang-picker { position: relative; flex-shrink: 0; }
+.lang-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 44px;
+  padding: 0 12px;
+  border-radius: 999px;
+  border: 2px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font: inherit;
+  font-weight: 700;
+  font-size: 0.84rem;
+  letter-spacing: 0.04em;
+  line-height: 1;
+  cursor: pointer;
+  transition: border-color 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
+}
+.lang-btn:hover { border-color: var(--color-primary); transform: translateY(-1px); box-shadow: var(--shadow-sm); }
+.lang-btn:focus-visible { outline: 3px solid var(--color-primary); outline-offset: 2px; }
+.lang-btn[aria-expanded="true"] { border-color: var(--color-primary); }
+.lang-flag, .lang-option img {
+  display: block;
+  border-radius: 2px;
+  object-fit: cover;
+  box-shadow: 0 0 0 1px var(--color-border);
+}
+.lang-flag { width: 20px; height: 15px; }
+.lang-caret { opacity: 0.6; }
+.lang-menu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 8px);
+  width: 250px;
+  max-width: calc(100vw - 24px);
+  max-height: min(72vh, 540px);
+  overflow-y: auto;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-lg);
+  padding: 6px;
+  z-index: 120;
+}
+.lang-menu[hidden] { display: none; }
+.lang-option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 9px 10px;
+  border: none;
+  background: none;
+  color: var(--color-text);
+  border-radius: var(--radius-sm);
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+}
+.lang-option:hover, .lang-option:focus-visible { background: var(--color-surface-alt); outline: none; }
+.lang-option:focus-visible { box-shadow: inset 0 0 0 2px var(--color-primary); }
+.lang-option[aria-checked="true"] { background: var(--color-primary-light); }
+.lang-option[aria-checked="true"] .lang-native { font-weight: 700; color: var(--color-primary-dark); }
+.lang-option img { width: 24px; height: 18px; flex: none; }
+.lang-names { display: flex; flex-direction: column; flex: 1; min-width: 0; line-height: 1.25; }
+.lang-native { font-weight: 600; }
+.lang-english { font-size: 0.78rem; color: var(--color-text-muted); }
+.lang-option-code { font-size: 0.74rem; font-weight: 700; color: var(--color-text-muted); letter-spacing: 0.06em; }
+@media (max-width: 480px) {
+  .lang-btn { height: 40px; padding: 0 10px; gap: 6px; }
+  .lang-caret { display: none; }
+}
+@media (max-width: 360px) {
+  .lang-btn { height: 36px; padding: 0 8px; gap: 5px; font-size: 0.76rem; }
+}
+
+/* Shown only when viewing a translation: English is authoritative. */
+.lang-notice {
+  width: calc(100% - 40px);
+  max-width: calc(var(--max-width) - 40px);
+  margin: 14px auto 0;
+  padding: 10px 16px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 12px;
+  font-size: 0.88rem;
+  color: var(--color-text);
+  background: var(--color-accent-light);
+  border: 1px solid var(--story-border);
+  border-radius: var(--radius-sm);
+}
+.lang-notice[hidden] { display: none; }
+
+/* Scripts the Latin web fonts don't cover fall back to good system
+   fonts per language (Latin characters still use Inter / Playfair). */
+html:lang(zh-Hans) {
+  --font: 'Inter', "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", "Noto Sans SC", sans-serif;
+  --font-display: 'Playfair Display', "Songti SC", "STSong", "Noto Serif CJK SC", "Noto Serif SC", "SimSun", serif;
+}
+html:lang(ja) {
+  --font: 'Inter', "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic", "Meiryo", "Noto Sans CJK JP", "Noto Sans JP", sans-serif;
+  --font-display: 'Playfair Display', "Hiragino Mincho ProN", "Yu Mincho", "Noto Serif CJK JP", "Noto Serif JP", serif;
+}
+html:lang(hi) {
+  --font: 'Inter', "Kohinoor Devanagari", "Nirmala UI", "Noto Sans Devanagari", "Mangal", sans-serif;
+  --font-display: 'Playfair Display', "Kohinoor Devanagari", "Nirmala UI", "Noto Serif Devanagari", "Noto Sans Devanagari", serif;
+}
+/* Long compound words (German, Dutch, Russian) must never push a heading
+   or checklist title past the screen edge. */
+h1, h2, h3, .item-title, .question-label, .feasibility-alert-title { overflow-wrap: break-word; hyphens: auto; }
 
 /* ---------- Layout sections ---------- */
 main#app { padding: 36px 20px 64px; min-height: 60vh; }
@@ -696,11 +846,16 @@ label.field-label { font-weight: 600; display: block; margin-bottom: 8px; }
 
 .wizard-nav {
   display: flex;
+  flex-wrap: wrap; /* long translated button labels must wrap, not overflow */
   justify-content: space-between;
   align-items: center;
   margin-top: 28px;
   gap: 12px;
 }
+.wizard-nav > div { flex-wrap: wrap; justify-content: flex-end; margin-left: auto; }
+/* Flex children default to min-width:auto (never narrower than their
+   longest word), which defeats word wrapping — let text columns shrink. */
+.checklist-item > div, .feasibility-alert > div, .progress-summary > div, .donate-text, .about-maker > div { min-width: 0; }
 
 .skip-link {
   background: none;

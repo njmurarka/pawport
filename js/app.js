@@ -12,6 +12,37 @@
   var DONATE_LABEL = 'paypal.me/loquitus';
   var LINKEDIN_URL = 'https://www.linkedin.com/in/njmurarka/';
 
+  /* ================= language =================
+     English (data/checklist-data.json) is the source of truth; other
+     languages are overlays in data/i18n/<code>.json applied at load —
+     see js/i18n.js for the format and the stale-translation guard.
+     The choice lives in a cookie (like the theme) and switching
+     reloads the page, so every renderer just reads the merged DATA. */
+  var I18N = window.PortDogI18n;
+  var I18N_VERSION = 1; // bump whenever any data/i18n/*.json changes (cache-busting)
+  var LANG_COOKIE = 'portdog_lang';
+  function langInfo(code) {
+    for (var i = 0; i < I18N.LANGS.length; i++) if (I18N.LANGS[i].code === code) return I18N.LANGS[i];
+    return I18N.LANGS[0];
+  }
+  var LANG = (function () {
+    var m = document.cookie.match(/(?:^|; )portdog_lang=([^;]*)/);
+    return langInfo(m && decodeURIComponent(m[1])).code;
+  })();
+  var LOCALE = langInfo(LANG).locale;
+  function setLang(code) {
+    var expires = new Date(Date.now() + 365 * 86400000).toUTCString();
+    document.cookie = LANG_COOKIE + '=' + encodeURIComponent(code) + '; expires=' + expires + '; path=/; SameSite=Lax';
+    location.reload();
+  }
+  // UI strings may contain trusted markup (from our own data file); any
+  // user-supplied value passed in `vars` must already be escaped.
+  function t(key, vars) {
+    var s = DATA && DATA.ui && typeof DATA.ui[key] === 'string' ? DATA.ui[key] : key;
+    if (vars) s = s.replace(/\{(\w+)\}/g, function (m, k) { return vars[k] !== undefined && vars[k] !== null ? String(vars[k]) : m; });
+    return s;
+  }
+
   /* ================= forward/backward-compatible answers =================
      Answers live in localStorage indefinitely (an app UPDATE must never
      lose them) and can also arrive via a JSON import from any previous
@@ -100,23 +131,29 @@
   }
   function applyTheme(theme) {
     document.documentElement.setAttribute('data-theme', theme);
-    var btn = document.getElementById('themeToggle');
-    if (!btn) return;
     var isDark = theme === 'dark';
-    btn.querySelector('.theme-toggle-icon').textContent = isDark ? '☀️' : '🌙';
-    btn.querySelector('.theme-toggle-label').textContent = isDark ? 'Light mode' : 'Dark mode';
-    var label = 'Switch to ' + (isDark ? 'light' : 'dark') + ' mode';
-    btn.setAttribute('aria-label', label);
-    btn.title = label;
+    var label = isDark ? t('theme.toLight') : t('theme.toDark');
+    ['themeToggle', 'themeToggleMenu'].forEach(function (id) {
+      var btn = document.getElementById(id);
+      if (!btn) return;
+      btn.querySelector('.theme-toggle-icon').textContent = isDark ? '☀️' : '🌙';
+      btn.querySelector('.theme-toggle-label').textContent = isDark ? t('theme.light') : t('theme.dark');
+      btn.setAttribute('aria-label', label);
+      btn.title = label;
+    });
+    fitHeader(); // the label's length differs per language and per state
   }
   function wireThemeToggle() {
     var current = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
     applyTheme(current);
-    var btn = document.getElementById('themeToggle');
-    btn.addEventListener('click', function () {
-      current = current === 'dark' ? 'light' : 'dark';
-      applyTheme(current);
-      setThemeCookie(current);
+    ['themeToggle', 'themeToggleMenu'].forEach(function (id) {
+      var btn = document.getElementById(id);
+      if (!btn) return;
+      btn.addEventListener('click', function () {
+        current = current === 'dark' ? 'light' : 'dark';
+        applyTheme(current);
+        setThemeCookie(current);
+      });
     });
   }
 
@@ -130,7 +167,10 @@
   function addYears(d, n) { var r = new Date(d); r.setFullYear(r.getFullYear() + n); return r; }
   function fmtDate(d) {
     if (!d) return '';
-    return d.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
+    var out = d.toLocaleDateString(LOCALE, { year: 'numeric', month: 'long', day: 'numeric' });
+    // Russian dates end in "г." — drop it so a sentence ending in a date
+    // doesn't get a double period ("2026 г..").
+    return LOCALE === 'ru' ? out.replace(/\s?г\.$/, '') : out;
   }
   function daysBetween(a, b) { return Math.round((b - a) / 86400000); }
   function todayDateOnly() { var d = new Date(); d.setHours(0, 0, 0, 0); return d; }
@@ -194,15 +234,15 @@
     var lastRabiesDate = parseDate(answers.lastRabiesDate);
 
     if (favnDate) {
-      out.favn180 = { label: 'Earliest possible travel date', value: addDays(favnDate, 180) };
+      out.favn180 = { label: t('dates.favn180'), value: addDays(favnDate, 180) };
       var validityEnd = addYears(favnDate, 2);
-      out.favnValidityEnd = { label: 'FAVN 2-year outer validity ends', value: validityEnd };
+      out.favnValidityEnd = { label: t('dates.favnValidityEnd'), value: validityEnd };
       // MAFF: a second antibody test needs no new 180-day wait if vaccine
       // coverage never lapsed and its draw is >= 180 days after the first.
       out.favnRetestEarliest = {
-        label: 'Earliest date for a second antibody test (only if needed)',
+        label: t('dates.retest'),
         value: addDays(favnDate, 180),
-        note: 'Only needed if you’ll arrive after ' + fmtDate(validityEnd) + '. No new 180-day wait, as long as your dog’s rabies vaccination never lapses — just leave time for lab results before your pre-export paperwork.'
+        note: t('dates.retestNote', { date: fmtDate(validityEnd) })
       };
     }
     if (lastRabiesDate && answers.rabiesDuration && answers.rabiesDuration !== 'unsure') {
@@ -211,17 +251,17 @@
       var dueDate = addYears(lastRabiesDate, years);
       var bufferDate = addDays(dueDate, -bufferDays);
       out.boosterBufferDate = {
-        label: 'Suggested booster-by date (safety buffer)',
+        label: t('dates.booster'),
         value: bufferDate,
-        note: 'Labeled immunity runs out ' + fmtDate(dueDate) + '. Missing this resets everything (new vaccination series + new FAVN + new 180-day wait), so we build in a bigger buffer: at least ' + bufferDays + ' days.'
+        note: t('dates.boosterNote', { date: fmtDate(dueDate), days: bufferDays })
       };
     }
     if (travelDate) {
-      out.advanceNotificationDeadline = { label: 'Submit AQS advance notification by', value: addDays(travelDate, -40) };
+      out.advanceNotificationDeadline = { label: t('dates.aqsBy'), value: addDays(travelDate, -40) };
       out.preExportExamWindow = {
-        label: 'Pre-export exam window opens',
+        label: t('dates.examOpens'),
         value: addDays(travelDate, -10),
-        note: 'Any time from ' + fmtDate(addDays(travelDate, -10)) + ' through your travel date.'
+        note: t('dates.examNote', { date: fmtDate(addDays(travelDate, -10)) })
       };
     }
     return out;
@@ -256,26 +296,26 @@
     if (nonDesignated) {
       var earliestTravel = null, basisNote = '';
       if (eff.favnDone === 'yes') {
-        if (dates.favn180) { earliestTravel = dates.favn180.value; basisNote = 'from your FAVN blood draw date'; }
+        if (dates.favn180) { earliestTravel = dates.favn180.value; basisNote = t('alert.basisFavn'); }
       } else {
         var earliestDraw = computeEarliestFavnDrawDate(eff, today);
         earliestTravel = addDays(earliestDraw, 180);
-        basisNote = 'in the best case, assuming every remaining vet step happens with no delay';
+        basisNote = t('alert.basisBest');
       }
 
       if (earliestTravel && travelDate && travelDate < earliestTravel) {
         alerts.push({
           level: 'blocker',
-          title: 'Your target travel date is not achievable',
-          detail: 'Japan requires a mandatory 180-day wait after the FAVN blood draw, with no exceptions. Based on your answers, the earliest your dog could legally enter Japan is ' + fmtDate(earliestTravel) + ' (' + basisNote + ') — ' + daysBetween(travelDate, earliestTravel) + ' day(s) after your stated travel date of ' + fmtDate(travelDate) + '. Your dog cannot travel with you on this date — you need to push your trip back.'
+          title: t('alert.impossible.title'),
+          detail: t('alert.impossible.detail', { earliest: fmtDate(earliestTravel), basis: basisNote, days: daysBetween(travelDate, earliestTravel), travel: fmtDate(travelDate) })
         });
       }
 
       if (eff.favnDone === 'yes' && dates.favnValidityEnd && travelDate && travelDate > dates.favnValidityEnd.value) {
         alerts.push({
           level: 'urgent',
-          title: 'You’ll need a second antibody test before your travel date',
-          detail: 'Your FAVN is only valid for 2 years from the blood draw, until ' + fmtDate(dates.favnValidityEnd.value) + '. Your stated travel date of ' + fmtDate(travelDate) + ' is after that, so you need a second antibody test (at a designated lab, 0.5 IU/mL or higher) whose result covers your arrival. Japan does not require a new 180-day wait for it, as long as your dog’s rabies vaccination never lapses and the new blood draw is on or after ' + fmtDate(addDays(parseDate(eff.favnDate), 180)) + '. Leave time for lab results before your pre-export paperwork.'
+          title: t('alert.retest.title'),
+          detail: t('alert.retest.detail', { end: fmtDate(dates.favnValidityEnd.value), travel: fmtDate(travelDate), drawFrom: fmtDate(addDays(parseDate(eff.favnDate), 180)) })
         });
       }
 
@@ -286,14 +326,14 @@
         if (dueDate < today) {
           alerts.push({
             level: 'blocker',
-            title: 'Your rabies vaccine coverage has already lapsed',
-            detail: 'Your last rabies vaccination’s labeled immunity period ended ' + fmtDate(dueDate) + '. A lapse invalidates your FAVN result entirely — Japan will require a brand-new vaccination series, a new FAVN blood draw, and a fresh 180-day wait from scratch.'
+            title: t('alert.lapsed.title'),
+            detail: t('alert.lapsed.detail', { due: fmtDate(dueDate) })
           });
         } else if (travelDate && dueDate < travelDate) {
           alerts.push({
             level: 'blocker',
-            title: 'Your rabies vaccine coverage will lapse before your travel date',
-            detail: 'Your current vaccination’s labeled immunity runs out ' + fmtDate(dueDate) + ', which is before your stated travel date of ' + fmtDate(travelDate) + '. You must get a booster before that date to keep your FAVN result valid — missing it resets the whole process.'
+            title: t('alert.willLapse.title'),
+            detail: t('alert.willLapse.detail', { due: fmtDate(dueDate), travel: fmtDate(travelDate) })
           });
         }
       }
@@ -308,8 +348,8 @@
         if (notifiedDate > deadline) {
           alerts.push({
             level: 'urgent',
-            title: 'Your AQS advance notification may have been filed after the deadline',
-            detail: 'You told us you submitted advance notification on ' + fmtDate(notifiedDate) + ', but the 40-day deadline for your travel date was ' + fmtDate(deadline) + ' — after that. Contact the AQS office at your port of entry to confirm they’ll still accept it; being late risks delays or denial at arrival.'
+            title: t('alert.aqsLate.title'),
+            detail: t('alert.aqsLate.detail', { filed: fmtDate(notifiedDate), deadline: fmtDate(deadline) })
           });
         }
         // else: filed on or before the deadline — fully compliant, no alert.
@@ -318,16 +358,16 @@
         if (deadlinePassed) {
           alerts.push({
             level: 'urgent',
-            title: 'Confirm your AQS advance notification was filed on time',
-            detail: 'You told us you already submitted advance notification, but didn’t give a date, so this can’t be checked against your 40-day deadline of ' + fmtDate(deadline) + '. If you filed after that date, contact the AQS office at your port of entry to confirm they’ll still accept it.'
+            title: t('alert.aqsNoDate.title'),
+            detail: t('alert.aqsNoDate.detail', { deadline: fmtDate(deadline) })
           });
         }
       } else if (deadlinePassed) {
         // Not yet notified (or unsure/unanswered) and the deadline has passed.
         alerts.push({
           level: 'urgent',
-          title: 'You are past the 40-day advance-notification deadline',
-          detail: 'Japan’s Animal Quarantine Service requires advance notification at least 40 days before arrival. Based on your travel date, that deadline was ' + fmtDate(deadline) + '. Contact the AQS office at your port of entry immediately if you haven’t already notified them — being this late risks delays or denial at arrival.'
+          title: t('alert.aqsPast.title'),
+          detail: t('alert.aqsPast.detail', { deadline: fmtDate(deadline) })
         });
       }
     }
@@ -413,26 +453,26 @@
           '<picture>' +
             '<source media="(max-width: 640px)" type="image/webp" srcset="assets/img/hero-main-mobile-720.webp 720w, assets/img/hero-main-mobile-1080.webp 1080w" sizes="100vw">' +
             '<source type="image/webp" srcset="assets/img/hero-main-1290.webp 1290w, assets/img/hero-main-2150.webp 2150w" sizes="(max-width: 1160px) 100vw, 1120px">' +
-            '<img src="assets/img/hero-main-1290.jpg" width="1290" height="621" fetchpriority="high" alt="A boxer in aviator goggles and a PORT.DOG harness, with a jet climbing over a sunset globe behind him">' +
+            '<img src="assets/img/hero-main-1290.jpg" width="1290" height="621" fetchpriority="high" alt="' + escapeHtml(t('home.heroAlt')) + '">' +
           '</picture>' +
         '</figure>' +
-        '<span class="tag">Free &middot; No account needed &middot; Works on your phone</span>' +
-        '<h1>Your dog’s path to Japan, mapped out step by step.</h1>' +
-        '<p class="lede">Bringing a dog into Japan involves microchips, blood tests, strict deadlines, and government paperwork — in an order that matters. This tool turns all of that into a personalized checklist for your situation, built from real experience so you don’t have to learn every lesson the hard way.</p>' +
+        '<span class="tag">' + t('home.tag') + '</span>' +
+        '<h1>' + t('home.title') + '</h1>' +
+        '<p class="lede">' + t('home.lede') + '</p>' +
         '<div class="cta-row">' +
-          '<a href="#/wizard" class="btn-primary" data-nav>Build my checklist &rarr;</a>' +
-          '<a href="#/resources" class="btn-secondary" data-nav>Browse the FAQ first</a>' +
+          '<a href="#/wizard" class="btn-primary" data-nav>' + t('home.ctaStart') + '</a>' +
+          '<a href="#/resources" class="btn-secondary" data-nav>' + t('home.ctaFaq') + '</a>' +
         '</div>' +
-        '<p class="muted"><button type="button" class="skip-link" id="btnImportHome">Already started on another device? Import your checklist &rarr;</button></p>' +
+        '<p class="muted"><button type="button" class="skip-link" id="btnImportHome">' + t('home.import') + '</button></p>' +
       '</section>'
     ));
     document.getElementById('btnImportHome').addEventListener('click', openImportModal);
 
     app.appendChild(el(
       '<section class="feature-grid">' +
-        '<div class="feature-card"><img class="feature-thumb" src="assets/img/feature-route.webp" width="64" height="64" alt="" loading="lazy"><h3>Personalized, not generic</h3><p>Answer a few plain-language questions about your dog and your country, and get a checklist tailored to your exact situation — including the simplified path if you’re coming from one of the handful of rabies-free “designated regions.”</p></div>' +
-        '<div class="feature-card"><img class="feature-thumb" src="assets/img/feature-plane.webp" width="64" height="64" alt="" loading="lazy"><h3>The deadlines, calculated for you</h3><p>The FAVN blood test’s 180-day wait, its 2-year outer limit, and safe booster timing all get worked out automatically from your dates — including safety buffers sized to how bad it is if you miss them.</p></div>' +
-        '<div class="feature-card"><img class="feature-thumb" src="assets/img/feature-passport.webp" width="64" height="64" alt="" loading="lazy"><h3>A checklist you actually check off</h3><p>Track your progress, print it, or come back later — your answers and progress are saved right on your device.</p></div>' +
+        '<div class="feature-card"><img class="feature-thumb" src="assets/img/feature-route.webp" width="64" height="64" alt="" loading="lazy"><h3>' + t('home.f1.title') + '</h3><p>' + t('home.f1.body') + '</p></div>' +
+        '<div class="feature-card"><img class="feature-thumb" src="assets/img/feature-plane.webp" width="64" height="64" alt="" loading="lazy"><h3>' + t('home.f2.title') + '</h3><p>' + t('home.f2.body') + '</p></div>' +
+        '<div class="feature-card"><img class="feature-thumb" src="assets/img/feature-passport.webp" width="64" height="64" alt="" loading="lazy"><h3>' + t('home.f3.title') + '</h3><p>' + t('home.f3.body') + '</p></div>' +
       '</section>'
     ));
 
@@ -440,17 +480,17 @@
       '<section class="story-callout story-callout-portrait">' +
         '<img class="story-portrait" src="assets/img/avatar-192.webp" width="96" height="96" alt="" loading="lazy">' +
         '<div>' +
-        '<h2>Why this exists</h2>' +
-        '<p>This app exists because someone went through this process for real — the confusing forms, the vet visits, the conflicting advice, the deadlines that quietly reset to zero if you get them wrong — and wanted to spare the next person some of that stress. It’s a work in progress, and it’ll keep improving as more people share what they learn.</p>' +
-        '<p><a href="#/about" data-nav>Read the full story &rarr;</a></p>' +
+        '<h2>' + t('home.why.title') + '</h2>' +
+        '<p>' + t('home.why.body') + '</p>' +
+        '<p><a href="#/about" data-nav>' + t('home.why.link') + '</a></p>' +
         '</div>' +
       '</section>'
     ));
 
     app.appendChild(el(
       '<section class="card">' +
-        '<h2>Before you dive in</h2>' +
-        '<p>This tool focuses on <strong>dogs</strong> traveling <strong>to Japan</strong> from anywhere else in the world. It’s built and maintained by pet owners, not lawyers or vets — always confirm current, exact requirements with your own veterinarian, your country’s export authority, and Japan’s Animal Quarantine Service before you travel. Rules can and do change.</p>' +
+        '<h2>' + t('home.before.title') + '</h2>' +
+        '<p>' + t('home.before.body') + '</p>' +
       '</section>'
     ));
 
@@ -461,38 +501,38 @@
   function donateInnerHtml(headingTag) {
     return (
       '<div class="donate-text">' +
-        '<' + headingTag + ' class="donate-heading">Help keep port.dog free</' + headingTag + '>' +
-        '<p>port.dog is a volunteer project. We don’t charge for anything — we simply want life to be easier for everyone traveling with their dog. Bringing your babies with you is a basic human right.</p>' +
-        '<p>The site does have real costs, like the domain and hosting. If you’re able to chip in, it’s hugely appreciated. If you’re not, that’s completely okay — everything here is yours to use, free.</p>' +
-        '<p class="donate-actions"><a class="btn-primary" href="' + DONATE_URL + '" target="_blank" rel="noopener">Donate with PayPal &rarr;</a></p>' +
-        '<p class="muted donate-link">Or go to <a href="' + DONATE_URL + '" target="_blank" rel="noopener">' + DONATE_LABEL + '</a></p>' +
+        '<' + headingTag + ' class="donate-heading">' + t('donate.heading') + '</' + headingTag + '>' +
+        '<p>' + t('donate.p1') + '</p>' +
+        '<p>' + t('donate.p2') + '</p>' +
+        '<p class="donate-actions"><a class="btn-primary" href="' + DONATE_URL + '" target="_blank" rel="noopener">' + t('donate.button') + '</a></p>' +
+        '<p class="muted donate-link">' + t('donate.orGoTo', { link: '<a href="' + DONATE_URL + '" target="_blank" rel="noopener">' + DONATE_LABEL + '</a>' }) + '</p>' +
       '</div>' +
       '<figure class="donate-qr">' +
-        '<img src="assets/img/paypal-qr.svg" width="180" height="180" alt="QR code that opens ' + DONATE_LABEL + ' in PayPal" loading="lazy">' +
-        '<figcaption>Scan with your phone’s camera to open PayPal</figcaption>' +
+        '<img src="assets/img/paypal-qr.svg" width="180" height="180" alt="' + escapeHtml(t('donate.qrAlt', { label: DONATE_LABEL })) + '" loading="lazy">' +
+        '<figcaption>' + t('donate.qrCaption') + '</figcaption>' +
       '</figure>'
     );
   }
 
   function openDonateModal() {
-    openModal('Support port.dog', el('<div class="donate-layout">' + donateInnerHtml('h4') + '</div>'));
+    openModal(t('donate.title'), el('<div class="donate-layout">' + donateInnerHtml('h4') + '</div>'));
   }
 
   function openAboutModal() {
-    var m = openModal('About the maker', el(
+    var m = openModal(t('maker.title'), el(
       '<div>' +
         '<div class="about-maker">' +
           '<img class="about-avatar" src="assets/img/maker-176.webp" srcset="assets/img/maker-176.webp 1x, assets/img/maker-352.webp 2x" width="88" height="88" alt="Neeraj Murarka">' +
           '<div>' +
             '<p class="about-name">Neeraj Murarka</p>' +
-            '<p class="about-role">Creator of port.dog</p>' +
+            '<p class="about-role">' + t('maker.role') + '</p>' +
           '</div>' +
         '</div>' +
-        '<p>CEO and co-founder of Bluzelle Networks, where he’s spent years building blockchain and decentralized computing systems, and an advisor to blockchain companies. Off the clock, he’s a licensed airplane and seaplane pilot in Canada and the US, a Class 1 truck driver, an amateur radio operator, and first-aid certified.</p>' +
-        '<p class="about-dogs">But above all, he’s a dog person — completely, unapologetically devoted to dogs. port.dog grew out of preparing to bring his own dog to Japan, and he built it so the next dog (and their person) has an easier time.</p>' +
+        '<p>' + t('maker.bio') + '</p>' +
+        '<p class="about-dogs">' + t('maker.dogs') + '</p>' +
         '<div class="modal-actions">' +
-          '<a class="btn-secondary" href="' + LINKEDIN_URL + '" target="_blank" rel="noopener">LinkedIn profile &#8599;</a>' +
-          '<button type="button" class="btn-primary" id="aboutDonateBtn">Support port.dog</button>' +
+          '<a class="btn-secondary" href="' + LINKEDIN_URL + '" target="_blank" rel="noopener">' + t('maker.linkedin') + '</a>' +
+          '<button type="button" class="btn-primary" id="aboutDonateBtn">' + t('donate.title') + '</button>' +
         '</div>' +
       '</div>'
     ));
@@ -507,33 +547,27 @@
     app.appendChild(el(
       '<section class="card">' +
         '<figure class="story-banner">' +
-          '<img src="assets/img/story-hero-900.webp" srcset="assets/img/story-hero-900.webp 900w, assets/img/story-hero-1600.webp 1600w" sizes="(max-width: 940px) 100vw, 900px" width="900" height="347" alt="A boxer in aviator goggles and a PORT.DOG harness, with a jet over a sunset skyline behind him">' +
+          '<img src="assets/img/story-hero-900.webp" srcset="assets/img/story-hero-900.webp 900w, assets/img/story-hero-1600.webp 1600w" sizes="(max-width: 940px) 100vw, 900px" width="900" height="347" alt="' + escapeHtml(t('story.bannerAlt')) + '">' +
         '</figure>' +
-        '<h1>Our story</h1>' +
-        '<p class="muted">This account is accurate to our actual timeline, including real dates. We’ve left out the city, the clinic, and other people’s names — everything else here happened as described.</p>' +
-
-        '<h2>How it started</h2>' +
-        '<p>On March 24, 2026, our vet in Canada confirmed the ISO-compliant microchip our dog has had since 2014, gave his second rabies vaccination (the first was in 2024), and drew blood for the antibody test Japan requires — all in one visit. Japan allows the blood draw on the same day as the second vaccination; a dog starting from scratch couldn’t compress it this far, because the chip has to come first, then two vaccinations at least 30 days apart, and only then the blood draw. That single date became the anchor for everything downstream: a 180-day minimum wait before travel, a 2-year outer limit on the test result, and a chain of booster and retest deadlines that all trace back to it.</p>' +
-        '<p>Four separate pieces had to line up correctly: the right kind of microchip, the right kind of rabies vaccine, a blood sample sent to a lab Japan actually recognizes, and a Japan-specific import form that our own country’s standard export paperwork doesn’t cover. A fifth complication sat underneath all of it — our dog has a heart condition, and a possible surgery meant the travel date itself couldn’t be treated as fixed.</p>' +
-
-        '<h2>Advice that needed a second look</h2>' +
-        '<p>A vet mentioned, in passing, that our documents needed blue-ink signatures. We couldn’t find that requirement in Japan’s rules, and an original document isn’t something you casually redo, so we chased it down. Japan’s official import guide specifies no signature ink color at all — it rules out pencil, erasable ink and correction fluid, which is a different requirement — and a designated lab’s own FAQ says a black-ink signature on the antibody test report is fine. We were ready to call it a myth. Then CFIA told us in writing that it does require a wet blue-ink signature from our vet on the rabies vaccination certificates we bring to the endorsement appointment, and recommended a wet-ink signature on the original Japan health certificate. The vet was right — just about a different document, and a different authority, than we first assumed. The lesson: Japan’s rules and your own export authority’s rules are separate, so check each one directly.</p>' +
-        '<p>The same pattern showed up with the export certificate itself. Our home country issues a standard, generic international health certificate that covers exporting an animal to most destinations. Japan is not “most destinations”: it has its own recommended form, any certificate it accepts has to cover everything on that form, and our own country’s official guidance says not to use the generic certificate when the destination country supplies its own. We only caught this by reading past the first search result and cross-checking two official sources against each other — and it changed which document our vet actually needed to complete.</p>' +
-
-        '<h2>The country nobody could agree on</h2>' +
-        '<p>The most genuinely unresolved question we ran into wasn’t about Japan at all — it was about our own route there. Our dog lives in Canada, was microchipped and vaccinated in Canada, and had blood drawn in Canada that was then shipped to a laboratory in the United States, simply because that’s where an approved lab exists. Our travel plan adds a third leg: driving from Canada into the United States, an overnight stay, then a direct flight to Japan from a U.S. airport the next day — under 24 hours on U.S. soil in total.</p>' +
-        '<p>That raises a specific question: for Japan’s paperwork, which country is the exporting country — Canada, where our dog lives and where every vaccination and test actually took place, or the United States, where the international flight physically departs from? We asked this in more than one place and got two different confident answers. A Canada-focused resource treated Canada as the exporting country by default and didn’t address the U.S. leg at all. A resource focused on airline and airport requirements framed the country of departure as what matters, which points to the United States instead. Neither source was wrong on its own terms — each was answering from its own slice of the process, and neither accounted for a route that touches both countries.</p>' +
-        '<p>We have not found one authoritative source that resolves this directly. The practical consequence: we are arranging export certification from both countries — a Canadian-endorsed certificate through our own official channel, and a U.S.-endorsed one as well — rather than guessing which one gets checked at the airport. That’s more paperwork and more cost than either certificate alone. Given how much a wrong guess would cost us, redundancy is the correct trade.</p>' +
-
-        '<h2>Deadlines that fail in two different ways</h2>' +
-        '<p>Once the vaccination and blood test were done, the real planning started, because that test result has a shelf life, and it can expire in two different ways with two very different consequences. The result must be at least 180 days old before travel, and it stays valid for 2 years total from the draw date — but only if our dog’s rabies vaccine coverage never lapses in between. From our March 24, 2026 draw date, that gave us a window opening in late September 2026 and closing in March 2028.</p>' +
-        '<p>Those two limits fail differently. If our travel date ever slipped past the 2-year mark, that’s recoverable: we’d get a second blood test. We first assumed that would start a new 180-day clock, but Japan’s own import guide says otherwise — as long as rabies coverage never lapsed and the second draw is at least 180 days after the first (ours easily would be), the new result counts as soon as it’s back from the lab, with no second wait. If a rabies booster were ever given even a day after the previous one’s labeled protection period ended, the entire process resets — new vaccination series, new blood test, new 180-day wait, six-plus months undone by one missed appointment. Because the two failures cost so differently, we treat them differently: a retest only needs enough lead time for the lab result to come back, while every future booster gets closer to six weeks of margin — marked on an actual calendar, not left to memory.</p>' +
-
-        '<h2>Why this was never just paperwork</h2>' +
-        '<p>Our dog’s heart condition meant a real chance of surgery interrupting our timeline. Understanding exactly how much flexibility the 180-day and 2-year rules actually allow — and confirming that a delayed trip costs us nothing as long as vaccine coverage stays unbroken — separated a medical decision from a paperwork deadline. That distinction mattered more to us than any individual form.</p>' +
-
-        '<h2>Why we’re sharing this</h2>' +
-        '<p>None of this was insurmountable. It took more research and more cross-checking than it should have, because well-meaning advice was sometimes accurate, sometimes outdated, and sometimes simply built for a route that crosses one country instead of three. We built this tool so the next person starts with a clearer map — including an honest account of the one question we still haven’t fully resolved. If you find a more definitive answer on the exporting-country question than we have, tell us: it’s the single biggest gap left in this checklist.</p>' +
+        '<h1>' + t('story.title') + '</h1>' +
+        '<p class="muted">' + t('story.note') + '</p>' +
+        '<h2>' + t('story.started.h') + '</h2>' +
+        '<p>' + t('story.started.p1') + '</p>' +
+        '<p>' + t('story.started.p2') + '</p>' +
+        '<h2>' + t('story.advice.h') + '</h2>' +
+        '<p>' + t('story.advice.p1') + '</p>' +
+        '<p>' + t('story.advice.p2') + '</p>' +
+        '<h2>' + t('story.country.h') + '</h2>' +
+        '<p>' + t('story.country.p1') + '</p>' +
+        '<p>' + t('story.country.p2') + '</p>' +
+        '<p>' + t('story.country.p3') + '</p>' +
+        '<h2>' + t('story.deadlines.h') + '</h2>' +
+        '<p>' + t('story.deadlines.p1') + '</p>' +
+        '<p>' + t('story.deadlines.p2') + '</p>' +
+        '<h2>' + t('story.paperwork.h') + '</h2>' +
+        '<p>' + t('story.paperwork.p1') + '</p>' +
+        '<h2>' + t('story.sharing.h') + '</h2>' +
+        '<p>' + t('story.sharing.p1') + '</p>' +
       '</section>'
     ));
   }
@@ -566,19 +600,19 @@
 
     app.appendChild(el(
       '<section>' +
-        '<h1>Resources &amp; FAQ</h1>' +
-        '<p class="muted">Common questions and myths, plain-language definitions, and links to official sources.</p>' +
+        '<h1>' + escapeHtml(t('res.title')) + '</h1>' +
+        '<p class="muted">' + t('res.subtitle') + '</p>' +
         '<div class="section-spacer">' +
-          '<h2>Frequently asked questions</h2>' + faqGroupsHtml +
+          '<h2>' + t('res.faq') + '</h2>' + faqGroupsHtml +
         '</div>' +
         '<div class="section-spacer">' +
-          '<h2>Glossary</h2>' + glossaryHtml +
+          '<h2>' + t('res.glossary') + '</h2>' + glossaryHtml +
         '</div>' +
         '<div class="section-spacer card">' +
-          '<h2>Official sources</h2>' +
-          '<p>This tool summarizes and simplifies real requirements — always cross-check against the official source before you travel.</p>' +
+          '<h2>' + t('res.sources') + '</h2>' +
+          '<p>' + t('res.sourcesBody') + '</p>' +
           '<ul>' + sourcesHtml + '</ul>' +
-          '<p class="muted">Content last reviewed: ' + escapeHtml(DATA.lastVerified) + '</p>' +
+          '<p class="muted">' + t('res.lastReviewed', { date: escapeHtml(fmtDate(parseDate(DATA.lastVerified)) || DATA.lastVerified) }) + '</p>' +
         '</div>' +
       '</section>'
     ));
@@ -626,22 +660,22 @@
       var html =
         '<div class="card" data-question-id="' + escapeHtml(q.id) + '">' +
           '<div class="progress-track"><div class="progress-fill" style="width:' + pct + '%"></div></div>' +
-          '<div class="progress-label"><span>Question ' + (idx + 1) + ' of ' + steps.length + '</span><span>' + pct + '%</span></div>' +
+          '<div class="progress-label"><span>' + t('wiz.progress', { n: idx + 1, total: steps.length }) + '</span><span>' + pct + '%</span></div>' +
           '<div class="question-label-row">' +
             '<span class="question-label">' + escapeHtml(q.label) + '</span>' +
-            (q.why ? '<button type="button" class="why-btn" id="btnWhy" aria-label="Why is this asked?" title="Why is this asked?">?</button>' : '') +
+            (q.why ? '<button type="button" class="why-btn" id="btnWhy" aria-label="' + escapeHtml(t('wiz.whyBtn')) + '" title="' + escapeHtml(t('wiz.whyBtn')) + '">?</button>' : '') +
           '</div>' +
           (q.help ? '<p class="question-help">' + escapeHtml(q.help) + '</p>' : '') +
           '<div id="fieldHost"></div>' +
-          '<p class="field-error" style="display:none;color:#b3261e;font-weight:600;margin-top:10px;">Please answer this question to continue.</p>' +
+          '<p class="field-error" style="display:none;color:#b3261e;font-weight:600;margin-top:10px;">' + t('wiz.required') + '</p>' +
           '<div class="wizard-nav">' +
-            '<button type="button" class="btn-secondary" id="btnBack">&larr; Back</button>' +
+            '<button type="button" class="btn-secondary" id="btnBack">' + t('wiz.back') + '</button>' +
             '<div style="display:flex;gap:10px;align-items:center;">' +
-              (!q.required ? '<button type="button" class="skip-link" id="btnSkip">Skip</button>' : '') +
-              '<button type="button" class="btn-primary" id="btnNext">' + (idx === steps.length - 1 ? 'See my checklist →' : 'Continue →') + '</button>' +
+              (!q.required ? '<button type="button" class="skip-link" id="btnSkip">' + t('wiz.skip') + '</button>' : '') +
+              '<button type="button" class="btn-primary" id="btnNext">' + (idx === steps.length - 1 ? t('wiz.finish') : t('wiz.next')) + '</button>' +
             '</div>' +
           '</div>' +
-          '<div class="wizard-startover-row"><button type="button" class="skip-link start-over-link" id="btnStartOver">↺ Start over</button></div>' +
+          '<div class="wizard-startover-row"><button type="button" class="skip-link start-over-link" id="btnStartOver">' + t('wiz.startOver') + '</button></div>' +
         '</div>';
 
       container.innerHTML = html;
@@ -650,12 +684,12 @@
       var whyBtn = container.querySelector('#btnWhy');
       if (whyBtn) {
         whyBtn.addEventListener('click', function () {
-          openModal('Why we ask this', el('<div><p>' + escapeHtml(q.why) + '</p></div>'));
+          openModal(t('wiz.whyTitle'), el('<div><p>' + escapeHtml(q.why) + '</p></div>'));
         });
       }
 
       container.querySelector('#btnStartOver').addEventListener('click', function () {
-        if (window.confirm('This clears all your saved answers and progress on this device. Continue?')) {
+        if (window.confirm(t('wiz.confirmClear'))) {
           localStorage.removeItem(STORAGE_KEYS.answers);
           localStorage.removeItem(STORAGE_KEYS.checked);
           // Already on #/wizard, so re-set the hash would be a no-op
@@ -696,7 +730,7 @@
 
   function renderField(q, answers, host) {
     if (q.type === 'select') {
-      var opts = '<option value="">Choose one…</option>' + DATA.countries.map(function (c) {
+      var opts = '<option value="">' + t('wiz.choose') + '</option>' + DATA.countries.map(function (c) {
         return '<option value="' + escapeHtml(c.code) + '"' + (answers[q.id] === c.code ? ' selected' : '') + '>' + escapeHtml(c.name) + '</option>';
       }).join('');
       host.appendChild(el('<select id="fieldInput">' + opts + '</select>'));
@@ -859,7 +893,7 @@
      one-click direct file download, everything on one long image/page. */
   function captureResultsCanvas() {
     if (typeof window.html2canvas !== 'function') {
-      return Promise.reject(new Error('The image/PDF export library did not load. Try reloading the page.'));
+      return Promise.reject(new Error(t('export.libMissing')));
     }
     var target = document.getElementById('app');
     var bg = getComputedStyle(document.body).backgroundColor;
@@ -880,7 +914,7 @@
     return captureResultsCanvas().then(function (canvas) {
       return new Promise(function (resolve, reject) {
         canvas.toBlob(function (blob) {
-          if (!blob) { reject(new Error('Could not create the image.')); return; }
+          if (!blob) { reject(new Error(t('export.imageFailed'))); return; }
           downloadBlob(exportFilenameBase() + '.png', blob);
           resolve();
         }, 'image/png');
@@ -983,9 +1017,9 @@
   function withExportButton(btn, workFn) {
     var original = btn.textContent;
     btn.disabled = true;
-    btn.textContent = 'Preparing…';
+    btn.textContent = t('export.busy');
     workFn().catch(function (err) {
-      window.alert('Sorry, that didn’t work: ' + (err && err.message ? err.message : err));
+      window.alert(t('export.failed', { error: err && err.message ? err.message : err }));
     }).then(function () {
       btn.disabled = false;
       btn.textContent = original;
@@ -1005,31 +1039,30 @@
   function openExportModal() {
     var payload = buildExportPayload();
     var json = JSON.stringify(payload, null, 2);
-    var dogBit = payload.answers.dogName ? ' for ' + payload.answers.dogName : '';
     var filename = 'port-dog-checklist' + (payload.answers.dogName ? '-' + payload.answers.dogName.toLowerCase().replace(/[^a-z0-9]+/g, '-') : '') + '.json';
 
     var body = el(
       '<div>' +
-        '<p>Save this to move your checklist' + escapeHtml(dogBit) + ' to another device, or as a backup.</p>' +
-        '<button type="button" class="btn-primary" id="btnDownloadJson">⬇️ Download as a file</button>' +
-        '<div class="modal-divider">or copy the text</div>' +
+        '<p>' + (payload.answers.dogName ? t('export.introDog', { dog: escapeHtml(payload.answers.dogName) }) : t('export.intro')) + '</p>' +
+        '<button type="button" class="btn-primary" id="btnDownloadJson">' + t('export.download') + '</button>' +
+        '<div class="modal-divider">' + t('export.orCopy') + '</div>' +
         '<textarea class="json-textarea" id="exportTextarea" readonly></textarea>' +
         '<div class="modal-actions">' +
-          '<button type="button" class="btn-secondary" id="btnCopyJson">📋 Copy to clipboard</button>' +
+          '<button type="button" class="btn-secondary" id="btnCopyJson">' + t('export.copy') + '</button>' +
         '</div>' +
         '<div class="modal-status" id="exportStatus"></div>' +
       '</div>'
     );
     body.querySelector('#exportTextarea').value = json;
 
-    var handle = openModal('Export your checklist', body);
+    var handle = openModal(t('export.title'), body);
     body.querySelector('#btnDownloadJson').addEventListener('click', function () {
       downloadTextAsFile(filename, json);
     });
     body.querySelector('#btnCopyJson').addEventListener('click', function () {
       copyTextToClipboard(json, function (ok) {
         var status = body.querySelector('#exportStatus');
-        status.textContent = ok ? 'Copied to clipboard.' : 'Could not copy automatically — select the text above and copy it manually.';
+        status.textContent = ok ? t('export.copied') : t('export.copyFailed');
         status.className = 'modal-status ' + (ok ? 'ok' : 'err');
       });
     });
@@ -1038,7 +1071,7 @@
 
   function applyImportedPayload(parsed) {
     if (!parsed || typeof parsed.answers !== 'object' || !parsed.answers) {
-      throw new Error('This file doesn’t look like a port.dog checklist export (no “answers” found).');
+      throw new Error(t('import.notExport'));
     }
     // migrateAnswers + sanitizeAnswers together mean an export from an
     // older or newer app version, a different device, or a hand-edited
@@ -1053,26 +1086,25 @@
   function openImportModal() {
     var body = el(
       '<div>' +
-        '<p>Bring in a checklist you exported from another device.</p>' +
-        '<label class="file-drop-label" id="fileDropLabel">📁 Choose a checklist file to upload<input type="file" accept="application/json,.json" id="importFileInput"></label>' +
-        '<div class="modal-divider">or paste it</div>' +
-        '<textarea class="json-textarea" id="importTextarea" placeholder="Paste your exported checklist JSON here"></textarea>' +
+        '<p>' + t('import.intro') + '</p>' +
+        '<label class="file-drop-label" id="fileDropLabel">' + t('import.choose') + '<input type="file" accept="application/json,.json" id="importFileInput"></label>' +
+        '<div class="modal-divider">' + t('import.orPaste') + '</div>' +
+        '<textarea class="json-textarea" id="importTextarea" placeholder="' + escapeHtml(t('import.placeholder')) + '"></textarea>' +
         '<div class="modal-actions">' +
-          '<button type="button" class="btn-primary" id="btnImportPasted">Import pasted text</button>' +
+          '<button type="button" class="btn-primary" id="btnImportPasted">' + t('import.button') + '</button>' +
         '</div>' +
         '<div class="modal-status" id="importStatus"></div>' +
       '</div>'
     );
 
-    var handle = openModal('Import a checklist', body);
+    var handle = openModal(t('import.title'), body);
     var statusEl = body.querySelector('#importStatus');
 
     function finishImport(rawText) {
       try {
         var parsed = JSON.parse(rawText);
         var versionMismatch = applyImportedPayload(parsed);
-        statusEl.textContent = 'Checklist imported. Loading it now…' +
-          (versionMismatch ? ' (This was exported from a different app version — a few older answers may not have carried over if questions changed since then.)' : '');
+        statusEl.textContent = t('import.done') + (versionMismatch ? ' ' + t('import.versionNote') : '');
         statusEl.className = 'modal-status ok';
         setTimeout(function () {
           handle.close();
@@ -1080,7 +1112,7 @@
           else location.hash = '#/results';
         }, 500);
       } catch (err) {
-        statusEl.textContent = 'Couldn’t import that: ' + err.message;
+        statusEl.textContent = t('import.failed', { error: err.message });
         statusEl.className = 'modal-status err';
       }
     }
@@ -1091,7 +1123,7 @@
       var reader = new FileReader();
       reader.onload = function () { finishImport(String(reader.result || '')); };
       reader.onerror = function () {
-        statusEl.textContent = 'Couldn’t read that file.';
+        statusEl.textContent = t('import.readFailed');
         statusEl.className = 'modal-status err';
       };
       reader.readAsText(file);
@@ -1099,7 +1131,7 @@
     body.querySelector('#btnImportPasted').addEventListener('click', function () {
       var text = body.querySelector('#importTextarea').value.trim();
       if (!text) {
-        statusEl.textContent = 'Paste your checklist JSON first.';
+        statusEl.textContent = t('import.pasteFirst');
         statusEl.className = 'modal-status err';
         return;
       }
@@ -1113,11 +1145,11 @@
     if (!answers.originCountry) {
       var emptyCard = el(
         '<div class="card">' +
-          '<h2>Let’s build your checklist first</h2>' +
-          '<p>We don’t have any answers saved yet on this device.</p>' +
+          '<h2>' + t('results.emptyTitle') + '</h2>' +
+          '<p>' + t('results.emptyBody') + '</p>' +
           '<div class="cta-row" style="justify-content:flex-start;">' +
-            '<a href="#/wizard" class="btn-primary" data-nav>Start the questions &rarr;</a>' +
-            '<button type="button" class="btn-secondary" id="btnImportEmpty">📥 Import a checklist instead</button>' +
+            '<a href="#/wizard" class="btn-primary" data-nav>' + t('results.emptyStart') + '</a>' +
+            '<button type="button" class="btn-secondary" id="btnImportEmpty">' + t('results.emptyImport') + '</button>' +
           '</div>' +
         '</div>'
       );
@@ -1126,7 +1158,7 @@
       return;
     }
 
-    var country = countriesByCode[answers.originCountry] || { name: 'your country', designated: false };
+    var country = countriesByCode[answers.originCountry] || { name: t('results.yourCountry'), designated: false };
     var checked = loadChecked();
     var eff = getEffectiveAnswers(answers);
     var dates = computeAllDates(eff);
@@ -1137,7 +1169,6 @@
     var totalCount = visibleItems.length;
     var pct = totalCount ? Math.round((doneCount / totalCount) * 100) : 0;
 
-    var dogLabel = answers.dogName ? escapeHtml(answers.dogName) + '’s' : 'Your';
 
     if (alerts.length) {
       var alertsHtml = alerts.map(function (a) {
@@ -1153,8 +1184,8 @@
 
     var header = el(
       '<div class="results-header">' +
-        '<h1>' + dogLabel + ' checklist for Japan</h1>' +
-        '<p class="muted">Starting from ' + escapeHtml(country.name) + (answers.dogBreed ? ' &middot; ' + escapeHtml(answers.dogBreed) : '') + '</p>' +
+        '<h1>' + (answers.dogName ? t('results.titleDog', { dog: escapeHtml(answers.dogName) }) : t('results.title')) + '</h1>' +
+        '<p class="muted">' + t('results.from', { country: escapeHtml(country.name) }) + (answers.dogBreed ? ' &middot; ' + escapeHtml(answers.dogBreed) : '') + '</p>' +
       '</div>'
     );
     app.appendChild(header);
@@ -1162,7 +1193,7 @@
     if (country.designated) {
       app.appendChild(el(
         '<div class="designated-banner">' +
-          '<strong>' + escapeHtml(country.name) + ' is currently one of Japan’s designated (rabies-free) regions.</strong> That means a simplified path — no FAVN antibody test required, based on residency instead. Double-check this is still current before you rely on it (see the checklist below).' +
+          t('results.designated', { country: escapeHtml(country.name) }) +
         '</div>'
       ));
     }
@@ -1172,20 +1203,20 @@
         '<div style="flex:1;">' +
           '<div class="progress-track"><div class="progress-fill" id="resultsProgressFill" style="width:' + pct + '%"></div></div>' +
         '</div>' +
-        '<div class="progress-circle-label" id="resultsProgressLabel">' + doneCount + ' / ' + totalCount + ' done</div>' +
+        '<div class="progress-circle-label" id="resultsProgressLabel">' + t('results.done', { done: doneCount, total: totalCount }) + '</div>' +
       '</div>'
     );
     app.appendChild(progressWrap);
 
     var actions = el(
       '<div class="results-actions">' +
-        '<button type="button" class="btn-secondary" id="btnPrint">🖨️ Print / Save as PDF</button>' +
-        '<button type="button" class="btn-secondary" id="btnDownloadPng">🖼️ Download as image</button>' +
-        '<button type="button" class="btn-secondary" id="btnDownloadPdf">📄 Download as one-page PDF</button>' +
-        '<a href="#/wizard" class="btn-secondary" data-nav>✏️ Edit my answers</a>' +
-        '<button type="button" class="btn-secondary" id="btnExport">⬇️ Export checklist</button>' +
-        '<button type="button" class="btn-secondary" id="btnImport">⬆️ Import checklist</button>' +
-        '<button type="button" class="btn-secondary" id="btnStartOver">↺ Start over</button>' +
+        '<button type="button" class="btn-secondary" id="btnPrint">' + t('results.print') + '</button>' +
+        '<button type="button" class="btn-secondary" id="btnDownloadPng">' + t('results.png') + '</button>' +
+        '<button type="button" class="btn-secondary" id="btnDownloadPdf">' + t('results.pdf') + '</button>' +
+        '<a href="#/wizard" class="btn-secondary" data-nav>' + t('results.edit') + '</a>' +
+        '<button type="button" class="btn-secondary" id="btnExport">' + t('results.export') + '</button>' +
+        '<button type="button" class="btn-secondary" id="btnImport">' + t('results.import') + '</button>' +
+        '<button type="button" class="btn-secondary" id="btnStartOver">' + t('wiz.startOver') + '</button>' +
       '</div>'
     );
     app.appendChild(actions);
@@ -1199,7 +1230,7 @@
     actions.querySelector('#btnExport').addEventListener('click', openExportModal);
     actions.querySelector('#btnImport').addEventListener('click', openImportModal);
     actions.querySelector('#btnStartOver').addEventListener('click', function () {
-      if (window.confirm('This clears all your saved answers and progress on this device. Continue?')) {
+      if (window.confirm(t('wiz.confirmClear'))) {
         localStorage.removeItem(STORAGE_KEYS.answers);
         localStorage.removeItem(STORAGE_KEYS.checked);
         location.hash = '#/wizard';
@@ -1226,7 +1257,7 @@
           var detail = (DATA.countryDetails[country.code] && DATA.countryDetails[country.code][item.id])
             || (DATA.countryDetails.default && DATA.countryDetails.default[item.id]);
           if (detail) {
-            body += '<br><br><strong>📍 Specific to ' + escapeHtml(country.name) + ':</strong> ' + escapeHtml(detail);
+            body += '<br><br><strong>' + t('results.specificTo', { country: escapeHtml(country.name) }) + '</strong> ' + escapeHtml(detail);
           }
         }
         // Already told us this is done — don't show a "submit by" deadline
@@ -1234,7 +1265,7 @@
         var alreadyNotifiedAqs = item.id === 'advance-notification' && eff.aqsNotified === 'yes';
         if (alreadyNotifiedAqs) {
           var notifiedDateForItem = parseDate(eff.aqsNotifiedDate);
-          body += '<br><br>✅ You told us you already submitted this' + (notifiedDateForItem ? ' on ' + escapeHtml(fmtDate(notifiedDateForItem)) : '') + '. (See the top of this page if there was an issue with the timing.)';
+          body += '<br><br>' + (notifiedDateForItem ? t('results.aqsDoneOn', { date: escapeHtml(fmtDate(notifiedDateForItem)) }) : t('results.aqsDone'));
         }
         var dateCalloutHtml = '';
         if (item.computedDate && dates[item.computedDate] && !alreadyNotifiedAqs) {
@@ -1262,7 +1293,7 @@
           var newDone = visibleItems.filter(function (i) { return checked[i.id]; }).length;
           var newPct = totalCount ? Math.round((newDone / totalCount) * 100) : 0;
           document.getElementById('resultsProgressFill').style.width = newPct + '%';
-          document.getElementById('resultsProgressLabel').textContent = newDone + ' / ' + totalCount + ' done';
+          document.getElementById('resultsProgressLabel').textContent = t('results.done', { done: newDone, total: totalCount });
         }
         row.querySelector('input').addEventListener('click', function (e) { e.stopPropagation(); toggle(); });
         row.querySelector('.item-title').addEventListener('click', toggle);
@@ -1284,8 +1315,101 @@
     }
   }
 
+  /* ================= header fit =================
+     CSS breakpoints handle the usual cases, but translated labels vary a
+     lot in length (German/Russian run long), so as a backstop: if the
+     inline nav doesn't fit on one row, collapse it into the hamburger
+     menu. Nav text is nowrap, so "doesn't fit" shows up as overflow. */
+  function fitHeader() {
+    var header = document.querySelector('.site-header');
+    var row = header && header.querySelector('.header-row');
+    if (!row) return;
+    header.classList.remove('nav-compact');
+    if (row.scrollWidth > row.clientWidth + 1) header.classList.add('nav-compact');
+  }
+  var fitQueued = false;
+  function queueFitHeader() {
+    if (fitQueued) return;
+    fitQueued = true;
+    requestAnimationFrame(function () { fitQueued = false; fitHeader(); });
+  }
+
+  /* ================= static shell text + language picker ================= */
+  function localizeStatic() {
+    document.documentElement.lang = LANG === 'zh' ? 'zh-Hans' : LANG;
+    document.title = t('meta.title');
+    document.querySelectorAll('[data-i18n]').forEach(function (n) { n.innerHTML = t(n.getAttribute('data-i18n')); });
+    document.querySelectorAll('[data-i18n-aria]').forEach(function (n) {
+      var v = t(n.getAttribute('data-i18n-aria'));
+      n.setAttribute('aria-label', v);
+      n.title = v;
+    });
+    var info = langInfo(LANG);
+    document.getElementById('langFlag').src = 'assets/flags/' + info.flag + '.svg';
+    document.getElementById('langCode').textContent = info.code.toUpperCase();
+    var lb = document.getElementById('langBtn');
+    lb.setAttribute('aria-label', t('lang.button', { language: info.name }));
+    lb.title = t('lang.title');
+    var notice = document.getElementById('langNotice');
+    if (LANG !== 'en') {
+      notice.innerHTML = '<span>🌐 ' + t('i18n.notice') + '</span> <button type="button" class="link-btn" id="btnReadEnglish" lang="en">' + t('i18n.readEnglish') + '</button>';
+      notice.hidden = false;
+      document.getElementById('btnReadEnglish').addEventListener('click', function () { setLang('en'); });
+    }
+  }
+
+  function wireLangPicker() {
+    var btn = document.getElementById('langBtn');
+    var menu = document.getElementById('langMenu');
+    function options() { return Array.prototype.slice.call(menu.querySelectorAll('.lang-option')); }
+    function build() {
+      I18N.LANGS.forEach(function (L) {
+        var opt = el(
+          '<button type="button" class="lang-option" role="menuitemradio" lang="' + L.code + '" aria-checked="' + (L.code === LANG) + '">' +
+            '<img src="assets/flags/' + L.flag + '.svg" alt="" width="24" height="18">' +
+            '<span class="lang-names"><span class="lang-native">' + escapeHtml(L.name) + '</span>' +
+              (L.name !== L.english ? '<span class="lang-english" lang="en">' + escapeHtml(L.english) + '</span>' : '') + '</span>' +
+            '<span class="lang-option-code">' + L.code.toUpperCase() + '</span>' +
+          '</button>'
+        );
+        opt.addEventListener('click', function () { if (L.code !== LANG) setLang(L.code); else close(); });
+        menu.appendChild(opt);
+      });
+    }
+    function open() {
+      if (!menu.firstChild) build(); // built on first open, so the flag images only load if needed
+      menu.hidden = false;
+      btn.setAttribute('aria-expanded', 'true');
+      var cur = menu.querySelector('[aria-checked="true"]') || options()[0];
+      cur.focus();
+    }
+    function close() {
+      menu.hidden = true;
+      btn.setAttribute('aria-expanded', 'false');
+    }
+    btn.addEventListener('click', function (e) {
+      e.stopPropagation();
+      if (menu.hidden) open(); else close();
+    });
+    document.addEventListener('click', function (e) {
+      if (!menu.hidden && !menu.contains(e.target)) close();
+    });
+    menu.addEventListener('keydown', function (e) {
+      var opts = options();
+      var i = opts.indexOf(document.activeElement);
+      if (e.key === 'Escape') { close(); btn.focus(); }
+      else if (e.key === 'ArrowDown') { e.preventDefault(); opts[(i + 1) % opts.length].focus(); }
+      else if (e.key === 'ArrowUp') { e.preventDefault(); opts[(i - 1 + opts.length) % opts.length].focus(); }
+      else if (e.key === 'Home') { e.preventDefault(); opts[0].focus(); }
+      else if (e.key === 'End') { e.preventDefault(); opts[opts.length - 1].focus(); }
+      else if (e.key === 'Tab') { close(); }
+    });
+  }
+
   /* ================= nav wiring ================= */
   function wireChrome() {
+    localizeStatic();
+    wireLangPicker();
     document.getElementById('navToggle').addEventListener('click', function () {
       var nav = document.getElementById('siteNav');
       var open = nav.classList.toggle('open');
@@ -1302,6 +1426,9 @@
       if (t.hasAttribute('data-open-donate')) openDonateModal(); else openAboutModal();
     });
     loadBuildInfo();
+    fitHeader();
+    window.addEventListener('resize', queueFitHeader);
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(fitHeader);
   }
 
   /* ================= build/publish stamp =================
@@ -1326,7 +1453,7 @@
       var d = new Date(isoDate);
       if (!isNaN(d.getTime())) {
         var tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
-        publishedEl.textContent = d.toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' }) + ' (' + tz + ')';
+        publishedEl.textContent = d.toLocaleString(LOCALE, { dateStyle: 'medium', timeStyle: 'short' }) + ' (' + tz + ')';
       }
     }
     if (hashLink && sha) {
@@ -1350,10 +1477,18 @@
   function init() {
     // ?v= bumped by hand alongside checklist-data.json edits, same
     // reasoning as the ?v= on the css/js tags in index.html.
-    fetch('data/checklist-data.json?v=20')
+    fetch('data/checklist-data.json?v=21')
       .then(function (r) { return r.json(); })
       .then(function (data) {
         DATA = data;
+        if (LANG === 'en') return null;
+        return fetch('data/i18n/' + LANG + '.json?v=' + I18N_VERSION)
+          .then(function (r) { return r.ok ? r.json() : null; })
+          .catch(function () { return null; });
+      })
+      .then(function (overlay) {
+        if (overlay) I18N.applyOverlay(DATA, overlay);
+        else if (LANG !== 'en') { LANG = 'en'; LOCALE = 'en'; } // language file unavailable: stay fully English
         DATA.countries.forEach(function (c) { countriesByCode[c.code] = c; });
         wireChrome();
         navigate();
@@ -1361,7 +1496,7 @@
       })
       .catch(function (err) {
         document.getElementById('app').innerHTML =
-          '<div class="card"><h2>Something went wrong loading the checklist data.</h2><p class="muted">' + escapeHtml(err && err.message) + '</p></div>';
+          '<div class="card"><h2>' + t('error.load') + '</h2><p class="muted">' + escapeHtml(err && err.message) + '</p></div>';
         console.error(err);
       });
   }
