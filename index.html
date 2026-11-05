@@ -12,8 +12,8 @@
   document.documentElement.setAttribute('data-theme', theme);
   // Language (see js/i18n.js): set <html lang> before paint so the right
   // font stack is used from the first frame. Default is English.
-  var l = document.cookie.match(/(?:^|; )portdog_lang=([^;]*)/);
-  l = l && decodeURIComponent(l[1]);
+  var l = location.search.match(/[?&]lang=([a-zA-Z-]+)/) || document.cookie.match(/(?:^|; )portdog_lang=([^;]*)/);
+  l = l && decodeURIComponent(l[1]).toLowerCase();
   if (['zh', 'hi', 'es', 'fr', 'de', 'ja', 'ru', 'nl'].indexOf(l) !== -1) {
     document.documentElement.lang = l === 'zh' ? 'zh-Hans' : l;
   }
@@ -119,6 +119,6 @@
      hash route itself, since this is a single-page app. -->
 <script id="gcScript" data-goatcounter="https://portdog.goatcounter.com/count" data-goatcounter-settings='{"no_onload": true}' async src="js/vendor/goatcounter-count.js?v=1"></script>
 <script src="js/i18n.js?v=1" defer></script>
-<script src="js/app.js?v=38" defer></script>
+<script src="js/app.js?v=39" defer></script>
 </body>
 </html>

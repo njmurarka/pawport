@@ -73,7 +73,8 @@ including all interface text, which lives in its `ui` section (code calls
 add a `ui` key instead; static shell text uses `data-i18n` /
 `data-i18n-aria` attributes). Other languages are overlays in
 `data/i18n/<code>.json` (zh, hi, es, fr, de, ja, ru, nl), loaded per the
-`portdog_lang` cookie. `js/i18n.js` defines the language list, which
+`portdog_lang` cookie, or a shareable `?lang=<code>` link (e.g.
+`https://port.dog/?lang=ja`), which also saves the cookie. `js/i18n.js` defines the language list, which
 strings are translatable, and the overlay format.
 
 Each translation stores a hash of the English it was translated from. **If

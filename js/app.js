@@ -52,15 +52,29 @@
     for (var i = 0; i < I18N.LANGS.length; i++) if (I18N.LANGS[i].code === code) return I18N.LANGS[i];
     return I18N.LANGS[0];
   }
+  // A ?lang=xx link (e.g. https://port.dog/?lang=ja) wins and is remembered,
+  // so a language-specific link can be shared; otherwise the cookie; else English.
+  function saveLangCookie(code) {
+    var expires = new Date(Date.now() + 365 * 86400000).toUTCString();
+    document.cookie = LANG_COOKIE + '=' + encodeURIComponent(code) + '; expires=' + expires + '; path=/; SameSite=Lax';
+  }
   var LANG = (function () {
+    var q = (location.search.match(/[?&]lang=([a-zA-Z-]+)/) || [])[1];
+    q = q && q.toLowerCase();
+    if (q && langInfo(q).code === q) { saveLangCookie(q); return q; }
     var m = document.cookie.match(/(?:^|; )portdog_lang=([^;]*)/);
     return langInfo(m && decodeURIComponent(m[1])).code;
   })();
   var LOCALE = langInfo(LANG).locale;
   function setLang(code) {
-    var expires = new Date(Date.now() + 365 * 86400000).toUTCString();
-    document.cookie = LANG_COOKIE + '=' + encodeURIComponent(code) + '; expires=' + expires + '; path=/; SameSite=Lax';
-    location.reload();
+    saveLangCookie(code);
+    // Drop any ?lang= from the URL so it can't override the new choice on reload.
+    if (/[?&]lang=/.test(location.search)) {
+      var search = location.search.replace(/([?&])lang=[^&]*&?/, '$1').replace(/[?&]$/, '');
+      location.replace(location.pathname + search + location.hash);
+    } else {
+      location.reload();
+    }
   }
   // UI strings may contain trusted markup (from our own data file); any
   // user-supplied value passed in `vars` must already be escaped.

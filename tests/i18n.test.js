@@ -119,6 +119,28 @@ async function run() {
       await ctx.close();
     }
 
+    // ---------- 3b. A ?lang= link opens that language and is remembered ----------
+    {
+      const { ctx, page } = await newPageIn(browser, 'en');
+      await page.goto(BASE + '/?lang=ja&ref=test#/home');
+      await page.waitForSelector('.feature-grid');
+      check('?lang=ja opens the site in Japanese', (await page.evaluate(() => document.documentElement.lang)) === 'ja');
+      check('?lang=ja is remembered', (await ctx.cookies()).some((c) => c.name === 'portdog_lang' && c.value === 'ja'));
+      await page.goto(BASE + '/#/home');
+      await page.waitForSelector('.feature-grid');
+      check('…and still Japanese without the parameter', (await page.evaluate(() => document.documentElement.lang)) === 'ja');
+      await page.goto(BASE + '/?lang=xx#/home');
+      await page.waitForSelector('.feature-grid');
+      check('an unknown ?lang= is ignored (keeps the saved language)', (await page.evaluate(() => document.documentElement.lang)) === 'ja');
+      await page.goto(BASE + '/?lang=ja#/home');
+      await page.waitForSelector('.feature-grid');
+      await page.click('#langBtn');
+      await Promise.all([page.waitForNavigation(), page.locator('#langMenu .lang-option', { hasText: 'English' }).click()]);
+      await page.waitForSelector('.feature-grid');
+      check('choosing English from the picker overrides a ?lang=ja link', (await page.evaluate(() => document.documentElement.lang)) === 'en' && !/lang=/.test(page.url()));
+      await ctx.close();
+    }
+
     // ---------- 4. Stale guard: edited English beats an outdated translation ----------
     {
       const { ctx, page } = await newPageIn(browser, 'de');
