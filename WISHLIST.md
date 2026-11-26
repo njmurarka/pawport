@@ -1,4 +1,4 @@
-# port.dog wish list — 20 ideas to make it even better
+# port.dog wish list — ideas to make it even better
 
 Written 2026-10-31 after a full read of the app: the wizard and checklist
 engine, the deadline math, 47 country notes, the return-home flow, the
@@ -131,6 +131,28 @@ A per-country breakdown with ranges: endorsement fees, lab fees, vet visits, air
 - **Share link:** a "share with my partner or vet" link that carries the answers inside the link itself (compressed into the URL `#fragment`, which never reaches any server) and opens a read-only checklist.
 
 - **Why:** coordination between partners, the vet and the export authority is constant. This keeps the site's no-account, no-server privacy promise.
+
+## Get found (search follow-ups)
+
+Added 2026-11-26, after the site went into Google Search Console and gained
+real, indexable URLs: `/faq/`, `/story/`, `/from/` with 47 country guides,
+each in all 9 languages with hreflang (about 460 pages, all in `sitemap.xml`).
+
+### 21. ⭐ Human check of the five partly-verified countries — S
+China, Israel, Saudi Arabia, South Africa and the UAE have country notes whose official sources blocked automated research (see `PROJECT-MEMORY.md`), so they are written more cautiously. They now have their own Google-indexed guide pages, so a person should check them against the official sites.
+- **Why:** wrong advice on a search landing page reaches more people than a note buried in a checklist.
+
+### 22. Add the site to Bing Webmaster Tools — S
+Use "Import from Google Search Console", which copies the verification and the sitemap.
+- **Why:** Bing's index also feeds DuckDuckGo, Yahoo and several AI search tools. It takes about five minutes.
+
+### 23. Watch for country pages Google won't index — S, then ongoing
+Around mid-December 2026, check Search Console → Indexing → Pages. The 47 guides share most of their text (Japan's side of the process is the same everywhere), and Google sometimes skips near-identical pages as "Crawled – currently not indexed".
+- **Why:** if that happens, the fix is more country-specific content on each guide (local fees, lead times, lab locations), and items #11 and #19 would supply much of it.
+
+### 24. Links from where people ask — ongoing
+Share the matching country guide in expat, Japan-relocation and pet-travel forums, Reddit threads and Facebook groups, for example `port.dog/from/canada/?ref=reddit`. The `?ref=` tag shows up in GoatCounter.
+- **Why:** links from relevant sites count for more in Google's ranking than anything left to change on the site itself.
 
 ---
 
