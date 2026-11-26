@@ -200,8 +200,8 @@
     "descriptionFull": "Bringing a dog to Japan from {country}: microchip, rabies vaccinations, the FAVN antibody test and 180-day wait, the export health certificate and who endorses it in {country}, and bringing your dog home.",
     "descriptionDesignated": "Bringing a dog to Japan from {country}, one of Japan's designated rabies-free regions: microchip, Form AB, advance notification, who endorses the certificate in {country}, and bringing your dog home."
   },
-  "fallbackCommitHash": "2356851f14200c44d3c5cafe59b86c8a16a534cb",
-  "fallbackPublishedAt": "2026-11-26T03:59:50-07:00",
+  "fallbackCommitHash": "4871a7802573a05b88bf992ffe8a03f1a678f66f",
+  "fallbackPublishedAt": "2026-11-26T04:40:31-07:00",
   "countries": [
     { "code": "CA", "name": "Canada", "designated": false, "richDetail": true, "slug": "canada" },
     { "code": "US", "name": "United States (mainland)", "designated": false, "slug": "united-states", "pageName": "the mainland United States" },
