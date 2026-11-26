@@ -201,8 +201,8 @@
     "_comment": "One pre-rendered page per country at from/<slug>/ (countries[].slug), built by scripts/build-pages.js. pageName (English only) is how the country reads mid-sentence.",
     "pathPrefix": "from/"
   },
-  "fallbackCommitHash": "4871a7802573a05b88bf992ffe8a03f1a678f66f",
-  "fallbackPublishedAt": "2026-11-26T04:40:31-07:00",
+  "fallbackCommitHash": "031bb9580e11b981fb350a563876a0ebb80ae150",
+  "fallbackPublishedAt": "2026-11-26T05:13:47-07:00",
   "countries": [
     { "code": "CA", "name": "Canada", "designated": false, "richDetail": true, "slug": "canada" },
     { "code": "US", "name": "United States (mainland)", "designated": false, "slug": "united-states", "pageName": "the mainland United States" },
