@@ -3,6 +3,12 @@
   "strings": {
     "tagline": ["406d7dba","Un guide personnalisé, étape par étape, pour emmener votre chien au Japon — conçu à partir d’une expérience vécue, pour que vous n’ayez pas à tout apprendre à vos dépens."],
     "ui.meta.title": ["8ff46f72","port.dog — Le chemin de votre chien vers le Japon, tracé pour vous"],
+    "ui.meta.description": ["74e56b3f","Une checklist gratuite, personnalisée et étape par étape pour emmener votre chien au Japon depuis n’importe où dans le monde."],
+    "ui.meta.desc.faq": ["bd4613a2","Vous emmenez un chien au Japon ? Des réponses claires sur le calendrier du test FAVN, l’attente de 180 jours, les rappels antirabiques, le Form AC et la quarantaine à l’aéroport, avec un glossaire et les liens officiels du MAFF."],
+    "ui.meta.desc.story": ["bdad73d1","L’histoire vraie derrière port.dog : le voyage d’un chien du Canada au Japon, avec le calendrier réel, les conseils qu’il a fallu vérifier deux fois et les échéances que nous avons dû suivre."],
+    "ui.meta.desc.countries": ["ea7afde7","Vous emmenez un chien au Japon ? Choisissez le pays d’où part votre chien pour voir chaque étape exigée par le Japon, avec des précisions sur qui s’occupe des documents d’exportation sur place."],
+    "ui.meta.desc.countryFull": ["cefa7136","Emmener un chien au Japon (pays de départ : {country}) : puce, vaccins antirabiques, test d’anticorps FAVN et attente de 180 jours, certificat sanitaire d’exportation et autorité qui le vise ({country}), et retour à la maison avec votre chien."],
+    "ui.meta.desc.countryDesignated": ["84cb35a9","Emmener un chien au Japon (pays de départ : {country}, région désignée indemne de rage) : puce, Form AB, notification préalable, autorité qui vise le certificat ({country}), et retour à la maison avec votre chien."],
     "ui.footer.countries": ["561ca12f","Guides par pays"],
     "ui.from.indexTitle": ["f200df56","Emmener votre chien au Japon, pays par pays"],
     "ui.from.indexIntro": ["0c355dd7","Choisissez le pays d’où part votre chien pour voir chaque étape exigée par le Japon, avec des précisions sur qui s’occupe des documents d’exportation sur place et ce qu’il faut pour rentrer avec votre chien."],

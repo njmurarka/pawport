@@ -46,7 +46,7 @@
      The choice lives in a cookie (like the theme) and switching
      reloads the page, so every renderer just reads the merged DATA. */
   var I18N = window.PortDogI18n;
-  var I18N_VERSION = 4; // bump whenever any data/i18n/*.json changes (cache-busting)
+  var I18N_VERSION = 5; // bump whenever any data/i18n/*.json changes (cache-busting)
   var LANG_COOKIE = 'portdog_lang';
   function langInfo(code) {
     for (var i = 0; i < I18N.LANGS.length; i++) if (I18N.LANGS[i].code === code) return I18N.LANGS[i];
@@ -58,7 +58,21 @@
     var expires = new Date(Date.now() + 365 * 86400000).toUTCString();
     document.cookie = LANG_COOKIE + '=' + encodeURIComponent(code) + '; expires=' + expires + '; path=/; SameSite=Lax';
   }
+  // Pre-rendered pages exist per language at /<lang>/<path> (e.g. /ja/faq/,
+  // /ja/ for the home page); English has no prefix. On those URLs the
+  // prefix decides the language, and is remembered like ?lang= is.
+  var URL_LANG = (function () {
+    var m = location.pathname.match(/^\/([a-z]{2})\//);
+    return m && m[1] !== 'en' && langInfo(m[1]).code === m[1] ? m[1] : null;
+  })();
+  // The path within the site, without any language prefix: /ja/faq/ → /faq/.
+  var SITE_PATH = URL_LANG ? location.pathname.slice(URL_LANG.length + 1) : location.pathname;
+  function langPrefix(code) { return code === 'en' ? '' : code + '/'; }
+  function searchWithoutLang() {
+    return location.search.replace(/([?&])lang=[^&]*&?/, '$1').replace(/[?&]$/, '');
+  }
   var LANG = (function () {
+    if (URL_LANG) { saveLangCookie(URL_LANG); return URL_LANG; }
     var q = (location.search.match(/[?&]lang=([a-zA-Z-]+)/) || [])[1];
     q = q && q.toLowerCase();
     if (q && langInfo(q).code === q) { saveLangCookie(q); return q; }
@@ -68,10 +82,15 @@
   var LOCALE = langInfo(LANG).locale;
   function setLang(code) {
     saveLangCookie(code);
+    // On a pre-rendered page (or a language home page like /ja/), go to
+    // the same page in the new language.
+    if (URL_LANG || pageRouteForPath()) {
+      location.assign('/' + langPrefix(code) + SITE_PATH.replace(/^\//, '').replace(/index\.html$/, '') + searchWithoutLang() + location.hash);
+      return;
+    }
     // Drop any ?lang= from the URL so it can't override the new choice on reload.
     if (/[?&]lang=/.test(location.search)) {
-      var search = location.search.replace(/([?&])lang=[^&]*&?/, '$1').replace(/[?&]$/, '');
-      location.replace(location.pathname + search + location.hash);
+      location.replace(location.pathname + searchWithoutLang() + location.hash);
     } else {
       location.reload();
     }
@@ -461,7 +480,8 @@
      is forwarded there. Internal route names (and so the analytics page
      names) stay 'resources' / 'about'. */
   function pageRouteForPath() {
-    var path = location.pathname.replace(/index\.html$/, '');
+    if (!DATA) return null;
+    var path = SITE_PATH.replace(/index\.html$/, '');
     if (!/\/$/.test(path)) path += '/';
     var routes = Object.keys(DATA.pages || {});
     for (var i = 0; i < routes.length; i++) {
@@ -480,14 +500,14 @@
     for (var i = 0; i < DATA.countries.length; i++) if (DATA.countries[i].slug && DATA.countries[i].slug === slug) return DATA.countries[i];
     return null;
   }
-  function countryPageHref(c) { return DATA.countryPages.pathPrefix + c.slug + '/'; }
+  function countryPageHref(c) { return langPrefix(LANG) + DATA.countryPages.pathPrefix + c.slug + '/'; }
   // How a country reads mid-sentence: "the United Kingdom", not "United
   // Kingdom". The English-only pageName is skipped in other languages,
   // whose translated name is already the right form.
   function countryPhrase(c) { return LANG === 'en' && c.pageName ? c.pageName : c.name; }
   function routeHref(route) {
     var page = DATA.pages && DATA.pages[route];
-    return page && page.path ? page.path : '#/' + route;
+    return page && page.path ? langPrefix(LANG) + page.path : '#/' + route;
   }
   function currentRoute() {
     var pageRoute = pageRouteForPath();
@@ -495,15 +515,29 @@
     var hash = location.hash || '#/home';
     return hash.replace('#/', '').split('?')[0] || 'home';
   }
-  // Old-style #/resources or #/about link on the home page → its real page.
+  // Sends the visitor to the right real URL, if they're not on it:
+  //  - an old-style #/resources or #/about link → that page's real URL;
+  //  - a pre-rendered page in a language other than the visitor's
+  //    (e.g. /faq/ with Japanese chosen, or a ?lang=ja link) → /ja/faq/.
   function forwardToRealPage() {
-    if (pageRouteForPath()) return false;
-    var route = currentRoute();
-    var page = DATA.pages && DATA.pages[route];
+    var search = searchWithoutLang();
+    if (pageRouteForPath()) {
+      if ((URL_LANG || 'en') === LANG) return false;
+      location.replace('/' + langPrefix(LANG) + SITE_PATH.replace(/^\//, '').replace(/index\.html$/, '') + search + location.hash);
+      return true;
+    }
+    var page = DATA.pages && DATA.pages[currentRoute()];
     if (!page || !page.path) return false;
-    var base = location.pathname.replace(/[^/]*$/, '');
-    location.replace(base + page.path + location.search);
+    location.replace('/' + langPrefix(LANG) + page.path + search);
     return true;
+  }
+  function pageDescription(route) {
+    if (route === 'resources') return t('meta.desc.faq');
+    if (route === 'about') return t('meta.desc.story');
+    if (route === 'countries') return t('meta.desc.countries');
+    var c = route.indexOf('country/') === 0 && countriesByCode[route.slice(8)];
+    if (c) return t(c.designated ? 'meta.desc.countryDesignated' : 'meta.desc.countryFull', { country: countryPhrase(c) });
+    return t('meta.description');
   }
   function pageTitle(route) {
     if (route === 'resources') return t('res.title') + ' — port.dog';
@@ -526,6 +560,8 @@
     if (forwardToRealPage()) return;
     var route = currentRoute();
     document.title = pageTitle(route);
+    var metaDesc = document.querySelector('meta[name="description"]');
+    if (metaDesc) metaDesc.setAttribute('content', pageDescription(route));
     document.querySelectorAll('.site-nav a').forEach(function (a) {
       a.classList.toggle('active', a.getAttribute('href') === routeHref(route));
     });
@@ -1552,6 +1588,8 @@
   function localizeStatic() {
     document.documentElement.lang = LANG === 'zh' ? 'zh-Hans' : LANG;
     document.querySelectorAll('[data-i18n]').forEach(function (n) { n.innerHTML = t(n.getAttribute('data-i18n')); });
+    // Links to pre-rendered pages go straight to the visitor's language version.
+    document.querySelectorAll('[data-page-path]').forEach(function (a) { a.setAttribute('href', langPrefix(LANG) + a.getAttribute('data-page-path')); });
     document.querySelectorAll('[data-i18n-aria]').forEach(function (n) {
       var v = t(n.getAttribute('data-i18n-aria'));
       n.setAttribute('aria-label', v);
@@ -1701,7 +1739,7 @@
   function init() {
     // ?v= bumped by hand alongside checklist-data.json edits, same
     // reasoning as the ?v= on the css/js tags in index.html.
-    fetch('data/checklist-data.json?v=30')
+    fetch('data/checklist-data.json?v=31')
       .then(function (r) { return r.json(); })
       .then(function (data) {
         DATA = data;

@@ -565,11 +565,12 @@ html:lang(ru) :is(h1, h2, h3, .item-title, .question-label, .feasibility-alert-t
 
 /* ---------- Layout sections ---------- */
 main#app { padding: 36px 20px 64px; min-height: 60vh; }
-/* Pre-rendered pages (faq/, story/) ship English copy for search engines
-   and no-JS visitors. For anyone reading in another language (the inline
-   <head> script has already set <html lang>), keep that English hidden
-   until js/app.js replaces it, so it never flashes up first. */
-html:not([lang="en"]) main#app[data-prerendered] { visibility: hidden; }
+/* Pre-rendered pages ship their content for search engines and no-JS
+   visitors, in one language (data-page-lang on <html>). If the visitor
+   reads another language, the inline <head> script marks the page
+   lang-pending: keep that content hidden until js/app.js redirects or
+   replaces it, so the wrong language never flashes up first. */
+html.lang-pending main#app[data-prerendered] { visibility: hidden; }
 
 .hero {
   text-align: center;

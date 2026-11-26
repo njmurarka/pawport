@@ -3,6 +3,12 @@
   "strings": {
     "tagline": ["406d7dba","Ein persönlicher Schritt-für-Schritt-Leitfaden, um Ihren Hund nach Japan zu bringen – entstanden aus echter Erfahrung, damit Sie nicht alles auf die harte Tour lernen müssen."],
     "ui.meta.title": ["8ff46f72","port.dog – Der Weg Ihres Hundes nach Japan, klar vorgezeichnet"],
+    "ui.meta.description": ["74e56b3f","Eine kostenlose, persönliche Schritt-für-Schritt-Checkliste, um Ihren Hund von überall auf der Welt nach Japan zu bringen."],
+    "ui.meta.desc.faq": ["bd4613a2","Mit dem Hund nach Japan? Klare Antworten zum Zeitplan des FAVN-Tests, zur 180-tägigen Wartezeit, zu Tollwut-Auffrischungsfristen, zum Form AC und zur Quarantäne am Flughafen – mit Glossar und offiziellen MAFF-Links."],
+    "ui.meta.desc.story": ["bdad73d1","Die wahre Geschichte hinter port.dog: der Umzug eines Hundes von Kanada nach Japan, mit dem tatsächlichen Zeitplan, Ratschlägen, die wir genauer prüfen mussten, und den Fristen, die wir im Blick behalten mussten."],
+    "ui.meta.desc.countries": ["ea7afde7","Mit dem Hund nach Japan? Wählen Sie das Land, aus dem Ihr Hund ausreist, und sehen Sie alle Schritte, die Japan verlangt – mit Hinweisen, wer dort die Ausfuhrpapiere bearbeitet."],
+    "ui.meta.desc.countryFull": ["cefa7136","Mit dem Hund nach Japan – Ausreiseland: {country}. Mikrochip, Tollwutimpfungen, FAVN-Antikörpertest und 180 Tage Wartezeit, das Ausfuhr-Gesundheitszeugnis und wer es bestätigt ({country}), und die Rückkehr mit Ihrem Hund."],
+    "ui.meta.desc.countryDesignated": ["84cb35a9","Mit dem Hund nach Japan – Ausreiseland: {country}, eine von Japans ausgewiesenen tollwutfreien Regionen. Mikrochip, Form AB, Voranmeldung, wer das Zeugnis bestätigt ({country}), und die Rückkehr mit Ihrem Hund."],
     "ui.footer.countries": ["561ca12f","Leitfäden nach Land"],
     "ui.from.indexTitle": ["f200df56","Mit Ihrem Hund nach Japan – Land für Land"],
     "ui.from.indexIntro": ["0c355dd7","Wählen Sie das Land, aus dem Ihr Hund ausreist, um alle Schritte zu sehen, die Japan verlangt – mit Hinweisen, wer dort die Ausfuhrpapiere bearbeitet und was nötig ist, um Ihren Hund wieder nach Hause zu bringen."],

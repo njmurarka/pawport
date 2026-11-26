@@ -3,6 +3,12 @@
   "strings": {
     "tagline": ["406d7dba","Una guía personalizada, paso a paso, para llevar a su perro a Japón, creada a partir de experiencia real para que usted no tenga que aprenderlo por las malas."],
     "ui.meta.title": ["8ff46f72","port.dog — El camino de su perro a Japón, trazado paso a paso"],
+    "ui.meta.description": ["74e56b3f","Una lista gratuita y personalizada, paso a paso, para llevar a su perro a Japón desde cualquier lugar del mundo."],
+    "ui.meta.desc.faq": ["bd4613a2","¿Va a llevar un perro a Japón? Respuestas claras sobre los plazos del análisis FAVN, la espera de 180 días, los refuerzos de la vacuna antirrábica, el Form AC y la cuarentena en el aeropuerto, con glosario y enlaces oficiales del MAFF."],
+    "ui.meta.desc.story": ["bdad73d1","La historia real detrás de port.dog: el traslado de un perro de Canadá a Japón, con el calendario real, los consejos que hubo que comprobar dos veces y los plazos que tuvimos que vigilar."],
+    "ui.meta.desc.countries": ["ea7afde7","¿Va a llevar un perro a Japón? Elija el país desde el que sale su perro para ver todos los pasos que exige Japón, con notas sobre quién gestiona allí los documentos de exportación."],
+    "ui.meta.desc.countryFull": ["cefa7136","Llevar un perro a Japón desde {country}: microchip, vacunas antirrábicas, el análisis de anticuerpos FAVN y la espera de 180 días, el certificado sanitario de exportación y quién lo avala en {country}, y la vuelta a casa con su perro."],
+    "ui.meta.desc.countryDesignated": ["84cb35a9","Llevar un perro a Japón desde {country}, una de las regiones designadas de Japón libres de rabia: microchip, Form AB, notificación previa, quién avala el certificado en {country} y la vuelta a casa con su perro."],
     "ui.footer.countries": ["561ca12f","Guías por país"],
     "ui.from.indexTitle": ["f200df56","Llevar a su perro a Japón, país por país"],
     "ui.from.indexIntro": ["0c355dd7","Elija el país desde el que sale su perro para ver todos los pasos que exige Japón, con notas sobre quién gestiona allí los documentos de exportación y qué hace falta para volver a casa con su perro."],

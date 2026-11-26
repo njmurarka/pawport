@@ -3,6 +3,12 @@
   "strings": {
     "tagline": ["406d7dba","一份为您量身定制、循序渐进的指南，帮您带狗狗前往日本——源自真实经历，让您不必再走弯路。"],
     "ui.meta.title": ["8ff46f72","port.dog — 狗狗前往日本的路线图，一目了然"],
+    "ui.meta.description": ["74e56b3f","免费的个性化分步清单，帮助您从世界任何地方带狗狗入境日本。"],
+    "ui.meta.desc.faq": ["bd4613a2","要带狗狗去日本？用通俗的语言解答 FAVN 检测时间、180 天等待期、狂犬病加强针期限、Form AC 和机场检疫等问题，并附术语表和 MAFF 官方链接。"],
+    "ui.meta.desc.story": ["bdad73d1","port.dog 背后的真实故事：一只狗狗从加拿大到日本的经历，包括真实的时间线、需要再三核实的建议，以及我们必须盯紧的各项期限。"],
+    "ui.meta.desc.countries": ["ea7afde7","要带狗狗去日本？选择狗狗出发的国家/地区，查看日本要求的每一个步骤，以及当地由谁办理出口文件。"],
+    "ui.meta.desc.countryFull": ["cefa7136","从{country}带狗狗入境日本：芯片、狂犬病疫苗、FAVN 抗体检测和 180 天等待期、出口健康证明及{country}由谁签署，以及如何带狗狗回国。"],
+    "ui.meta.desc.countryDesignated": ["84cb35a9","从{country}（日本指定的无狂犬病地区之一）带狗狗入境日本：芯片、Form AB、提前申报、{country}由谁签署证明，以及如何带狗狗回国。"],
     "ui.footer.countries": ["561ca12f","按国家/地区查看指南"],
     "ui.from.indexTitle": ["f200df56","带狗狗入境日本：按国家/地区分类指南"],
     "ui.from.indexIntro": ["0c355dd7","请选择您的狗狗出发的国家/地区，查看日本要求的每一个步骤，以及当地由谁办理出口文件、带狗狗回国需要什么。"],

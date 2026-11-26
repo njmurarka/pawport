@@ -3,6 +3,12 @@
   "strings": {
     "tagline": ["406d7dba","Een persoonlijke stapsgewijze gids om uw hond naar Japan mee te nemen — gebaseerd op echte ervaring, zodat u het niet op de harde manier hoeft te leren."],
     "ui.meta.title": ["8ff46f72","port.dog — De weg van uw hond naar Japan, helder uitgestippeld"],
+    "ui.meta.description": ["74e56b3f","Een gratis, persoonlijke stap-voor-stap-checklist om uw hond vanaf elke plek ter wereld naar Japan mee te nemen."],
+    "ui.meta.desc.faq": ["bd4613a2","Neemt u een hond mee naar Japan? Heldere antwoorden over de timing van de FAVN-test, de wachttijd van 180 dagen, deadlines voor rabiës-boosters, Form AC en de quarantaine op het vliegveld, met een woordenlijst en officiële MAFF-links."],
+    "ui.meta.desc.story": ["bdad73d1","Het echte verhaal achter port.dog: de verhuizing van een hond van Canada naar Japan, met de werkelijke tijdlijn, het advies dat we nog eens moesten nakijken en de deadlines die we in de gaten moesten houden."],
+    "ui.meta.desc.countries": ["ea7afde7","Neemt u een hond mee naar Japan? Kies het land waar uw hond vertrekt en zie elke stap die Japan vereist, met uitleg over wie daar de exportdocumenten afhandelt."],
+    "ui.meta.desc.countryFull": ["cefa7136","Een hond meenemen naar Japan vanuit {country}: microchip, rabiësvaccinaties, de FAVN-antistoffentest en 180 dagen wachten, het exportgezondheidscertificaat en wie het bekrachtigt in {country}, en met uw hond weer naar huis."],
+    "ui.meta.desc.countryDesignated": ["84cb35a9","Een hond meenemen naar Japan vanuit {country}, een van de door Japan aangewezen rabiësvrije gebieden: microchip, Form AB, voorafgaande melding, wie het certificaat bekrachtigt in {country}, en met uw hond weer naar huis."],
     "ui.footer.countries": ["561ca12f","Gidsen per land"],
     "ui.from.indexTitle": ["f200df56","Met uw hond naar Japan, per land"],
     "ui.from.indexIntro": ["0c355dd7","Kies het land waar uw hond vertrekt om elke stap te zien die Japan vereist, met uitleg over wie daar de exportdocumenten afhandelt en wat er nodig is om met uw hond weer naar huis te gaan."],

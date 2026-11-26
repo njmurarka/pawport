@@ -71,14 +71,14 @@ async function run() {
     }
 
     // ---------- Old #/ links forward to the real pages ----------
-    for (const [from, to] of [['/#/resources', '/faq/'], ['/#/about', '/story/'], ['/index.html#/resources', '/faq/'], ['/?lang=ja#/about', '/story/']]) {
+    for (const [from, to] of [['/#/resources', '/faq/'], ['/#/about', '/story/'], ['/index.html#/resources', '/faq/'], ['/?lang=ja#/about', '/ja/story/'], ['/faq/?lang=de&ref=x', '/de/faq/']]) {
       const context = await browser.newContext();
       const page = await context.newPage();
       await page.goto(BASE + from);
       await page.waitForURL((u) => u.pathname === to, { timeout: 5000 }).catch(() => {});
       const u = new URL(page.url());
       check(from + ' forwards to ' + to, u.pathname === to, page.url());
-      if (from.includes('lang=ja')) check(from + ' keeps ?lang=ja', u.search.includes('lang=ja'), page.url());
+      if (from.includes('ref=x')) check(from + ' keeps other query parameters, drops ?lang=', u.search === '?ref=x', page.url());
       await context.close();
     }
 
@@ -93,23 +93,97 @@ async function run() {
       await page.close();
     }
 
-    // ---------- Another language: translated, English never shown first ----------
+    // ---------- Languages: each has its own URLs ----------
     {
+      // Someone reading Japanese who opens an English page lands on its
+      // Japanese URL, and never sees the English flash up first.
       const context = await browser.newContext();
       await context.addCookies([{ name: 'portdog_lang', value: 'ja', url: BASE }]);
       const page = await context.newPage();
       await page.goto(BASE + '/faq/', { waitUntil: 'commit' });
       await page.waitForSelector('main#app', { state: 'attached' });
-      const hiddenFirst = await page.evaluate(() => {
-        const m = document.getElementById('app');
-        return !m.hasAttribute('data-prerendered') || getComputedStyle(m).visibility === 'hidden';
-      });
-      check('ja on faq/: pre-rendered English is hidden until translated', hiddenFirst);
+      const hiddenFirst = await page.evaluate(() => location.pathname !== '/faq/' || getComputedStyle(document.getElementById('app')).visibility === 'hidden');
+      check('ja visitor on /faq/: English content hidden until redirected', hiddenFirst);
+      await page.waitForURL((u) => u.pathname === '/ja/faq/', { timeout: 5000 }).catch(() => {});
+      check('ja visitor on /faq/ is sent to /ja/faq/', new URL(page.url()).pathname === '/ja/faq/', page.url());
       await page.waitForSelector('main#app:not([data-prerendered]) h1');
       const h1 = await page.locator('main h1').textContent();
-      check('ja on faq/: page is shown in Japanese', h1 !== 'Resources & FAQ' && /[぀-ヿ一-龯]/.test(h1), h1);
-      check('ja on faq/: content visible after translating', await page.evaluate(() => getComputedStyle(document.getElementById('app')).visibility === 'visible'));
+      check('/ja/faq/: shown in Japanese', /[\u3040-\u30ff\u4e00-\u9faf]/.test(h1), h1);
+      check('/ja/faq/: content visible', await page.evaluate(() => getComputedStyle(document.getElementById('app')).visibility === 'visible'));
+      check('/ja/faq/: nav links stay in Japanese', (await page.locator('.site-nav a[data-page-path="story/"]').getAttribute('href')) === 'ja/story/');
+      // Switching language on a page goes to that page in the new language.
+      await page.click('#langBtn');
+      await page.click('.lang-option[lang="de"]');
+      await page.waitForURL((u) => u.pathname === '/de/faq/', { timeout: 5000 }).catch(() => {});
+      check('Language menu on /ja/faq/ → German goes to /de/faq/', new URL(page.url()).pathname === '/de/faq/', page.url());
+      await page.waitForSelector('main#app:not([data-prerendered]) h1');
+      await page.click('#langBtn');
+      await page.click('.lang-option[lang="en"]');
+      await page.waitForURL((u) => u.pathname === '/faq/', { timeout: 5000 }).catch(() => {});
+      check('Language menu on /de/faq/ → English goes to /faq/', new URL(page.url()).pathname === '/faq/', page.url());
+      await page.waitForSelector('main#app:not([data-prerendered]) h1');
+      check('…and stays in English there', (await page.locator('main h1').textContent()) === 'Resources & FAQ');
       await context.close();
+    }
+    {
+      // A language URL wins over a different saved language, and is remembered.
+      const context = await browser.newContext();
+      await context.addCookies([{ name: 'portdog_lang', value: 'fr', url: BASE }]);
+      const page = await context.newPage();
+      await page.goto(BASE + '/es/from/germany/');
+      await page.waitForSelector('main#app:not([data-prerendered]) h1');
+      check('/es/from/germany/ with a French cookie stays Spanish', new URL(page.url()).pathname === '/es/from/germany/' && /Alemania/.test(await page.locator('main h1').textContent()));
+      check('…and remembers Spanish', /portdog_lang=es/.test(await page.evaluate(() => document.cookie)));
+      // The app (wizard) keeps that language; its links lead back to Spanish pages.
+      await page.click('.guide-cta a.btn-primary');
+      await page.waitForSelector('.card[data-question-id]');
+      check('Guide CTA from /es/ opens the wizard in Spanish', (await page.evaluate(() => document.documentElement.lang)) === 'es');
+      check('App nav links point to the Spanish pages', (await page.locator('.site-nav a[data-page-path="faq/"]').getAttribute('href')) === 'es/faq/');
+      await context.close();
+    }
+    {
+      // Language home pages (/ja/ …) are pre-rendered too and lead into the app.
+      const context = await browser.newContext();
+      const page = await context.newPage();
+      await page.goto(BASE + '/ja/');
+      await page.waitForSelector('main#app:not([data-prerendered]) .feature-grid');
+      check('/ja/: home page in Japanese', (await page.evaluate(() => document.documentElement.lang)) === 'ja' && /[\u3040-\u30ff\u4e00-\u9faf]/.test(await page.locator('main h1').textContent()));
+      await page.click('.cta-row a.btn-primary');
+      await page.waitForSelector('.card[data-question-id]');
+      check('/ja/ "start" button opens the wizard in Japanese', new URL(page.url()).pathname === '/' && (await page.evaluate(() => document.documentElement.lang)) === 'ja', page.url());
+      await context.close();
+    }
+    {
+      // No JavaScript: a translated page carries its own language, text and links.
+      const context = await browser.newContext({ javaScriptEnabled: false });
+      const page = await context.newPage();
+      await page.goto(BASE + '/de/from/germany/');
+      check('/de/from/germany/ (no JS): <html lang="de">', (await page.evaluate(() => document.documentElement.lang)) === 'de');
+      check('/de/from/germany/ (no JS): German heading', /Deutschland/.test(await page.locator('main h1').textContent()));
+      check('/de/from/germany/ (no JS): German nav text', (await page.locator('.site-nav a[data-page-path="faq/"]').textContent()) !== 'Resources & FAQ');
+      check('/de/from/germany/ (no JS): German description', /Ausreiseland: Deutschland/.test(await page.locator('meta[name=description]').getAttribute('content')));
+      check('/de/from/germany/ (no JS): canonical is itself', (await page.locator('link[rel=canonical]').getAttribute('href')) === 'https://port.dog/de/from/germany/');
+      await context.close();
+    }
+
+    // ---------- hreflang: every page lists all 9 versions, reciprocally ----------
+    {
+      const LANGS = require('../scripts/build-pages').LANGS;
+      const hl = (l) => (l === 'zh' ? 'zh-Hans' : l);
+      const pre = (l) => (l === 'en' ? '' : l + '/');
+      const read = (p) => fs.readFileSync(path.join(ROOT, p === '' ? 'index.html' : p + 'index.html'), 'utf8');
+      const alternates = (html) => [...html.matchAll(/<link rel="alternate" hreflang="([^"]+)" href="([^"]+)">/g)].map((m) => m[1] + ' ' + m[2]).sort();
+      const bad = [];
+      const basePaths = [''].concat([...new Set(pages.map((p) => p.basePath))].filter((b) => b !== ''));
+      for (const b of basePaths) {
+        const want = LANGS.map((l) => hl(l) + ' https://port.dog/' + pre(l) + b).concat('x-default https://port.dog/' + b).sort();
+        for (const l of LANGS) {
+          const html = read(pre(l) + b);
+          if (JSON.stringify(alternates(html)) !== JSON.stringify(want)) bad.push(pre(l) + b);
+          if (!html.includes('<link rel="canonical" href="https://port.dog/' + pre(l) + b + '">')) bad.push(pre(l) + b + ' (canonical)');
+        }
+      }
+      check('All ' + basePaths.length * LANGS.length + ' pages (incl. index.html) list the same 9 languages + x-default and a self canonical', bad.length === 0, bad.slice(0, 5).join(', '));
     }
 
     // ---------- Sitemap lists every page ----------
@@ -206,10 +280,10 @@ async function run() {
       await page.waitForSelector('.feature-grid');
       check('Footer links to the country guides', (await page.locator('.site-footer a[href="from/"]').count()) === 1);
       await context.addCookies([{ name: 'portdog_lang', value: 'ja', url: BASE }]);
-      await page.goto(BASE + '/from/germany/');
+      await page.goto(BASE + '/ja/from/germany/');
       await page.waitForSelector('main#app:not([data-prerendered]) h1');
       const h1 = await page.locator('main h1').textContent();
-      check('ja on from/germany/: translated heading with the Japanese country name', /ドイツ/.test(h1) && !/Bringing/.test(h1), h1);
+      check('/ja/from/germany/: translated heading with the Japanese country name', /ドイツ/.test(h1) && !/Bringing/.test(h1), h1);
       await context.close();
     }
   });
