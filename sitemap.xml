@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Only the home page for now: every other view (#/resources, #/about, the
+     wizard, ?lang= translations) lives at the same URL as far as search
+     engines are concerned. Add entries here if pages get real URLs. -->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://port.dog/</loc>
+    <lastmod>2026-11-26</lastmod>
+  </url>
+</urlset>

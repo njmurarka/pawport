@@ -41,6 +41,34 @@
 <meta property="og:image:height" content="630">
 <meta property="og:image:alt" content="A boxer in aviator goggles and a PORT.DOG harness, with a jet climbing over a sunset globe behind him">
 <meta name="twitter:card" content="summary_large_image">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "WebSite",
+      "@id": "https://port.dog/#website",
+      "url": "https://port.dog/",
+      "name": "port.dog",
+      "description": "A free, personalized step-by-step checklist for bringing your dog to Japan from anywhere in the world.",
+      "inLanguage": ["en", "zh-Hans", "hi", "es", "fr", "de", "ja", "ru", "nl"]
+    },
+    {
+      "@type": "WebApplication",
+      "@id": "https://port.dog/#app",
+      "url": "https://port.dog/",
+      "name": "port.dog",
+      "description": "A free, personalized step-by-step checklist for bringing your dog to Japan from anywhere in the world, and back home again.",
+      "applicationCategory": "TravelApplication",
+      "operatingSystem": "Any (web browser)",
+      "isAccessibleForFree": true,
+      "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+      "image": "https://port.dog/assets/img/og-port-dog.jpg",
+      "isPartOf": { "@id": "https://port.dog/#website" }
+    }
+  ]
+}
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -100,6 +128,15 @@
 <div class="lang-notice" id="langNotice" hidden></div>
 
 <main id="app" class="wrap"></main>
+<!-- Shown only without JavaScript (and read by crawlers that don't run it).
+     Deliberately English-only and static: the i18n overlay needs JS anyway. -->
+<noscript>
+  <div class="wrap">
+    <h1>port.dog — Your dog's path to Japan, mapped out</h1>
+    <p>A free, personalized step-by-step checklist for bringing your dog to Japan from anywhere in the world, and back home again. It covers the steps that apply to your dog's situation, such as the microchip, rabies vaccinations, the FAVN rabies antibody test and waiting period, advance notification to Japan's Animal Quarantine Service (AQS), export health certificates, and arrival inspection.</p>
+    <p>port.dog needs JavaScript to build your checklist. Please enable it and reload the page.</p>
+  </div>
+</noscript>
 
 <footer class="site-footer">
   <div class="wrap">
