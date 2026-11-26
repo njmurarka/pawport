@@ -1,10 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Only the home page for now: every other view (#/resources, #/about, the
-     wizard, ?lang= translations) lives at the same URL as far as search
-     engines are concerned. Add entries here if pages get real URLs. -->
+<!-- The wizard and checklist (#/ routes) and ?lang= translations share the
+     home page's URL as far as search engines are concerned. The content
+     pages have real URLs (DATA.pages in data/checklist-data.json, built by
+     scripts/build-pages.js) — keep this list in sync with that. -->
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://port.dog/</loc>
+    <lastmod>2026-11-26</lastmod>
+  </url>
+  <url>
+    <loc>https://port.dog/faq/</loc>
+    <lastmod>2026-11-26</lastmod>
+  </url>
+  <url>
+    <loc>https://port.dog/story/</loc>
     <lastmod>2026-11-26</lastmod>
   </url>
 </urlset>
