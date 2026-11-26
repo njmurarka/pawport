@@ -1539,7 +1539,7 @@
   function init() {
     // ?v= bumped by hand alongside checklist-data.json edits, same
     // reasoning as the ?v= on the css/js tags in index.html.
-    fetch('data/checklist-data.json?v=25')
+    fetch('data/checklist-data.json?v=26')
       .then(function (r) { return r.json(); })
       .then(function (data) {
         DATA = data;
