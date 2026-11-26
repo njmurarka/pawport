@@ -46,7 +46,7 @@
      The choice lives in a cookie (like the theme) and switching
      reloads the page, so every renderer just reads the merged DATA. */
   var I18N = window.PortDogI18n;
-  var I18N_VERSION = 3; // bump whenever any data/i18n/*.json changes (cache-busting)
+  var I18N_VERSION = 4; // bump whenever any data/i18n/*.json changes (cache-busting)
   var LANG_COOKIE = 'portdog_lang';
   function langInfo(code) {
     for (var i = 0; i < I18N.LANGS.length; i++) if (I18N.LANGS[i].code === code) return I18N.LANGS[i];
@@ -461,14 +461,30 @@
      is forwarded there. Internal route names (and so the analytics page
      names) stay 'resources' / 'about'. */
   function pageRouteForPath() {
-    var path = location.pathname;
+    var path = location.pathname.replace(/index\.html$/, '');
+    if (!/\/$/.test(path)) path += '/';
     var routes = Object.keys(DATA.pages || {});
     for (var i = 0; i < routes.length; i++) {
       var p = DATA.pages[routes[i]] && DATA.pages[routes[i]].path;
-      if (p && (path === '/' + p || path === '/' + p + 'index.html' || path === '/' + p.replace(/\/$/, ''))) return routes[i];
+      if (p && path === '/' + p) return routes[i];
+    }
+    // One page per country: from/<slug>/ → route 'country/<code>'.
+    var prefix = DATA.countryPages && DATA.countryPages.pathPrefix;
+    if (prefix && path.indexOf('/' + prefix) === 0) {
+      var c = countryBySlug(path.slice(prefix.length + 1).replace(/\/$/, ''));
+      if (c) return 'country/' + c.code;
     }
     return null;
   }
+  function countryBySlug(slug) {
+    for (var i = 0; i < DATA.countries.length; i++) if (DATA.countries[i].slug && DATA.countries[i].slug === slug) return DATA.countries[i];
+    return null;
+  }
+  function countryPageHref(c) { return DATA.countryPages.pathPrefix + c.slug + '/'; }
+  // How a country reads mid-sentence: "the United Kingdom", not "United
+  // Kingdom". The English-only pageName is skipped in other languages,
+  // whose translated name is already the right form.
+  function countryPhrase(c) { return LANG === 'en' && c.pageName ? c.pageName : c.name; }
   function routeHref(route) {
     var page = DATA.pages && DATA.pages[route];
     return page && page.path ? page.path : '#/' + route;
@@ -492,6 +508,9 @@
   function pageTitle(route) {
     if (route === 'resources') return t('res.title') + ' — port.dog';
     if (route === 'about') return t('story.title') + ' — port.dog';
+    if (route === 'countries') return t('from.indexTitle') + ' — port.dog';
+    var c = route.indexOf('country/') === 0 && countriesByCode[route.slice(8)];
+    if (c) return t('from.title', { country: countryPhrase(c) }) + ' — port.dog';
     return t('meta.title');
   }
 
@@ -524,6 +543,8 @@
     else if (route === 'results') renderResults(app);
     else if (route === 'resources') renderResources(app);
     else if (route === 'about') renderAbout(app);
+    else if (route === 'countries') renderCountries(app);
+    else if (route.indexOf('country/') === 0 && countriesByCode[route.slice(8)]) renderCountry(app, countriesByCode[route.slice(8)]);
     else renderHome(app);
     window.scrollTo(0, 0);
     closeMobileNav();
@@ -702,6 +723,99 @@
     ));
   }
 
+  /* ================= COUNTRY GUIDES (from/, from/<slug>/) =================
+     Search landing pages, one per country. The steps are not written
+     separately: they're the app's own checklist for a dog from that
+     country starting from scratch (no chip, no vaccinations yet), picked
+     by the same showIf / getEffectiveAnswers logic as the results page,
+     so a guide can never say something the checklist doesn't. */
+  var SCRATCH_ANSWERS = { microchipDone: 'no', rabiesDoses: '0', healthConditions: ['none'], hasTransit: 'no' };
+
+  function officialSourcesHtml() {
+    var sourcesHtml = DATA.officialSources.map(function (s) {
+      return '<li><a href="' + escapeHtml(s.url) + '" target="_blank" rel="noopener">' + escapeHtml(s.label) + '</a></li>';
+    }).join('');
+    return (
+      '<div class="section-spacer card">' +
+        '<h2>' + t('res.sources') + '</h2>' +
+        '<p>' + t('res.sourcesBody') + '</p>' +
+        '<ul>' + sourcesHtml + '</ul>' +
+        '<p class="muted">' + t('res.lastReviewed', { date: escapeHtml(fmtDate(parseDate(DATA.lastVerified)) || DATA.lastVerified) }) + '</p>' +
+      '</div>'
+    );
+  }
+
+  function guideCountries() {
+    var collator = new Intl.Collator(LOCALE);
+    return DATA.countries.filter(function (c) { return c.slug; })
+      .sort(function (a, b) { return collator.compare(a.name, b.name); });
+  }
+
+  function renderCountries(app) {
+    function list(designated) {
+      return '<ul class="country-list">' + guideCountries().filter(function (c) { return !!c.designated === designated; }).map(function (c) {
+        return '<li><a href="' + countryPageHref(c) + '">' + escapeHtml(c.name) + '</a></li>';
+      }).join('') + '</ul>';
+    }
+    app.appendChild(el(
+      '<section>' +
+        '<h1>' + t('from.indexTitle') + '</h1>' +
+        '<p class="lede">' + t('from.indexIntro') + '</p>' +
+        '<div class="section-spacer"><h2>' + t('from.groupFull') + '</h2>' + list(false) + '</div>' +
+        '<div class="section-spacer"><h2>' + t('from.groupDesignated') + '</h2>' + list(true) + '</div>' +
+        '<p class="muted section-spacer">' + t('from.notListed') + '</p>' +
+      '</section>'
+    ));
+  }
+
+  function renderCountry(app, country) {
+    var phrase = escapeHtml(countryPhrase(country));
+    var eff = getEffectiveAnswers(Object.assign({ originCountry: country.code }, SCRATCH_ANSWERS));
+    var items = DATA.checklistItems.filter(function (item) { return matches(item.showIf, eff); });
+    var step = 0;
+    var categoriesHtml = DATA.categories.map(function (cat) {
+      var inCat = items.filter(function (i) { return i.category === cat.id; });
+      if (!inCat.length) return '';
+      return (
+        '<div class="category-block">' +
+          '<div class="category-title"><span>' + cat.icon + '</span><h2>' + escapeHtml(cat.title) + '</h2></div>' +
+          '<p class="category-blurb">' + escapeHtml(cat.blurb) + '</p>' +
+          '<div class="card item-list">' + inCat.map(function (item) {
+            var body = item.body;
+            if (item.countryNote) {
+              var detail = (DATA.countryDetails[country.code] && DATA.countryDetails[country.code][item.id])
+                || (DATA.countryDetails.default && DATA.countryDetails.default[item.id]);
+              if (detail) body += '<br><br><strong>' + t('results.specificTo', { country: escapeHtml(country.name) }) + '</strong> ' + escapeHtml(detail);
+            }
+            step++;
+            return (
+              '<div class="checklist-item guide-item">' +
+                '<span class="guide-step" aria-hidden="true">' + step + '</span>' +
+                '<div style="flex:1;">' +
+                  '<h3 class="item-title">' + escapeHtml(item.title) + '</h3>' +
+                  '<div class="item-body">' + body + '</div>' +
+                '</div>' +
+              '</div>'
+            );
+          }).join('') + '</div>' +
+        '</div>'
+      );
+    }).join('');
+    app.appendChild(el(
+      '<section>' +
+        '<p class="muted"><a href="' + routeHref('countries') + '">' + t('from.allCountries') + '</a></p>' +
+        '<h1>' + t('from.title', { country: phrase }) + '</h1>' +
+        '<p class="lede">' + t(country.designated ? 'from.ledeDesignated' : 'from.ledeFull', { country: phrase }) + '</p>' +
+        '<div class="card guide-cta">' +
+          '<p>' + t('from.scratchNote') + '</p>' +
+          '<p><a class="btn-primary" href="#/wizard?country=' + encodeURIComponent(country.code) + '">' + t('nav.build') + '</a></p>' +
+        '</div>' +
+        '<div class="section-spacer">' + categoriesHtml + '</div>' +
+        officialSourcesHtml() +
+      '</section>'
+    ));
+  }
+
   /* ================= WIZARD ================= */
   function getVisibleSteps(answers) {
     // Filter against EFFECTIVE answers, not raw ones: a downstream
@@ -729,6 +843,13 @@
 
   function renderWizard(app) {
     var answers = loadAnswers();
+    // Arriving from a country guide (#/wizard?country=DE): pre-select that
+    // country, but never overwrite a country someone already chose.
+    var pre = (location.hash.match(/[?&]country=([A-Za-z-]+)/) || [])[1];
+    if (pre) {
+      if (!answers.originCountry && countriesByCode[pre]) { answers.originCountry = pre; saveAnswers(answers); }
+      history.replaceState(null, '', location.pathname + location.search + '#/wizard');
+    }
     var idx = 0;
     var container = el('<div></div>');
     app.appendChild(container);
@@ -1580,7 +1701,7 @@
   function init() {
     // ?v= bumped by hand alongside checklist-data.json edits, same
     // reasoning as the ?v= on the css/js tags in index.html.
-    fetch('data/checklist-data.json?v=28')
+    fetch('data/checklist-data.json?v=29')
       .then(function (r) { return r.json(); })
       .then(function (data) {
         DATA = data;

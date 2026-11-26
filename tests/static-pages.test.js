@@ -14,7 +14,12 @@ const ROOT = path.join(__dirname, '..');
 async function run() {
   const { check, failures } = makeChecker();
   const pages = loadPages();
-  check('DATA.pages defines faq/ and story/', pages.map((p) => p.path).sort().join(',') === 'faq/,story/', JSON.stringify(pages));
+  const data = JSON.parse(fs.readFileSync(path.join(ROOT, 'data/checklist-data.json'), 'utf8'));
+  const realCountries = data.countries.filter((c) => c.code !== 'OTHER');
+  check('DATA.pages defines faq/, story/ and from/', ['faq/', 'story/', 'from/'].every((x) => pages.some((p) => p.path === x)));
+  check('Every real country has a guide page', realCountries.every((c) => pages.some((p) => p.path === 'from/' + c.slug + '/')), realCountries.filter((c) => !c.slug).map((c) => c.code).join(','));
+  check('Country slugs are unique and URL-safe', new Set(realCountries.map((c) => c.slug)).size === realCountries.length && realCountries.every((c) => /^[a-z0-9]+(-[a-z0-9]+)*$/.test(c.slug)));
+  check('"Other / not listed" gets no guide page', !data.countries.find((c) => c.code === 'OTHER').slug);
 
   await withBrowser(async (browser) => {
     // ---------- Committed files match a fresh build ----------
@@ -110,9 +115,102 @@ async function run() {
     // ---------- Sitemap lists every page ----------
     {
       const sitemap = fs.readFileSync(path.join(ROOT, 'sitemap.xml'), 'utf8');
-      for (const p of ['', ...pages.map((x) => x.path)]) {
-        check('sitemap.xml lists https://port.dog/' + p, sitemap.includes('<loc>https://port.dog/' + p + '</loc>'));
-      }
+      const missing = ['', ...pages.map((x) => x.path)].filter((p) => !sitemap.includes('<loc>https://port.dog/' + p + '</loc>'));
+      check('sitemap.xml lists the home page and all ' + pages.length + ' generated pages', missing.length === 0, missing.join(', '));
+    }
+
+    // ---------- Country guides ----------
+    // The steps on a guide are the app's own checklist for a dog from that
+    // country starting from scratch — so they must match the results page
+    // for exactly those answers, item for item and in order.
+    const SCRATCH = { microchipDone: 'no', rabiesDoses: '0', healthConditions: ['none'], hasTransit: 'no' };
+    for (const code of ['GB', 'US', 'AU', 'US-HI', 'IL']) {
+      const c = data.countries.find((x) => x.code === code);
+      const context = await browser.newContext();
+      const page = await context.newPage();
+      await page.goto(BASE + '/#/home');
+      await page.evaluate((a) => localStorage.setItem('pawport_answers_v1', JSON.stringify(a)), Object.assign({ originCountry: code }, SCRATCH));
+      await page.goto(BASE + '/#/results');
+      await page.waitForSelector('.results-header');
+      const resultsTitles = await page.locator('.checklist-item .item-title').allTextContents();
+      await page.evaluate(() => localStorage.clear());
+      await page.goto(BASE + '/from/' + c.slug + '/');
+      await page.waitForSelector('main#app:not([data-prerendered]) h1');
+      const guideTitles = await page.locator('.guide-item .item-title').allTextContents();
+      check(code + ' guide: same steps as the results page for a from-scratch dog', guideTitles.length > 5 && JSON.stringify(guideTitles) === JSON.stringify(resultsTitles), guideTitles.length + ' vs ' + resultsTitles.length);
+      const lede = await page.locator('main .lede').textContent();
+      check(code + ' guide: ' + (c.designated ? 'simplified' : 'full') + '-process intro', c.designated ? /designated rabies-free regions, so a simpler/.test(lede) : /doesn’t count .* designated/.test(lede), lede);
+      check(code + ' guide: heading names the country naturally', (await page.locator('main h1').textContent()) === 'Bringing your dog to Japan from ' + (c.pageName || c.name));
+      const noteCount = await page.locator('.guide-item strong', { hasText: 'Specific to ' + c.name }).count();
+      check(code + ' guide: shows the country-specific notes', noteCount >= 2, noteCount);
+      if (c.designated) check(code + ' guide: no FAVN step for a designated region', !guideTitles.some((tt) => /FAVN/.test(tt)));
+      else check(code + ' guide: FAVN step present', guideTitles.some((tt) => /FAVN/.test(tt)));
+      await context.close();
+    }
+    {
+      // Designated regions: implanting the chip comes before confirming its number.
+      const context = await browser.newContext();
+      const page = await context.newPage();
+      await page.goto(BASE + '/from/australia/');
+      await page.waitForSelector('main#app:not([data-prerendered]) h1');
+      const titles = await page.locator('.guide-item .item-title').allTextContents();
+      const implant = titles.findIndex((x) => /^Implant/.test(x));
+      const confirm = titles.findIndex((x) => /^Confirm your microchip number/.test(x));
+      check('AU guide: implant step comes before confirm-number step', implant !== -1 && confirm !== -1 && implant < confirm, titles.slice(0, 4).join(' | '));
+      await context.close();
+    }
+    {
+      // No-JS: the country page carries its own content and metadata.
+      const context = await browser.newContext({ javaScriptEnabled: false });
+      const page = await context.newPage();
+      await page.goto(BASE + '/from/germany/');
+      check('from/germany/ (no JS): heading', (await page.locator('main h1').textContent()) === 'Bringing your dog to Japan from Germany');
+      check('from/germany/ (no JS): Germany-specific note present', (await page.locator('main').textContent()).includes('Veterinäramt'));
+      check('from/germany/ (no JS): canonical', (await page.locator('link[rel=canonical]').getAttribute('href')) === 'https://port.dog/from/germany/');
+      const desc = await page.locator('meta[name=description]').getAttribute('content');
+      check('from/germany/ (no JS): description names Germany', /from Germany/.test(desc), desc);
+      await page.goto(BASE + '/from/hawaii/');
+      const hdesc = await page.locator('meta[name=description]').getAttribute('content');
+      check('from/hawaii/ (no JS): designated-region description', /designated rabies-free/.test(hdesc) && !/FAVN/.test(hdesc), hdesc);
+      await page.goto(BASE + '/from/');
+      const links = await page.locator('main .country-list a').count();
+      check('from/ (no JS): lists every country', links === realCountries.length, links + ' vs ' + realCountries.length);
+      await context.close();
+    }
+    {
+      // "Build my checklist" on a guide pre-selects that country in the wizard…
+      const context = await browser.newContext();
+      const page = await context.newPage();
+      await page.goto(BASE + '/from/germany/');
+      await page.waitForSelector('main#app:not([data-prerendered]) h1');
+      await page.click('.guide-cta a.btn-primary');
+      await page.waitForSelector('.card[data-question-id]');
+      const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('pawport_answers_v1') || '{}'));
+      check('Guide CTA pre-selects the country in the wizard', saved.originCountry === 'DE', JSON.stringify(saved));
+      check('Guide CTA lands on the wizard with a clean URL', new URL(page.url()).hash === '#/wizard', page.url());
+      // …but never overwrites a country someone already chose.
+      await page.evaluate(() => localStorage.setItem('pawport_answers_v1', JSON.stringify({ originCountry: 'CA', dogName: 'Keep' })));
+      await page.goto(BASE + '/from/australia/');
+      await page.waitForSelector('main#app:not([data-prerendered]) h1');
+      await page.click('.guide-cta a.btn-primary');
+      await page.waitForSelector('.card[data-question-id]');
+      const kept = await page.evaluate(() => JSON.parse(localStorage.getItem('pawport_answers_v1') || '{}'));
+      check('Guide CTA never overwrites saved answers', kept.originCountry === 'CA' && kept.dogName === 'Keep', JSON.stringify(kept));
+      await context.close();
+    }
+    {
+      // Footer links to the country index on every page; Japanese guide is translated.
+      const context = await browser.newContext();
+      const page = await context.newPage();
+      await page.goto(BASE + '/#/home');
+      await page.waitForSelector('.feature-grid');
+      check('Footer links to the country guides', (await page.locator('.site-footer a[href="from/"]').count()) === 1);
+      await context.addCookies([{ name: 'portdog_lang', value: 'ja', url: BASE }]);
+      await page.goto(BASE + '/from/germany/');
+      await page.waitForSelector('main#app:not([data-prerendered]) h1');
+      const h1 = await page.locator('main h1').textContent();
+      check('ja on from/germany/: translated heading with the Japanese country name', /ドイツ/.test(h1) && !/Bringing/.test(h1), h1);
+      await context.close();
     }
   });
 

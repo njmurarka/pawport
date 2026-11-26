@@ -119,6 +119,11 @@ async function inspect(page, lang, label, leaks, problems, opts) {
       await page.evaluate(() => document.querySelectorAll('details').forEach((d) => { d.open = true; }));
       await check('resources'); await shot('resources');
       await go('about', '.story-banner'); await check('story'); await shot('story');
+      // Country guides: the index, a long name on the full process, and a designated region.
+      for (const [p, name] of [['from/', 'countries'], ['from/united-arab-emirates/', 'country-AE'], ['from/hawaii/', 'country-US-HI']]) {
+        await page.goto(h.BASE + '/' + p); await page.waitForSelector('main#app:not([data-prerendered]) h1'); await page.waitForTimeout(200);
+        await check(name); await shot(name);
+      }
       if (errs.length) problems.push(lang + ' | ' + tag + ' | JS ERRORS: ' + errs.join(' ;; '));
       await ctx.close();
     }

@@ -993,6 +993,41 @@ label.field-label { font-weight: 600; display: block; margin-bottom: 8px; }
 .checklist-item.done .item-title { text-decoration: line-through; color: var(--color-text-muted); }
 .checklist-item .item-body { margin-top: 6px; color: var(--color-text); }
 
+/* Country guides (from/<country>/): the same items, numbered, not tickable. */
+.guide-item:hover { background: none; }
+.guide-item h3.item-title { margin: 0; font-family: var(--font); font-size: 1.06rem; line-height: 1.4; cursor: auto; }
+.guide-step {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-weight: 700;
+  font-size: 0.9rem;
+  background: var(--color-primary-light);
+  color: var(--color-primary-dark);
+}
+.guide-cta p:last-child { margin-bottom: 0; }
+.country-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 8px;
+}
+.country-list a {
+  display: block;
+  padding: 10px 14px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  font-weight: 600;
+  text-decoration: none;
+}
+.country-list a:hover { background: var(--color-surface-alt); }
+
 .progress-summary {
   display: flex;
   align-items: center;
